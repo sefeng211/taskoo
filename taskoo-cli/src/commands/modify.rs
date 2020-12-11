@@ -16,6 +16,7 @@ impl Modify {
             tag_names: vec![],
             context_name: None,
             body: None,
+            remove_tag_names: vec![],
         };
 
         let mut task_ids: Vec<i64> = vec![];
@@ -29,11 +30,10 @@ impl Modify {
 
         if matches.is_present("options") {
             let config: Vec<&str> = matches.values_of("options").unwrap().collect();
-            option = parse_command_option(&config, false).unwrap();
+            option = parse_command_option(&config, false, true).unwrap();
         }
 
-        println!("Context Name {:?}", option.context_name);
-        println!("Tag Names {:?}", option.tag_names);
+        debug!("Context Name {:?}", option.context_name);
         let mut operation = ModifyOperation {
             database_manager: None,
             result: vec![],

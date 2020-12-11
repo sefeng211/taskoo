@@ -17,12 +17,13 @@ impl Add {
             due_date: None,
             tag_names: vec![],
             context_name: None,
-            body: None
+            body: None,
+            remove_tag_names: vec![],
         };
 
         if matches.is_present("config") {
             let config: Vec<&str> = matches.values_of("config").unwrap().collect();
-            option = parse_command_option(&config, true).unwrap();
+            option = parse_command_option(&config, true, false).unwrap();
         }
 
         let mut operation = AddOperation {
