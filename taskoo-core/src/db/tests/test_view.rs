@@ -4,16 +4,17 @@ use std::collections::HashMap;
 // Note this useful idiom: importing names from outer (for mod tests) scope.
 use crate::db::task_manager::DatabaseManager;
 
+
 fn get_setting() -> HashMap<String, String> {
     let mut setting = HashMap::new();
     setting.insert("db_path".to_owned(), ":memory:".to_owned());
-    setting.insert("tag".to_owned(), "Ready, Blocked".to_owned());
+    setting.insert("tag".to_owned(), "Ready, Blocked, Completed".to_owned());
     setting.insert("context".to_owned(), "Inbox, Work, Life".to_owned());
     return setting;
 }
 
 #[test]
-fn test_delete_simple() -> Result<()> {
+fn test_view_due() -> Result<()> {
     let mut database_manager = DatabaseManager::new(&get_setting());
 
     database_manager
@@ -22,31 +23,44 @@ fn test_delete_simple() -> Result<()> {
             &None,
             &None,
             &vec![],
+            &Some("2020-11-11"),
+            &None,
+            &Some(2),
+            &None,
+        )
+        .expect("");
+
+    database_manager
+        .add(
+            "Test Body",
             &None,
             &None,
-            &Some(1),
+            &vec![],
+            &Some("2020-11-13"),
+            &None,
+            &Some(2),
             &None,
         )
         .expect("");
 
     let rows = database_manager
-        .get(&None, &None, &vec![], &None, &None, &Some(1), &None)
+        .view(
+            &"Inbox".to_string(),
+            &Some("due".to_string()),
+            &None,
+            &"2020-11-13".to_string(),
+        )
         .unwrap();
 
     assert_eq!(rows.len(), 1);
 
-    database_manager.delete(&vec![1]).unwrap();
+    assert_eq!(rows[0].due_date, "2020-11-13".to_string());
 
-    let rows = database_manager
-        .get(&None, &None, &vec![], &None, &None, &Some(1), &None)
-        .unwrap();
-
-    assert_eq!(rows.len(), 0);
     Ok(())
 }
 
 #[test]
-fn test_delete_multiple() -> Result<()> {
+fn test_view_overdue() -> Result<()> {
     let mut database_manager = DatabaseManager::new(&get_setting());
 
     database_manager
@@ -55,9 +69,9 @@ fn test_delete_multiple() -> Result<()> {
             &None,
             &None,
             &vec![],
+            &Some("2020-11-11"),
             &None,
-            &None,
-            &Some(1),
+            &Some(2),
             &None,
         )
         .expect("");
@@ -68,25 +82,25 @@ fn test_delete_multiple() -> Result<()> {
             &None,
             &None,
             &vec![],
+            &Some("2020-11-13"),
             &None,
-            &None,
-            &Some(1),
+            &Some(2),
             &None,
         )
         .expect("");
 
     let rows = database_manager
-        .get(&None, &None, &vec![], &None, &None, &Some(1), &None)
+        .view(
+            &"Inbox".to_string(),
+            &Some("overdue".to_string()),
+            &None,
+            &"2020-11-13".to_string(),
+        )
         .unwrap();
 
-    assert_eq!(rows.len(), 2);
+    assert_eq!(rows.len(), 1);
 
-    database_manager.delete(&vec![1, 2]).unwrap();
+    assert_eq!(rows[0].due_date, "2020-11-11".to_string());
 
-    let bb = database_manager
-        .get(&None, &None, &vec![], &None, &None, &Some(1), &None)
-        .unwrap();
-
-    assert_eq!(bb.len(), 0);
     Ok(())
 }

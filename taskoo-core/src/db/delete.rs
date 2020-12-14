@@ -25,7 +25,7 @@ pub fn delete(conn: &Connection, task_ids: &Vec<i64>) -> Result<Vec<Task>, DbErr
     // the task ids to that table and then do a delete query based on
     // that temporary table.
     for task_id in task_ids_str.iter() {
-        let num_changed = statement.execute_named(named_params! {
+        statement.execute_named(named_params! {
             ":task_id": task_id,
         })?;
     }

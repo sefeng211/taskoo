@@ -1,5 +1,5 @@
 use clap::ArgMatches;
-use log::{debug, error, info, log_enabled, Level};
+use log::{debug, info};
 use taskoo_core::operation::{execute, DeleteOperation};
 
 pub struct Delete;

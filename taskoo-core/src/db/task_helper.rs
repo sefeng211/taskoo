@@ -1,11 +1,13 @@
 use rusqlite::Rows;
 
+#[derive(Debug)]
 pub struct Task {
     pub id: i64,
     pub body: String,
     pub priority: i64,
     pub context_name: String,
     pub tag_names: Vec<String>,
+    pub tag_ids: Vec<i64>,
     pub created_at: String,
     pub due_date: String,
     pub scheduled_at: String,
@@ -20,7 +22,7 @@ pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
     while let Some(row) = rows.next().unwrap() {
         // TODO convert context_id to context_name
         let mut tag_names: Vec<String> = vec![];
-        match row.get(14) {
+        match row.get(15) {
             Ok(names) => {
                 let temp: String = names;
                 for n in temp.split(",") {
@@ -29,12 +31,25 @@ pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
             }
             Err(_) => {}
         }
+
+        let mut tag_ids: Vec<i64> = vec![];
+        match row.get(14) {
+            Ok(ids) => {
+                let temp: String = ids;
+                for n in temp.split(",") {
+                    tag_ids.push(n.parse::<i64>().unwrap());
+                }
+            }
+            Err(_) => {}
+        }
+
         let is_completed = tag_names.contains(&"Completed".to_string());
         let task = Task {
             id: row.get(0).unwrap(),
             body: row.get(1).unwrap(),
             priority: row.get(2).unwrap(),
             tag_names: tag_names,
+            tag_ids: tag_ids,
             created_at: row.get(4).unwrap(),
             due_date: row.get(5).unwrap(),
             scheduled_at: row.get(6).unwrap(),

@@ -5,6 +5,9 @@ mod add;
 mod get;
 mod delete;
 mod modify;
+mod view;
+
+mod query_helper;
 
 #[cfg(test)]
 mod tests;

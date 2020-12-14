@@ -1,14 +1,10 @@
+use super::query_helper::generate_condition;
 use crate::db::task_helper::Task;
+use log::debug;
 use rusqlite::{named_params, Connection, Error as DbError, Result, Transaction};
 
-const MODIFY_QUERY: &str = "
-    Update task
-    SET {}
-    WHERE id = :task_id
-";
-
 // XXX Why task_ids is reference?
-fn add_tag(conn: &Transaction, task_ids: &Vec<i64>, tag_ids: Vec<i64>) {
+fn add_tag(conn: &Transaction, task_ids: &Vec<i64>, tag_ids: Vec<i64>) -> Result<(), DbError> {
     let mut statement = conn
         .prepare(
             "INSERT INTO task_tag
@@ -20,12 +16,12 @@ fn add_tag(conn: &Transaction, task_ids: &Vec<i64>, tag_ids: Vec<i64>) {
         for tag_id in tag_ids.iter() {
             statement.execute_named(named_params! {
             ":task_id": task_id,
-            ":tag_id": tag_id});
+            ":tag_id": tag_id})?;
         }
     }
+    Ok(())
 }
 
-type TaskValue<'a> = (&'a str, &'a str); // (x,y)
 pub fn modify(
     conn: &mut Connection,
     task_ids: &Vec<i64>,
@@ -39,61 +35,35 @@ pub fn modify(
     is_recurrence: &Option<u8>,
 ) -> Result<Vec<Task>, DbError> {
     // Prepare the statement
-    let mut arguments: String = String::from("");
-    let mut args: Vec<TaskValue> = vec![];
-    if body.is_some() {
-        arguments.push_str(format!("body = '{}',", body.unwrap()).as_str());
-    }
-
-    if priority.is_some() {
-        arguments.push_str(format!("priority = {},", priority.unwrap()).as_str());
-    }
-
-    if context_id.is_some() {
-        arguments.push_str(format!("context_id = {},", context_id.unwrap()).as_str());
-    }
-
-    if due_date.is_some() {
-        arguments.push_str(format!("due_date = '{}',", due_date.unwrap()).as_str());
-    }
-
-    if scheduled_at.is_some() {
-        arguments.push_str(format!("scheduled_at = '{}',", scheduled_at.unwrap()).as_str());
-    }
-
-    if is_repeat.is_some() {
-        arguments.push_str(format!("is_repeat = {},", is_repeat.unwrap()).as_str());
-    }
-
-    if is_recurrence.is_some() {
-        arguments.push_str(format!("is_recurrence = {},", is_recurrence.unwrap()).as_str());
-    }
+    let conditions = generate_condition(
+        body,
+        priority,
+        context_id,
+        due_date,
+        scheduled_at,
+        is_repeat,
+        is_recurrence,
+    );
 
     let tx = conn.transaction()?;
     // TODO: Return Error here
-    if !arguments.is_empty() {
-        // Pop the last comma character due to sql syntax error
-        arguments.pop();
-
+    assert!(!conditions.is_empty() || !tag_ids.is_empty());
+    if !conditions.is_empty() {
         let final_argument = format!(
-            "
-    Update task
-    SET {}
-    WHERE id = :task_id
-    ",
-            arguments
+            "Update task SET {} WHERE id = :task_id",
+            conditions.join(",")
         );
 
-        println!("{}", final_argument);
+        debug!("Running modify with query \n {}", final_argument);
         let mut statement = tx.prepare(&final_argument)?;
         for task_id in task_ids.iter() {
             statement.execute_named(named_params! {
                 ":task_id": task_id
-            });
+            })?;
         }
     }
 
-    add_tag(&tx, &task_ids, tag_ids);
+    add_tag(&tx, &task_ids, tag_ids)?;
     tx.commit()?;
     Ok(vec![])
 }

@@ -4,8 +4,6 @@ use std::collections::HashMap;
 // Note this useful idiom: importing names from outer (for mod tests) scope.
 use crate::db::task_helper::convert_rows_into_task;
 use crate::db::task_manager::DatabaseManager;
-use crate::operation::{execute, GetAllForContextOperation};
-use chrono::NaiveDateTime;
 use chrono::{Date, DateTime, Duration, NaiveDate, Utc};
 
 use more_asserts::*;
@@ -334,8 +332,7 @@ fn test_add_scheduled_at_raw_timestamp() -> Result<()> {
 
     let tasks = convert_rows_into_task(&mut rows);
 
-    assert_eq!(&tasks[0].scheduled_at, "2020-11-11 00:00:00");
-    //assert_le!(scheduled_at_parsed.timestamp(), end.timestamp());
+    assert_eq!(&tasks[0].scheduled_at, "2020-11-11");
     Ok(())
 }
 
@@ -396,14 +393,25 @@ fn test_add_completed_task() -> Result<()> {
         )
         .expect("");
 
-    let mut operation = GetAllForContextOperation {
-        database_manager: Some(database_manager),
-        context_name: Some("Inbox".to_string()),
-        result: vec![],
-    };
+    // TODO: Why this doesn't work
+    //let mut operation = GetOperation {
+        //priority: None,
+        //context_name: None,
+        //due_date: None,
+        //is_repeat: None,
+        //is_recurrence: None,
+        //scheduled_at: None,
+        //database_manager: Some(database_manager2),
+        //tag_names: vec![],
+        //result: vec![],
+    //};
+    //execute(&mut operation).expect("");
 
-    execute(&mut operation);
-    assert_eq!(operation.result.iter().count(), 1);
-    assert_eq!(&operation.result[0].is_completed, &true);
+    let rows = database_manager
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
+        .unwrap();
+
+    assert_eq!(rows.len(), 1);
+    assert_eq!(&rows[0].is_completed, &true);
     Ok(())
 }

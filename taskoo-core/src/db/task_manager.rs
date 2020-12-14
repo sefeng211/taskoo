@@ -1,30 +1,41 @@
 use crate::db::add::add;
 use crate::db::delete::delete;
-use crate::db::get::{get, get_all_for_context};
+use crate::db::get::get;
 use crate::db::modify::modify;
 use crate::db::task_helper::Task;
+use crate::db::view::view;
 use crate::error::OperationError;
 use chrono::{Date, DateTime, Duration, NaiveDate, Utc};
+use log::info;
 use rusqlite::{named_params, Connection, Error as DbError, Result, NO_PARAMS};
 use std::collections::HashMap;
 
+// TODO: Rename it to TaskManager or create another struct to contain it
 pub struct DatabaseManager {
     pub conn: Connection,
+    setting: HashMap<String, String>,
 }
 
 impl DatabaseManager {
     // ensure the database is created
     pub fn new(setting: &HashMap<String, String>) -> DatabaseManager {
-        env_logger::try_init();
-        let conn = Connection::open(setting.get("db_path").unwrap()).unwrap();
-        let manager = DatabaseManager { conn: conn };
-        match manager
-            .create_table_if_needed(setting.get("tag").unwrap(), setting.get("context").unwrap())
-        {
-            Ok(_) => (),
-            Err(e) => println!("Failed to create database {:?}", e),
+        if env_logger::try_init().is_err() {
+            info!("Unable to init the logger, it's okay");
         }
+        let conn = Connection::open(setting.get("db_path").unwrap()).unwrap();
+        let manager = DatabaseManager {
+            conn: conn,
+            setting: setting.clone(),
+        };
+        manager
+            .create_table_if_needed(setting.get("tag").unwrap(), setting.get("context").unwrap())
+            .expect("Failed to create all required tables");
         return manager;
+    }
+
+    pub fn get_context_names_from_config(&self) -> Vec<String> {
+        let context = self.setting.get("context").unwrap().to_string();
+        return context.split(",").map(|s| s.to_string()).collect();
     }
 
     pub fn add(
@@ -77,6 +88,7 @@ impl DatabaseManager {
         )
         .map_err(|error| OperationError::SqliteError { source: error });
     }
+
     pub fn get(
         &mut self,
         priority: &Option<u8>,
@@ -95,8 +107,6 @@ impl DatabaseManager {
             }
             None => (),
         };
-        // Prepare the tag_ids
-        let mut tag_ids: Vec<i64> = vec![];
 
         // Prepare the tag_ids
         let mut tag_ids: Vec<i64> = vec![];
@@ -115,22 +125,6 @@ impl DatabaseManager {
             &is_recurrence,
         )
         .map_err(|error| OperationError::SqliteError { source: error });
-    }
-
-    pub fn get_all_for_context(
-        &mut self,
-        context_name: &Option<String>,
-    ) -> Result<Vec<Task>, OperationError> {
-        let mut context_id: i64 = 1;
-        match context_name {
-            Some(name) => {
-                context_id = self.convert_context_name_to_id(&name)?;
-            }
-            None => (),
-        };
-
-        return get_all_for_context(&self.conn, &Some(context_id))
-            .map_err(|error| OperationError::SqliteError { source: error });
     }
 
     pub fn delete(&self, task_ids: &Vec<i64>) -> Result<Vec<Task>, OperationError> {
@@ -184,6 +178,41 @@ impl DatabaseManager {
         )
         .map_err(|error| OperationError::SqliteError { source: error });
     }
+
+    pub fn view(
+        &mut self,
+        context_name: &String,
+        view_type: &Option<String>,
+        view_range_start: &Option<String>,
+        view_range_end: &String,
+    ) -> Result<Vec<Task>, OperationError> {
+        let parsed_view_range_start = self.parse_scheduled_at(&view_range_end)?;
+        if view_type == &Some("due".to_string()) {
+            // Convert to use db::view
+            return self.get(
+                &None,
+                &Some(context_name.clone()),
+                &vec![],
+                &Some(&parsed_view_range_start),
+                &None,
+                &None,
+                &None,
+            );
+        } else if view_type == &Some("overdue".to_string()) {
+            let context_id = self.convert_context_name_to_id(&context_name)?;
+            return view(
+                &mut self.conn,
+                &context_id,
+                &view_range_start,
+                &view_range_end,
+                &view_type,
+            )
+            .map_err(|error| OperationError::SqliteError { source: error });
+        }
+
+        Ok(vec![])
+    }
+
     fn convert_context_name_to_id(&self, context_name: &String) -> Result<i64, OperationError> {
         let mut statement = self
             .conn
@@ -234,7 +263,7 @@ impl DatabaseManager {
             let key: i64;
             match scheduled_at_split.iter().next() {
                 Some(value) => {
-                    let value_in_int = value.parse::<i64>().map_err(|error| {
+                    let value_in_int = value.parse::<i64>().map_err(|_error| {
                         OperationError::PeriodParsingError(scheduled_at.to_string())
                     })?;
                     key = value_in_int;
@@ -253,7 +282,7 @@ impl DatabaseManager {
             let key: i64;
             match scheduled_at_split.iter().next() {
                 Some(value) => {
-                    let value_in_int = value.parse::<i64>().map_err(|error| {
+                    let value_in_int = value.parse::<i64>().map_err(|_error| {
                         OperationError::PeriodParsingError(scheduled_at.to_string())
                     })?;
                     key = value_in_int;
@@ -272,7 +301,7 @@ impl DatabaseManager {
             let key: i64;
             match scheduled_at_split.iter().next() {
                 Some(value) => {
-                    let value_in_int = value.parse::<i64>().map_err(|error| {
+                    let value_in_int = value.parse::<i64>().map_err(|_error| {
                         OperationError::PeriodParsingError(scheduled_at.to_string())
                     })?;
                     key = value_in_int;
@@ -296,8 +325,7 @@ impl DatabaseManager {
                 .unwrap(),
             Utc,
         );
-        Ok(parsed_timestamp.format("%Y-%m-%d 00:00:00").to_string())
-        // Err(OperationError::PeriodParsingError(scheduled_at.to_string()))
+        Ok(parsed_timestamp.format("%Y-%m-%d").to_string())
     }
 
     fn create_table_if_needed(&self, tag: &String, context: &String) -> Result<(), DbError> {

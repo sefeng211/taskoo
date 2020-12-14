@@ -1,20 +1,44 @@
+use super::query_helper::generate_get_condition;
 use crate::db::task_helper::{convert_rows_into_task, Task};
-use rusqlite::{NO_PARAMS, named_params, Connection, Error as DbError, Result};
+use log::debug;
+use rusqlite::{Connection, Error as DbError, Result, NO_PARAMS};
+
+fn task_matches_tag_ids(task: &Task, tag_ids: &Vec<i64>) -> bool {
+    for tag_id in tag_ids.iter() {
+        if !task.tag_ids.contains(tag_id) {
+            return false;
+        }
+    }
+    return true;
+}
 
 pub fn get(
     conn: &Connection,
     priority: &Option<u8>,
     context_id: &Option<i64>,
-    _tag_ids: &Vec<i64>,
+    tag_ids: &Vec<i64>,
     due_date: &Option<&str>,
     scheduled_at: &Option<&str>,
     is_repeat: &Option<u8>,
     is_recurrence: &Option<u8>,
 ) -> Result<Vec<Task>, DbError> {
-    // TODO query on tag id
-    let mut statement = conn.prepare(
+    let conditions = generate_get_condition(
+        &None,
+        priority,
+        context_id,
+        due_date,
+        scheduled_at,
+        is_repeat,
+        is_recurrence,
+    );
+
+    assert!(!conditions.is_empty());
+
+    rusqlite::vtab::array::load_module(&conn)?;
+
+    let final_argument = format!(
         "
-    SELECT *, GROUP_CONCAT(task_tag.name) FROM task
+    SELECT *, GROUP_CONCAT(task_tag.tag_id) as concat_tag_ids, GROUP_CONCAT(task_tag.name) FROM task
     INNER JOIN context
     on context_id = context.id
     LEFT JOIN
@@ -23,54 +47,26 @@ pub fn get(
         INNER JOIN tag ON task_tag.tag_id = tag.id
         ) task_tag
     ON task.id = task_tag.task_id
-    WHERE priority = :priority and
-    context_id = :context_id and
-    due_date = :due_date and
-    scheduled_at = :scheduled_at and
-    is_repeat = :is_repeat and
-    is_recurrence = :is_recurrence
+    Where {}
     Group By task.id
-    "
-    )?;
+    ",
+        conditions.join(" and ")
+    );
 
-    let mut rows = statement.query_named(named_params! {
-        ":priority": priority.unwrap_or(1),
-        ":context_id": context_id.unwrap_or(1),
-        ":due_date": due_date.unwrap_or(""),
-        ":scheduled_at": scheduled_at.unwrap_or(""),
-        ":is_repeat": is_repeat.unwrap_or(0),
-        ":is_recurrence": is_recurrence.unwrap_or(0)
-    })?;
-
+    debug!("Running select query \n{}", final_argument);
+    let mut statement = conn.prepare(&final_argument)?;
+    let mut rows = statement.query(NO_PARAMS)?;
     let tasks = convert_rows_into_task(&mut rows);
-    Ok(tasks)
-}
 
-pub fn get_all_for_context(
-    conn: &Connection,
-    context_id: &Option<i64>,
-) -> Result<Vec<Task>, DbError> {
-    // TODO query on tag id
-    let mut statement = conn.prepare(
-        "
-    SELECT *, GROUP_CONCAT(task_tag.name) FROM task
-    INNER JOIN context
-    on context_id = context.id
-    LEFT JOIN
-        (
-        SELECT task_tag.task_id, task_tag.tag_id, tag.name FROM task_tag
-        INNER JOIN tag ON task_tag.tag_id = tag.id
-        ) task_tag
-    ON task.id = task_tag.task_id
-    WHERE context_id = :context_id
-    Group By task.id
-    "
-    )?;
+    if !tag_ids.is_empty() {
+        return Ok(tasks
+            .into_iter()
+            .filter(|task| {
+                //task.tag_ids == tag_ids.clone()
+                task_matches_tag_ids(task, &tag_ids)
+            })
+            .collect());
+    }
 
-    let mut rows = statement.query_named(named_params! {
-        ":context_id": context_id.unwrap_or(1),
-    })?;
-
-    let tasks = convert_rows_into_task(&mut rows);
     Ok(tasks)
 }

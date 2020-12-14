@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rusqlite = "0.24.1"
+# rusqlite = "0.24.1"
 rust-ini = "0.16.0"
 dirs = "3.0"
 rrule = "0.3.4"
@@ -16,3 +16,8 @@ thiserror = "1.0.22"
 more-asserts = "0.2.1"
 log = "0.4.0"
 env_logger = "0.8.2"
+
+[dependencies.rusqlite]
+version = "0.24.1"
+default-features = false
+features = ["bundled", "array"]

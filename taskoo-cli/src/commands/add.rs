@@ -1,9 +1,9 @@
 use clap::ArgMatches;
 use taskoo_core::operation::{execute, AddOperation};
 
-use crate::option_parser::{parse_command_option, CommandOption};
+use crate::option_parser::{generate_default_command_option, parse_command_option};
 //use crate::option_parser::parse_command_option;
-use log::{debug, error, info, log_enabled, Level};
+//use log::{debug, error, info, log_enabled, Level};
 pub struct Add;
 
 impl Add {
@@ -12,18 +12,11 @@ impl Add {
         //let mut tag_names: Vec<String> = vec![];
         //let mut scheduled_at: Option<&str> = None;
 
-        let mut option = CommandOption {
-            scheduled_at: None,
-            due_date: None,
-            tag_names: vec![],
-            context_name: None,
-            body: None,
-            remove_tag_names: vec![],
-        };
+        let mut option = generate_default_command_option();
 
         if matches.is_present("config") {
             let config: Vec<&str> = matches.values_of("config").unwrap().collect();
-            option = parse_command_option(&config, true, false).unwrap();
+            option = parse_command_option(&config, true, false, false).unwrap();
         }
 
         let mut operation = AddOperation {

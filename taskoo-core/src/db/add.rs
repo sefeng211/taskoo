@@ -1,8 +1,8 @@
 use crate::db::task_helper::Task;
+use log::{debug};
 use rusqlite::{named_params, Connection, Error as DbError, Result, Transaction};
-use log::{debug, error, log_enabled, info, Level};
 
-fn add_tag(conn: &Transaction, tag_ids: Vec<i64>) {
+fn add_tag(conn: &Transaction, tag_ids: Vec<i64>) -> Result<(), DbError> {
     debug!("Adding new tag {:?}", &tag_ids);
     let mut statement = conn
         .prepare(
@@ -15,9 +15,9 @@ fn add_tag(conn: &Transaction, tag_ids: Vec<i64>) {
     for id in tag_ids.iter() {
         statement.execute_named(named_params! {
         ":task_id": last_insert_rowid,
-        ":tag_id": id});
-        //dbg!("Insert task_id: {} tag_id: {}", last_insert_rowid, id);
+        ":tag_id": id})?;
     }
+    Ok(())
 }
 
 pub fn add(
@@ -52,7 +52,7 @@ pub fn add(
         })?;
     }
 
-    add_tag(&tx, tag_ids);
+    add_tag(&tx, tag_ids)?;
 
     tx.commit()?;
     Ok(vec![])

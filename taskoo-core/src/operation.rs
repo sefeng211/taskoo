@@ -64,6 +64,7 @@ impl<'a> Operation for GetOperation<'a> {
             &self.is_recurrence,
         );
     }
+
     fn set_result(&mut self, result: Vec<Task>) {
         self.result = result;
     }
@@ -82,29 +83,6 @@ impl Operation for DeleteOperation {
         return DatabaseManager::delete(self.database_manager.as_mut().unwrap(), &self.task_ids);
     }
     fn set_result(&mut self, _result: Vec<Task>) {}
-}
-
-pub struct GetAllForContextOperation {
-    pub database_manager: Option<DatabaseManager>,
-    pub result: Vec<Task>,
-    pub context_name: Option<String>,
-}
-
-impl Operation for GetAllForContextOperation {
-    fn init(&mut self) {
-        if self.database_manager.is_none() {
-            self.database_manager = Some(DatabaseManager::new(&self.init_and_get_database_path()));
-        }
-    }
-    fn do_work(&mut self) -> Result<Vec<Task>, OperationError> {
-        return DatabaseManager::get_all_for_context(
-            self.database_manager.as_mut().unwrap(),
-            &self.context_name,
-        );
-    }
-    fn set_result(&mut self, result: Vec<Task>) {
-        self.result = result;
-    }
 }
 
 pub struct ModifyOperation<'a> {
@@ -141,6 +119,39 @@ impl<'a> Operation for ModifyOperation<'a> {
             &self.is_recurrence,
         );
     }
+    fn set_result(&mut self, result: Vec<Task>) {
+        self.result = result;
+    }
+}
+
+/* Some of the view functionalities are overlap with list, however,
+ * view should provide better API for clients */
+pub struct View {
+    pub view_type: Option<String>,
+    pub view_range_start: Option<String>,
+    pub view_range_end: String,
+    pub context_name: String,
+    pub database_manager: Option<DatabaseManager>,
+    pub result: Vec<Task>,
+}
+
+impl Operation for View {
+    fn init(&mut self) {
+        if self.database_manager.is_none() {
+            self.database_manager = Some(DatabaseManager::new(&self.init_and_get_database_path()));
+        }
+    }
+
+    fn do_work(&mut self) -> Result<Vec<Task>, OperationError> {
+        return DatabaseManager::view(
+            self.database_manager.as_mut().unwrap(),
+            &self.context_name,
+            &self.view_type,
+            &self.view_range_start,
+            &self.view_range_end,
+        );
+    }
+
     fn set_result(&mut self, result: Vec<Task>) {
         self.result = result;
     }

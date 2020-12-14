@@ -1,17 +1,14 @@
-use rusqlite::{named_params, params, Connection, Error as DbError, Result, NO_PARAMS};
+use chrono::{DateTime, NaiveDate, Date, Utc};
+use rusqlite::Result;
 use std::collections::HashMap;
 
 // Note this useful idiom: importing names from outer (for mod tests) scope.
-use super::*;
 use crate::db::task_manager::DatabaseManager;
-use chrono::format::ParseError;
-use chrono::prelude::*;
-use chrono::NaiveDateTime;
 
 fn get_setting() -> HashMap<String, String> {
     let mut setting = HashMap::new();
     setting.insert("db_path".to_owned(), ":memory:".to_owned());
-    setting.insert("tag".to_owned(), "Ready, Blocked".to_owned());
+    setting.insert("tag".to_owned(), "Ready, Blocked, Completed".to_owned());
     setting.insert("context".to_owned(), "Inbox, Work, Life".to_owned());
     return setting;
 }
@@ -102,10 +99,86 @@ fn test_get_all_for_context() -> Result<()> {
         .expect("");
 
     let rows = database_manager
-        .get_all_for_context(&Some("Work".to_string()))
+        .get(
+            &None,
+            &Some("Work".to_string()),
+            &vec![],
+            &None,
+            &None,
+            &None,
+            &None,
+        )
         .unwrap();
 
     assert_eq!(rows.len(), 2);
 
+    Ok(())
+}
+
+#[test]
+fn test_get_with_tag_ids() -> Result<()> {
+    println!("Start the test");
+    let mut database_manager = DatabaseManager::new(&get_setting());
+
+    database_manager
+        .add(
+            "Test Body",
+            &None,
+            &None,
+            &vec![],
+            &None,
+            &None,
+            &Some(1),
+            &None,
+        )
+        .expect("");
+
+    database_manager
+        .add(
+            "Test Body",
+            &None,
+            &None,
+            &vec!["Blocked".to_owned(), "Completed".to_owned()],
+            &None,
+            &None,
+            &Some(1),
+            &None,
+        )
+        .expect("");
+
+    database_manager
+        .add(
+            "Test Body",
+            &None,
+            &None,
+            &vec!["Blocked".to_owned(), "Completed".to_owned()],
+            &None,
+            &None,
+            &Some(1),
+            &None,
+        )
+        .expect("");
+
+    let rows = database_manager
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
+        .unwrap();
+
+    assert_eq!(rows.len(), 3);
+
+    let rows = database_manager
+        .get(
+            &None,
+            &None,
+            &vec!["Completed".to_string()],
+            &None,
+            &None,
+            &None,
+            &None,
+        )
+        .unwrap();
+
+    assert_eq!(rows.len(), 2);
+    assert_eq!(rows[0].tag_names, vec!["Blocked", "Completed"]);
+    assert_eq!(rows[1].tag_names, vec!["Blocked", "Completed"]);
     Ok(())
 }

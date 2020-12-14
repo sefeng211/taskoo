@@ -16,7 +16,15 @@ impl Review {
             database_manager: None,
             result: vec![],
         };
-        execute(&mut operation);
+
+        match execute(&mut operation) {
+            Ok(_) => {
+                println!("Successfully added task");
+            }
+            Err(e) => {
+                eprintln!("Failed {}", e);
+            }
+        }
 
         for task in operation.result.iter() {
             println!(

@@ -2,12 +2,12 @@ use crate::db::task_helper::Task;
 use crate::error::OperationError;
 use dirs::config_dir;
 use ini::Ini;
+use log::debug;
 use std::collections::HashMap;
 use std::fs::create_dir_all;
 use std::fs::OpenOptions;
 use std::io;
 use std::path::Path;
-use log::{debug, error, log_enabled, info, Level};
 
 use rusqlite::Result;
 
@@ -22,9 +22,10 @@ pub trait Operation {
         let database_path = general_section
             .get("db_path")
             .expect("Failed to get the location of the database file");
-        self.ensure_db_file_exists(&database_path);
-        let mut setting = HashMap::new();
+        self.ensure_db_file_exists(&database_path)
+            .expect("Unable to create the database file");
 
+        let mut setting = HashMap::new();
         setting.insert("db_path".to_owned(), database_path.to_owned());
         setting.insert(
             "tag".to_owned(),

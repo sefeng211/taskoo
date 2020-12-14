@@ -12,3 +12,6 @@ mod test_delete;
 
 #[cfg(test)]
 mod test_modify;
+
+#[cfg(test)]
+mod test_view;

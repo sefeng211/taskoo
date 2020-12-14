@@ -1,14 +1,8 @@
-use rusqlite::{Result, NO_PARAMS};
+use rusqlite::Result;
 use std::collections::HashMap;
 
 // Note this useful idiom: importing names from outer (for mod tests) scope.
-use crate::db::task_helper::convert_rows_into_task;
 use crate::db::task_manager::DatabaseManager;
-use crate::operation::{execute, GetAllForContextOperation};
-use chrono::NaiveDateTime;
-use chrono::{Date, DateTime, Duration, NaiveDate, Utc};
-
-use more_asserts::*;
 
 fn get_setting() -> HashMap<String, String> {
     let mut setting = HashMap::new();
@@ -56,7 +50,15 @@ fn test_modify_single() -> Result<()> {
         .unwrap();
 
     let tasks = database_manager
-        .get_all_for_context(&Some("Work".to_string()))
+        .get(
+            &None,
+            &Some("Work".to_string()),
+            &vec![],
+            &None,
+            &None,
+            &None,
+            &None,
+        )
         .unwrap();
 
     assert_eq!(tasks.len(), 1);
@@ -111,7 +113,15 @@ fn test_modify_single_with_tag() -> Result<()> {
         .unwrap();
 
     let tasks = database_manager
-        .get_all_for_context(&Some("Work".to_string()))
+        .get(
+            &None,
+            &Some("Work".to_string()),
+            &vec![],
+            &None,
+            &None,
+            &None,
+            &None,
+        )
         .unwrap();
 
     assert_eq!(tasks.len(), 1);
@@ -125,6 +135,63 @@ fn test_modify_single_with_tag() -> Result<()> {
     assert_eq!(tasks[0].scheduled_at, "2020-11-11");
     assert_eq!(tasks[0].is_repeat, 1);
     assert_eq!(tasks[0].is_recurrence, 1);
+
+    Ok(())
+}
+
+#[test]
+fn test_modify_tag_only() -> Result<()> {
+    let mut database_manager = DatabaseManager::new(&get_setting());
+
+    database_manager
+        .add(
+            "Test Body",
+            &None,
+            &None,
+            &vec![],
+            &None,
+            &None,
+            &None,
+            &None,
+        )
+        .unwrap();
+
+    let tasks = database_manager
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
+        .unwrap();
+
+    assert_eq!(tasks.len(), 1);
+
+    database_manager
+        .modify(
+            &vec![1],
+            &None,
+            &None,
+            &None,
+            &vec!["Blocked".to_string()],
+            &None,
+            &None,
+            &None,
+            &None,
+        )
+        .unwrap();
+
+    let tasks = database_manager
+        .get(
+            &None,
+            &Some("Inbox".to_string()),
+            &vec![],
+            &None,
+            &None,
+            &None,
+            &None,
+        )
+        .unwrap();
+
+    assert_eq!(tasks.len(), 1);
+
+    assert_eq!(tasks[0].id, 1);
+    assert_eq!(tasks[0].tag_names, ["Blocked".to_string()]);
 
     Ok(())
 }
