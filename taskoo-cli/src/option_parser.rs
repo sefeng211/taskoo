@@ -1,37 +1,29 @@
+use crate::extra::CommandError;
 use log::error;
 use thiserror::Error;
 
+#[derive(Debug)]
 pub struct CommandOption<'a> {
     pub scheduled_at: Option<&'a str>,
+    pub repetition: Option<&'a str>,
     pub due_date: Option<&'a str>,
     pub tag_names: Vec<String>,
     pub remove_tag_names: Vec<String>,
     pub task_ids: Vec<i64>,
     pub context_name: Option<String>,
+    pub state_name: Option<String>,
     pub body: Option<String>,
-}
-
-#[derive(Error, Debug)]
-pub enum CommandOptionError {
-    #[error("Invalid scheduled at {0}")]
-    InvalidScheduleAt(String),
-    #[error("Invalid due date {0}")]
-    InvalidDueDate(String),
-    #[error("Invalid context name {0}")]
-    InvalidContextName(String),
-    #[error("Invalid tag name {0}")]
-    InvalidTagName(String),
-    #[error("Invalid tag name {0}")]
-    InvalidTaskId(String),
 }
 
 pub fn generate_default_command_option<'a>() -> CommandOption<'a> {
     return CommandOption {
         scheduled_at: None,
+        repetition: None,
         due_date: None,
         tag_names: vec![],
         task_ids: vec![],
         context_name: None,
+        state_name: None,
         body: None,
         remove_tag_names: vec![],
     };
@@ -42,13 +34,15 @@ pub fn parse_command_option<'a>(
     parse_body: bool,
     parse_remove_tag_names: bool,
     parse_task_ids: bool,
-) -> Result<CommandOption<'a>, CommandOptionError> {
+) -> Result<CommandOption<'a>, CommandError> {
     let mut command_option = CommandOption {
         scheduled_at: None,
+        repetition: None,
         due_date: None,
         tag_names: vec![],
         task_ids: vec![],
         context_name: None,
+        state_name: None,
         body: None,
         remove_tag_names: vec![],
     };
@@ -68,21 +62,27 @@ pub fn parse_command_option<'a>(
             if command_option.scheduled_at.is_none() {
                 command_option.scheduled_at = Some(&option[2..]);
             } else {
-                return Err(CommandOptionError::InvalidScheduleAt(option.to_string()));
+                return Err(CommandError::InvalidScheduleAt(option.to_string()));
             };
         } else if option.starts_with("d:") {
             start_parse_options = true;
             if command_option.due_date.is_none() {
                 command_option.due_date = Some(&option[2..]);
             } else {
-                return Err(CommandOptionError::InvalidDueDate(option.to_string()));
+                return Err(CommandError::InvalidDueDate(option.to_string()));
             };
         } else if option.starts_with("c:") {
             start_parse_options = true;
             if command_option.context_name.is_none() {
                 command_option.context_name = Some(option[2..].to_string());
             } else {
-                return Err(CommandOptionError::InvalidContextName(option.to_string()));
+                return Err(CommandError::InvalidContextName(option.to_string()));
+            };
+        } else if option.starts_with("r:") {
+            if command_option.repetition.is_none() {
+                command_option.repetition = Some(&option[2..]);
+            } else {
+                return Err(CommandError::InvalidDueDate(option.to_string()));
             };
         } else if option.starts_with("+") {
             start_parse_options = true;
@@ -94,7 +94,7 @@ pub fn parse_command_option<'a>(
                     .remove_tag_names
                     .push(option[1..].to_string());
             } else {
-                return Err(CommandOptionError::InvalidTagName(option.to_string()));
+                return Err(CommandError::InvalidTagName(option.to_string()));
             }
         } else {
             if !start_parse_options {
@@ -108,7 +108,7 @@ pub fn parse_command_option<'a>(
                     if option.contains("..") {
                         let ranged_selection = option.split("..").collect::<Vec<&str>>();
                         if ranged_selection.len() != 2 {
-                            return Err(CommandOptionError::InvalidTaskId(option.to_string()));
+                            return Err(CommandError::InvalidTaskId(option.to_string()));
                         }
                         let start = ranged_selection[0]
                             .parse::<i64>()
@@ -120,9 +120,7 @@ pub fn parse_command_option<'a>(
                             .task_ids
                             .append(&mut (start..=end).collect::<Vec<i64>>());
                     } else {
-                        command_option
-                            .task_ids
-                            .push(option.parse().expect("Invalid task id provided"));
+                        command_option.task_ids.push(option.parse()?);
                     }
                 }
             }

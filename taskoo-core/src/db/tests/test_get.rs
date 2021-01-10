@@ -24,8 +24,9 @@ fn test_get_simple() -> Result<()> {
             &None,
             &vec![],
             &None,
+            &Some("2weeks"),
+            &Some("2weeks"), // Repeat every 2 weeks
             &None,
-            &Some(1),
             &None,
         )
         .expect("");
@@ -44,13 +45,13 @@ fn test_get_simple() -> Result<()> {
 
     assert_eq!(rows[0].id, 1);
     assert_eq!(rows[0].body, "Test Body");
-    assert_eq!(rows[0].priority, 1);
+    assert_eq!(rows[0].priority, 0);
     assert_eq!(rows[0].context_name, "Inbox");
     assert_eq!(created_at_datetime, current_datetime.date());
     assert_eq!(rows[0].due_date.is_empty(), true);
-    assert_eq!(rows[0].scheduled_at.is_empty(), true);
-    assert_eq!(rows[0].is_repeat, 1);
-    assert_eq!(rows[0].is_recurrence, 0);
+    assert_eq!(rows[0].scheduled_at.is_empty(), false);
+    //assert_eq!(rows[0].is_repeat, 1);
+    //assert_eq!(rows[0].is_recurrence, 0);
 
     Ok(())
 }
@@ -67,7 +68,8 @@ fn test_get_all_for_context() -> Result<()> {
             &vec![],
             &None,
             &None,
-            &Some(1),
+            &None,
+            &None,
             &None,
         )
         .expect("");
@@ -80,7 +82,8 @@ fn test_get_all_for_context() -> Result<()> {
             &vec![],
             &None,
             &None,
-            &Some(1),
+            &None,
+            &None,
             &None,
         )
         .expect("");
@@ -93,7 +96,8 @@ fn test_get_all_for_context() -> Result<()> {
             &vec![],
             &None,
             &None,
-            &Some(1),
+            &None,
+            &None,
             &None,
         )
         .expect("");
@@ -128,7 +132,8 @@ fn test_get_with_tag_ids() -> Result<()> {
             &vec![],
             &None,
             &None,
-            &Some(1),
+            &None,
+            &None,
             &None,
         )
         .expect("");
@@ -141,7 +146,8 @@ fn test_get_with_tag_ids() -> Result<()> {
             &vec!["Blocked".to_owned(), "Completed".to_owned()],
             &None,
             &None,
-            &Some(1),
+            &None,
+            &None,
             &None,
         )
         .expect("");
@@ -154,7 +160,8 @@ fn test_get_with_tag_ids() -> Result<()> {
             &vec!["Blocked".to_owned(), "Completed".to_owned()],
             &None,
             &None,
-            &Some(1),
+            &None,
+            &None,
             &None,
         )
         .expect("");

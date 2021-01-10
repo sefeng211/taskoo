@@ -26,6 +26,7 @@ fn test_modify_single() -> Result<()> {
             &None,
             &None,
             &None,
+            &None,
         )
         .unwrap();
 
@@ -44,8 +45,9 @@ fn test_modify_single() -> Result<()> {
             &vec![],
             &Some("2020-11-10"),
             &Some("2020-11-11"),
-            &Some(1),
-            &Some(1),
+            &None,
+            &None,
+            &None,
         )
         .unwrap();
 
@@ -69,8 +71,8 @@ fn test_modify_single() -> Result<()> {
     assert_eq!(tasks[0].context_name, "Work");
     assert_eq!(tasks[0].due_date, "2020-11-10");
     assert_eq!(tasks[0].scheduled_at, "2020-11-11");
-    assert_eq!(tasks[0].is_repeat, 1);
-    assert_eq!(tasks[0].is_recurrence, 1);
+    //assert_eq!(tasks[0].is_repeat, 1);
+    //assert_eq!(tasks[0].is_recurrence, 1);
 
     Ok(())
 }
@@ -85,6 +87,7 @@ fn test_modify_single_with_tag() -> Result<()> {
             &None,
             &None,
             &vec![],
+            &None,
             &None,
             &None,
             &None,
@@ -107,8 +110,9 @@ fn test_modify_single_with_tag() -> Result<()> {
             &vec!["Blocked".to_string()],
             &Some("2020-11-10"),
             &Some("2020-11-11"),
-            &Some(1),
-            &Some(1),
+            &None,
+            &None,
+            &None,
         )
         .unwrap();
 
@@ -133,8 +137,8 @@ fn test_modify_single_with_tag() -> Result<()> {
     assert_eq!(tasks[0].context_name, "Work");
     assert_eq!(tasks[0].due_date, "2020-11-10");
     assert_eq!(tasks[0].scheduled_at, "2020-11-11");
-    assert_eq!(tasks[0].is_repeat, 1);
-    assert_eq!(tasks[0].is_recurrence, 1);
+    //assert_eq!(tasks[0].is_repeat, 1);
+    //assert_eq!(tasks[0].is_recurrence, 1);
 
     Ok(())
 }
@@ -149,6 +153,7 @@ fn test_modify_tag_only() -> Result<()> {
             &None,
             &None,
             &vec![],
+            &None,
             &None,
             &None,
             &None,
@@ -169,6 +174,7 @@ fn test_modify_tag_only() -> Result<()> {
             &None,
             &None,
             &vec!["Blocked".to_string()],
+            &None,
             &None,
             &None,
             &None,

@@ -1,7 +1,8 @@
 use crate::db::task_helper::Task;
-use rusqlite::{named_params, Connection, Error as DbError, Result};
+use crate::error::TaskooError;
+use rusqlite::{named_params, Result, Transaction};
 
-pub fn delete(conn: &Connection, task_ids: &Vec<i64>) -> Result<Vec<Task>, DbError> {
+pub fn delete(conn: &Transaction, task_ids: &Vec<i64>) -> Result<Vec<Task>, TaskooError> {
     // TODO query on tag id
     // TODO convert to and_then
     if task_ids.is_empty() {

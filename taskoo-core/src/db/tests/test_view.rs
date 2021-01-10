@@ -1,9 +1,9 @@
+use chrono::{Date, DateTime, Duration, NaiveDate, Utc};
 use rusqlite::Result;
 use std::collections::HashMap;
 
 // Note this useful idiom: importing names from outer (for mod tests) scope.
 use crate::db::task_manager::DatabaseManager;
-
 
 fn get_setting() -> HashMap<String, String> {
     let mut setting = HashMap::new();
@@ -23,9 +23,10 @@ fn test_view_due() -> Result<()> {
             &None,
             &None,
             &vec![],
-            &Some("2020-11-11"),
+            &Some("2020-11-14"),
             &None,
-            &Some(2),
+            &None,
+            &None,
             &None,
         )
         .expect("");
@@ -38,7 +39,8 @@ fn test_view_due() -> Result<()> {
             &vec![],
             &Some("2020-11-13"),
             &None,
-            &Some(2),
+            &None,
+            &None,
             &None,
         )
         .expect("");
@@ -71,7 +73,8 @@ fn test_view_overdue() -> Result<()> {
             &vec![],
             &Some("2020-11-11"),
             &None,
-            &Some(2),
+            &None,
+            &None,
             &None,
         )
         .expect("");
@@ -84,7 +87,8 @@ fn test_view_overdue() -> Result<()> {
             &vec![],
             &Some("2020-11-13"),
             &None,
-            &Some(2),
+            &None,
+            &None,
             &None,
         )
         .expect("");
@@ -101,6 +105,190 @@ fn test_view_overdue() -> Result<()> {
     assert_eq!(rows.len(), 1);
 
     assert_eq!(rows[0].due_date, "2020-11-11".to_string());
+
+    Ok(())
+}
+
+#[test]
+fn test_view_schedule() -> Result<()> {
+    let mut database_manager = DatabaseManager::new(&get_setting());
+
+    database_manager
+        .add(
+            "Test Body",
+            &None,
+            &None,
+            &vec![],
+            &Some("2020-11-11"),
+            &Some("2020-11-13"),
+            &None,
+            &None,
+            &None,
+        )
+        .expect("");
+
+    database_manager
+        .add(
+            "Test Body 1",
+            &None,
+            &None,
+            &vec![],
+            &Some("2020-11-13"),
+            &None,
+            &None,
+            &None,
+            &None,
+        )
+        .expect("");
+
+    database_manager
+        .add(
+            "Test Body 2",
+            &None,
+            &None,
+            &vec![],
+            &Some("2020-11-13"),
+            &None,
+            &None,
+            &None,
+            &None,
+        )
+        .expect("");
+
+    let rows = database_manager
+        .view(
+            &"Inbox".to_string(),
+            &Some("schedule".to_string()),
+            &None,
+            &"2020-11-13".to_string(),
+        )
+        .unwrap();
+
+    assert_eq!(rows.len(), 1);
+
+    assert_eq!(rows[0].scheduled_at, "2020-11-13".to_string());
+
+    Ok(())
+}
+
+#[test]
+fn test_view_schedule_today() -> Result<()> {
+    let mut database_manager = DatabaseManager::new(&get_setting());
+
+    let expected = Utc::now() + Duration::days(0);
+    database_manager
+        .add(
+            "Test Body",
+            &None,
+            &None,
+            &vec![],
+            &Some("2020-11-11"),
+            &Some("today"),
+            &None,
+            &None,
+            &None,
+        )
+        .expect("");
+
+    database_manager
+        .add(
+            "Test Body 1",
+            &None,
+            &None,
+            &vec![],
+            &Some("2020-11-13"),
+            &None,
+            &None,
+            &None,
+            &None,
+        )
+        .expect("");
+
+    database_manager
+        .add(
+            "Test Body 2",
+            &None,
+            &None,
+            &vec![],
+            &Some("2020-11-13"),
+            &None,
+            &None,
+            &None,
+            &None,
+        )
+        .expect("");
+
+    let rows = database_manager
+        .view(
+            &"Inbox".to_string(),
+            &Some("schedule".to_string()),
+            &None,
+            &"today".to_string(),
+        )
+        .unwrap();
+
+    assert_eq!(rows.len(), 1);
+
+    let scheduled_at_parsed = Date::<Utc>::from_utc(
+        NaiveDate::parse_from_str(&rows[0].scheduled_at, "%Y-%m-%d").expect(""),
+        Utc,
+    );
+
+    assert_eq!(scheduled_at_parsed, expected.date());
+
+    Ok(())
+}
+
+#[test]
+fn test_view_all_today() -> Result<()> {
+    let mut database_manager = DatabaseManager::new(&get_setting());
+
+    let expected = Utc::now() + Duration::days(0);
+    database_manager
+        .add(
+            "Test Body",
+            &None,
+            &None,
+            &vec![],
+            &Some("2020-11-11"),
+            &Some("today"),
+            &None,
+            &None,
+            &None,
+        )
+        .expect("");
+
+    database_manager
+        .add(
+            "Test Body 1",
+            &None,
+            &None,
+            &vec![],
+            &Some("today"),
+            &None,
+            &None,
+            &None,
+            &None,
+        )
+        .expect("");
+
+    let rows = database_manager
+        .view(
+            &"Inbox".to_string(),
+            &Some("all".to_string()),
+            &None,
+            &"today".to_string(),
+        )
+        .unwrap();
+
+    assert_eq!(rows.len(), 2);
+
+    let scheduled_at_parsed = Date::<Utc>::from_utc(
+        NaiveDate::parse_from_str(&rows[0].scheduled_at, "%Y-%m-%d").expect(""),
+        Utc,
+    );
+
+    assert_eq!(scheduled_at_parsed, expected.date());
 
     Ok(())
 }

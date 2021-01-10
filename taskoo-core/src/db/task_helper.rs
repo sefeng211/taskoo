@@ -1,5 +1,9 @@
 use rusqlite::Rows;
 
+pub const TASK_STATES: [&'static str; 4] = ["ready", "completed", "blocked", "started"];
+
+pub const DEFAULT_CONTEXT: [&'static str; 1] = ["Inbox"];
+
 #[derive(Debug)]
 pub struct Task {
     pub id: i64,
@@ -11,9 +15,10 @@ pub struct Task {
     pub created_at: String,
     pub due_date: String,
     pub scheduled_at: String,
-    pub is_repeat: u8,
-    pub is_recurrence: u8,
+    pub due_repeat: String,
+    pub scheduled_repeat: String,
     pub is_completed: bool,
+    pub state_name: String,
 }
 
 pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
@@ -22,7 +27,7 @@ pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
     while let Some(row) = rows.next().unwrap() {
         // TODO convert context_id to context_name
         let mut tag_names: Vec<String> = vec![];
-        match row.get(15) {
+        match row.get(11) {
             Ok(names) => {
                 let temp: String = names;
                 for n in temp.split(",") {
@@ -33,7 +38,7 @@ pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
         }
 
         let mut tag_ids: Vec<i64> = vec![];
-        match row.get(14) {
+        match row.get(10) {
             Ok(ids) => {
                 let temp: String = ids;
                 for n in temp.split(",") {
@@ -50,12 +55,13 @@ pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
             priority: row.get(2).unwrap(),
             tag_names: tag_names,
             tag_ids: tag_ids,
-            created_at: row.get(4).unwrap(),
-            due_date: row.get(5).unwrap(),
-            scheduled_at: row.get(6).unwrap(),
-            is_repeat: row.get(7).unwrap(),
-            is_recurrence: row.get(8).unwrap(),
-            context_name: row.get(10).unwrap(),
+            created_at: row.get(3).unwrap(),
+            due_date: row.get(4).unwrap(),
+            scheduled_at: row.get(5).unwrap(),
+            due_repeat: row.get(6).unwrap(),
+            scheduled_repeat: row.get(7).unwrap(),
+            context_name: row.get(8).unwrap(),
+            state_name: row.get(9).unwrap(),
             is_completed: is_completed,
         };
 

@@ -30,7 +30,10 @@ fn test_create_table_if_needed() -> Result<(), DbError> {
     while let Some(result_row) = rows.next().expect("Failed to get the next row") {
         names.push(result_row.get(1).unwrap());
     }
-    assert_eq!(names, ["task", "tag", "task_tag", "dependency", "context"]);
+    assert_eq!(
+        names,
+        ["task", "tag", "task_tag", "dependency", "context", "state"]
+    );
 
     Ok(())
 }
@@ -49,24 +52,24 @@ fn test_ensure_context_is_created() -> Result<(), DbError> {
     while let Some(names) = rows.next().expect("") {
         context_names.push(names.get(0).unwrap());
     }
-    assert_eq!(context_names, ["Context1", "Context2", "Context3"]);
+    assert_eq!(context_names, ["Inbox"]);
     Ok(())
 }
 
 #[test]
-fn test_ensure_tag_is_created() -> Result<(), DbError> {
+fn test_ensure_state_is_created() -> Result<(), DbError> {
     let database_manager = DatabaseManager::new(&get_setting());
 
     let mut context = database_manager
         .conn
-        .prepare("SELECT name FROM tag")
+        .prepare("SELECT name FROM state")
         .expect("");
     let mut rows = context.query(NO_PARAMS).expect("");
 
-    let mut tag_names: Vec<String> = Vec::new();
+    let mut state_names: Vec<String> = Vec::new();
     while let Some(names) = rows.next().expect("") {
-        tag_names.push(names.get(0).unwrap());
+        state_names.push(names.get(0).unwrap());
     }
-    assert_eq!(tag_names, ["Tag1", "Tag2"]);
+    assert_eq!(state_names, ["ready", "completed", "blocked", "started"]);
     Ok(())
 }

@@ -1,8 +1,9 @@
 use crate::db::task_helper::Task;
-use log::{debug};
-use rusqlite::{named_params, Connection, Error as DbError, Result, Transaction};
+use crate::error::TaskooError;
+use log::debug;
+use rusqlite::{named_params, Connection, Result, Transaction};
 
-fn add_tag(conn: &Transaction, tag_ids: Vec<i64>) -> Result<(), DbError> {
+fn add_tag(conn: &Transaction, tag_ids: Vec<i64>) -> Result<(), TaskooError> {
     debug!("Adding new tag {:?}", &tag_ids);
     let mut statement = conn
         .prepare(
@@ -21,39 +22,36 @@ fn add_tag(conn: &Transaction, tag_ids: Vec<i64>) -> Result<(), DbError> {
 }
 
 pub fn add(
-    conn: &mut Connection,
+    tx: &mut Transaction,
     body: &str,
     priority: &Option<u8>,
     context_id: &i64,
     tag_ids: Vec<i64>,
     due_date: &Option<&str>,
     scheduled_at: &Option<&str>,
-    is_repeat: &Option<u8>,
-    is_recurrence: &Option<u8>,
-) -> Result<Vec<Task>, DbError> {
-    let tx = conn.transaction()?;
-
-    {
-        let mut statement = tx.prepare(
-            "
+    due_repeat: &Option<&str>,
+    scheduled_repeat: &Option<&str>,
+    state_id: &Option<i64>,
+) -> Result<Vec<Task>, TaskooError> {
+    let mut statement = tx.prepare(
+        "
     INSERT INTO task
-    (body, priority, context_id, due_date, scheduled_at, is_repeat, is_recurrence) VALUES
-    (:body, :priority, :context_id, :due_date, :scheduled_at, :is_repeat, :is_recurrence)",
-        )?;
+    (body, priority, context_id, due_date, scheduled_at, due_repeat, scheduled_repeat, state_id) VALUES
+    (:body, :priority, :context_id, :due_date, :scheduled_at, :due_repeat, :scheduled_repeat, :state_id)",
+    )?;
 
-        statement.execute_named(named_params! {
-            ":body": body,
-            ":priority": priority.unwrap_or(1),
-            ":context_id": context_id,
-            ":due_date": due_date.unwrap_or(""),
-            ":scheduled_at": scheduled_at.unwrap_or(""),
-            ":is_repeat": is_repeat.unwrap_or(0),
-            ":is_recurrence": is_recurrence.unwrap_or(0)
-        })?;
-    }
+    statement.execute_named(named_params! {
+        ":body": body,
+        ":priority": priority.unwrap_or(0),
+        ":context_id": context_id,
+        ":due_date": due_date.unwrap_or(""),
+        ":scheduled_at": scheduled_at.unwrap_or(""),
+        ":due_repeat": due_repeat.unwrap_or(""),
+        ":scheduled_repeat": scheduled_repeat.unwrap_or(""),
+        ":state_id": state_id.unwrap_or(1)
+    })?;
 
     add_tag(&tx, tag_ids)?;
 
-    tx.commit()?;
     Ok(vec![])
 }

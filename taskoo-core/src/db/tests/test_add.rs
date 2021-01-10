@@ -11,7 +11,6 @@ use more_asserts::*;
 fn get_setting() -> HashMap<String, String> {
     let mut setting = HashMap::new();
     setting.insert("db_path".to_owned(), ":memory:".to_owned());
-    setting.insert("tag".to_owned(), "Ready, Blocked, Completed".to_owned());
     setting.insert("context".to_owned(), "Inbox, Work, Life".to_owned());
     return setting;
 }
@@ -30,20 +29,22 @@ fn test_add_simple() -> Result<()> {
             &None,
             &None,
             &None,
+            &None,
         )
         .unwrap();
 
+    //
+    {
+        let mut statement = database_manager.conn.prepare("SELECT * from task INNER JOIN context on context_id = 1 INNER JOIN state on state_id = state.id Where context_id = 1 Group By task.id").unwrap();
+        let mut rows = statement.query(NO_PARAMS).unwrap();
+        while let Some(row) = rows.next().unwrap() {
+            println!("11111");
+        }
+    }
+    //
     let mut tasks = database_manager
-        .conn
-        .prepare("SELECT * FROM task INNER JOIN context on context_id = context.id")
-        .expect("");
-    let result = tasks.query(NO_PARAMS);
-
-    assert_eq!(result.iter().count(), 1);
-
-    let mut rows = result.unwrap();
-
-    let tasks = convert_rows_into_task(&mut rows);
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
+        .unwrap();
 
     assert_eq!(tasks.len(), 1);
 
@@ -56,15 +57,16 @@ fn test_add_simple() -> Result<()> {
 
     assert_eq!(tasks[0].id, 1);
     assert_eq!(tasks[0].body, "Test Body");
-    assert_eq!(tasks[0].priority, 1);
+    assert_eq!(tasks[0].priority, 0);
     assert_eq!(tasks[0].context_name, "Inbox");
     // TODO: Improve the assert_eq here to ensure the auto created `created_at` timestamp is
     // correct
     assert_eq!(created_at_datetime, current_datetime.date());
     assert_eq!(tasks[0].due_date.is_empty(), true);
     assert_eq!(tasks[0].scheduled_at.is_empty(), true);
-    assert_eq!(tasks[0].is_repeat, 0);
-    assert_eq!(tasks[0].is_recurrence, 0);
+    //assert_eq!(tasks[0].is_repeat, 0);
+    //assert_eq!(tasks[0].is_recurrence, 0);
+    assert_eq!(tasks[0].state_name, "ready");
 
     Ok(())
 }
@@ -83,20 +85,23 @@ fn test_add_complex() -> Result<()> {
             &None,
             &None,
             &None,
+            &None,
         )
         .unwrap();
 
     let mut tasks = database_manager
-        .conn
-        .prepare("SELECT * FROM task INNER JOIN context on context_id = context.id")
-        .expect("");
-    let result = tasks.query(NO_PARAMS);
+        .get(
+            &None,
+            &Some("Work".to_string()),
+            &vec![],
+            &None,
+            &None,
+            &None,
+            &None,
+        )
+        .unwrap();
 
-    assert_eq!(result.iter().count(), 1);
-
-    let mut rows = result.unwrap();
-
-    let tasks = convert_rows_into_task(&mut rows);
+    assert_eq!(tasks.len(), 1);
 
     let created_at_datetime = Date::<Utc>::from_utc(
         NaiveDate::parse_from_str(&tasks[0].created_at, "%Y-%m-%d").expect(""),
@@ -114,8 +119,8 @@ fn test_add_complex() -> Result<()> {
     assert_eq!(created_at_datetime, current_datetime.date());
     assert_eq!(tasks[0].due_date.is_empty(), true);
     assert_eq!(tasks[0].scheduled_at.is_empty(), true);
-    assert_eq!(tasks[0].is_repeat, 0);
-    assert_eq!(tasks[0].is_recurrence, 0);
+    //assert_eq!(tasks[0].is_repeat, 0);
+    //assert_eq!(tasks[0].is_recurrence, 0);
     assert_eq!(tasks[0].is_completed, false);
 
     Ok(())
@@ -132,6 +137,7 @@ fn test_add_exist_tag() -> Result<()> {
             &Some(3),
             &Some(String::from("Work")),
             &vec!["Ready".to_owned(), "Blocked".to_owned()],
+            &None,
             &None,
             &None,
             &None,
@@ -156,25 +162,6 @@ fn test_add_exist_tag() -> Result<()> {
     Ok(())
 }
 
-#[test]
-#[should_panic]
-fn test_add_not_exist_tag() {
-    let mut database_manager = DatabaseManager::new(&get_setting());
-
-    database_manager
-        .add(
-            "Test Body",
-            &Some(3),
-            &Some(String::from("Work")),
-            &vec!["NewTag1".to_owned(), "Blocked".to_owned()],
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
-}
-
 // Performing the add query should also add the tag
 #[test]
 fn test_add_scheduled_at_days() -> Result<()> {
@@ -191,21 +178,25 @@ fn test_add_scheduled_at_days() -> Result<()> {
             &Some("2days"),
             &None,
             &None,
+            &None,
         )
         .expect("");
 
     let end = Utc::now() + Duration::days(2);
+
     let mut tasks = database_manager
-        .conn
-        .prepare("SELECT * FROM task INNER JOIN context on context_id = context.id")
-        .expect("");
-    let result = tasks.query(NO_PARAMS);
+        .get(
+            &None,
+            &Some("Work".to_string()),
+            &vec![],
+            &None,
+            &None,
+            &None,
+            &None,
+        )
+        .unwrap();
 
-    assert_eq!(result.iter().count(), 1);
-
-    let mut rows = result.unwrap();
-
-    let tasks = convert_rows_into_task(&mut rows);
+    assert_eq!(tasks.len(), 1);
 
     // Scheduled_at should be in between start and end;
     let scheduled_at_parsed = Date::<Utc>::from_utc(
@@ -234,21 +225,24 @@ fn test_add_scheduled_at_hours() -> Result<()> {
             &Some("11hours"),
             &None,
             &None,
+            &None,
         )
         .expect("");
 
     let end = Utc::now() + Duration::hours(11);
     let mut tasks = database_manager
-        .conn
-        .prepare("SELECT * FROM task INNER JOIN context on context_id = context.id")
-        .expect("");
-    let result = tasks.query(NO_PARAMS);
+        .get(
+            &None,
+            &Some("Work".to_string()),
+            &vec![],
+            &None,
+            &None,
+            &None,
+            &None,
+        )
+        .unwrap();
 
-    assert_eq!(result.iter().count(), 1);
-
-    let mut rows = result.unwrap();
-
-    let tasks = convert_rows_into_task(&mut rows);
+    assert_eq!(tasks.len(), 1);
 
     // Scheduled_at should be in between start and end;
     let scheduled_at_parsed = Date::<Utc>::from_utc(
@@ -276,21 +270,24 @@ fn test_add_scheduled_at_weeks() -> Result<()> {
             &Some("1weeks"),
             &None,
             &None,
+            &None,
         )
         .expect("");
 
     let end = Utc::now() + Duration::weeks(1);
     let mut tasks = database_manager
-        .conn
-        .prepare("SELECT * FROM task INNER JOIN context on context_id = context.id")
-        .expect("");
-    let result = tasks.query(NO_PARAMS);
+        .get(
+            &None,
+            &Some("Work".to_string()),
+            &vec![],
+            &None,
+            &None,
+            &None,
+            &None,
+        )
+        .unwrap();
 
-    assert_eq!(result.iter().count(), 1);
-
-    let mut rows = result.unwrap();
-
-    let tasks = convert_rows_into_task(&mut rows);
+    assert_eq!(tasks.len(), 1);
 
     // Scheduled_at should be in between start and end;
     let scheduled_at_parsed = Date::<Utc>::from_utc(
@@ -317,20 +314,23 @@ fn test_add_scheduled_at_raw_timestamp() -> Result<()> {
             &Some("2020-11-11"),
             &None,
             &None,
+            &None,
         )
         .expect("");
 
     let mut tasks = database_manager
-        .conn
-        .prepare("SELECT * FROM task INNER JOIN context on context_id = context.id")
-        .expect("");
-    let result = tasks.query(NO_PARAMS);
+        .get(
+            &None,
+            &Some("Work".to_string()),
+            &vec![],
+            &None,
+            &None,
+            &None,
+            &None,
+        )
+        .unwrap();
 
-    assert_eq!(result.iter().count(), 1);
-
-    let mut rows = result.unwrap();
-
-    let tasks = convert_rows_into_task(&mut rows);
+    assert_eq!(tasks.len(), 1);
 
     assert_eq!(&tasks[0].scheduled_at, "2020-11-11");
     Ok(())
@@ -351,20 +351,23 @@ fn test_add_scheduled_at_tmr() -> Result<()> {
             &Some("tmr"),
             &None,
             &None,
+            &None,
         )
         .expect("");
 
     let mut tasks = database_manager
-        .conn
-        .prepare("SELECT * FROM task INNER JOIN context on context_id = context.id")
-        .expect("");
-    let result = tasks.query(NO_PARAMS);
+        .get(
+            &None,
+            &Some("Work".to_string()),
+            &vec![],
+            &None,
+            &None,
+            &None,
+            &None,
+        )
+        .unwrap();
 
-    assert_eq!(result.iter().count(), 1);
-
-    let mut rows = result.unwrap();
-
-    let tasks = convert_rows_into_task(&mut rows);
+    assert_eq!(tasks.len(), 1);
 
     // Scheduled_at should be in between start and end;
     let scheduled_at_parsed = Date::<Utc>::from_utc(
@@ -376,6 +379,48 @@ fn test_add_scheduled_at_tmr() -> Result<()> {
     Ok(())
 }
 
+#[test]
+fn test_add_scheduled_at_today() -> Result<()> {
+    let mut database_manager = DatabaseManager::new(&get_setting());
+
+    let expected = Utc::now() + Duration::days(0);
+    database_manager
+        .add(
+            "Test Body",
+            &Some(3),
+            &Some(String::from("Work")),
+            &vec!["Blocked".to_owned()],
+            &None,
+            &Some("today"),
+            &None,
+            &None,
+            &None,
+        )
+        .expect("");
+
+    let mut tasks = database_manager
+        .get(
+            &None,
+            &Some("Work".to_string()),
+            &vec![],
+            &None,
+            &None,
+            &None,
+            &None,
+        )
+        .unwrap();
+
+    assert_eq!(tasks.len(), 1);
+
+    // Scheduled_at should be in between start and end;
+    let scheduled_at_parsed = Date::<Utc>::from_utc(
+        NaiveDate::parse_from_str(&tasks[0].scheduled_at, "%Y-%m-%d").expect(""),
+        Utc,
+    );
+
+    assert_ge!(scheduled_at_parsed, expected.date());
+    Ok(())
+}
 #[test]
 fn test_add_completed_task() -> Result<()> {
     let mut database_manager = DatabaseManager::new(&get_setting());
@@ -390,20 +435,21 @@ fn test_add_completed_task() -> Result<()> {
             &None,
             &None,
             &None,
+            &None,
         )
         .expect("");
 
     // TODO: Why this doesn't work
     //let mut operation = GetOperation {
-        //priority: None,
-        //context_name: None,
-        //due_date: None,
-        //is_repeat: None,
-        //is_recurrence: None,
-        //scheduled_at: None,
-        //database_manager: Some(database_manager2),
-        //tag_names: vec![],
-        //result: vec![],
+    //priority: None,
+    //context_name: None,
+    //due_date: None,
+    //is_repeat: None,
+    //is_recurrence: None,
+    //scheduled_at: None,
+    //database_manager: Some(database_manager2),
+    //tag_names: vec![],
+    //result: vec![],
     //};
     //execute(&mut operation).expect("");
 
@@ -413,5 +459,127 @@ fn test_add_completed_task() -> Result<()> {
 
     assert_eq!(rows.len(), 1);
     assert_eq!(&rows[0].is_completed, &true);
+    Ok(())
+}
+
+#[test]
+fn test_add_repeat_scheduled_task() -> Result<()> {
+    let mut database_manager = DatabaseManager::new(&get_setting());
+
+    database_manager
+        .add(
+            "Test Body",
+            &None,
+            &None,
+            &vec!["Completed".to_owned()],
+            &None,
+            &Some("2weeks"),
+            &None,
+            &Some("3weeks"),
+            &None,
+        )
+        .expect("");
+
+    let tasks = database_manager
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
+        .unwrap();
+
+    let expected = Utc::now() + Duration::weeks(2);
+
+    assert_eq!(tasks.len(), 1);
+    let scheduled_at_parsed = Date::<Utc>::from_utc(
+        NaiveDate::parse_from_str(&tasks[0].scheduled_at, "%Y-%m-%d").expect(""),
+        Utc,
+    );
+    assert_ge!(scheduled_at_parsed, expected.date());
+    assert_ge!(tasks[0].state_name, "ready".to_string());
+
+    database_manager
+        .modify(
+            &vec![1],
+            &None,
+            &None,
+            &None,
+            &vec![],
+            &None,
+            &None,
+            &None,
+            &None,
+            &Some("completed"),
+        )
+        .unwrap();
+
+    let tasks = database_manager
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
+        .unwrap();
+
+    let expected = Utc::now() + Duration::weeks(3);
+    let scheduled_at_parsed = Date::<Utc>::from_utc(
+        NaiveDate::parse_from_str(&tasks[0].scheduled_at, "%Y-%m-%d").expect(""),
+        Utc,
+    );
+    assert_ge!(scheduled_at_parsed, expected.date());
+    assert_ge!(tasks[0].state_name, "completed".to_string());
+    Ok(())
+}
+
+#[test]
+fn test_add_repeat_due_task() -> Result<()> {
+    let mut database_manager = DatabaseManager::new(&get_setting());
+
+    database_manager
+        .add(
+            "Test Body",
+            &None,
+            &None,
+            &vec!["Completed".to_owned()],
+            &Some("2weeks"),
+            &None,
+            &Some("3weeks"),
+            &None,
+            &None,
+        )
+        .expect("");
+
+    let tasks = database_manager
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
+        .unwrap();
+
+    let expected = Utc::now() + Duration::weeks(2);
+
+    assert_eq!(tasks.len(), 1);
+    let due_date_parsed = Date::<Utc>::from_utc(
+        NaiveDate::parse_from_str(&tasks[0].due_date, "%Y-%m-%d").expect(""),
+        Utc,
+    );
+    assert_ge!(due_date_parsed, expected.date());
+    assert_ge!(tasks[0].state_name, "ready".to_string());
+
+    database_manager
+        .modify(
+            &vec![1],
+            &None,
+            &None,
+            &None,
+            &vec![],
+            &None,
+            &None,
+            &None,
+            &None,
+            &Some("completed"),
+        )
+        .unwrap();
+
+    let tasks = database_manager
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
+        .unwrap();
+
+    let expected = Utc::now() + Duration::weeks(3);
+    let due_date_parsed = Date::<Utc>::from_utc(
+        NaiveDate::parse_from_str(&tasks[0].due_date, "%Y-%m-%d").expect(""),
+        Utc,
+    );
+    assert_ge!(due_date_parsed, expected.date());
+    assert_ge!(tasks[0].state_name, "completed".to_string());
     Ok(())
 }

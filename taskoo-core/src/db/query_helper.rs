@@ -1,15 +1,97 @@
+pub const CREATE_TASK_TABLE_QUERY: &str = "
+    create table if not exists task (
+        id integer primary key,
+        body text not null,
+        priority integer not null,
+        context_id INTEGER not null,
+        created_at Text DEFAULT CURRENT_DATE,
+        due_date TEXT nullable,
+        scheduled_at Text nullable,
+        due_repeat TEXT nullable,
+        scheduled_repeat TEXT nullable,
+        state_id INTEGER nullable,
+        FOREIGN KEY(context_id) REFERENCES context(id),
+        FOREIGN KEY(state_id) REFERENCES state(id)
+    )";
+
+pub const CREATE_TAG_TABLE_QUERY: &str = "
+    create table if not exists tag (
+        id integer primary key,
+        name TEXT not null unique
+    )";
+
+pub const CREATE_TASK_TAG_TABLE_QUERY: &str = "
+    create table if not exists task_tag (
+        task_id integer not null,
+        tag_id integer not null,
+        PRIMARY KEY (task_id, tag_id),
+        FOREIGN KEY (task_id) REFERENCES task(id),
+        FOREIGN KEY (tag_id) REFERENCES tag(id)
+    )";
+
+pub const CREATE_DEPENDENCY_TABLE_QUERY: &str = "
+    create table if not exists dependency (
+        task_id integer not null,
+        depended_task_id integer not null,
+        PRIMARY KEY (task_id, depended_task_id),
+        FOREIGN KEY (task_id) REFERENCES task(id),
+        FOREIGN KEY (depended_task_id) REFERENCES task(id)
+    )";
+
+pub const CREATE_CONTEXT_TABLE_QUERY: &str = "
+    create table if not exists context (
+        id integer primary key,
+        name Text not null unique
+    )";
+
+pub const CREATE_STATE_TABLE_QUERY: &str = "
+    create table if not exists state (
+        id integer primary key,
+        name Text not null unique
+    )";
+
 pub fn generate_view_condition(
     context_id: &i64,
     _view_range_start: &Option<String>,
     view_range_end: &String,
     view_type: &Option<String>,
 ) -> Vec<String> {
-    let mut conditions: Vec<String> = vec![];
+    let mut conditions = generate_condition(
+        &None,
+        &None,
+        &Some(*context_id),
+        &None,
+        &None,
+        &None,
+        &None,
+        &None,
+    );
     if view_type == &Some("overdue".to_string()) {
-        conditions =
-            generate_condition(&None, &None, &Some(*context_id), &None, &None, &None, &None);
         conditions.push(
             format!("due_date < '{}'", view_range_end)
+                .as_str()
+                .to_string(),
+        );
+    } else if view_type == &Some("due".to_string()) {
+        conditions.push(
+            format!("(due_date <= '{}' and due_date <> '')", view_range_end)
+                .as_str()
+                .to_string(),
+        );
+        conditions.push("due_date <> ''".to_string());
+    } else if view_type == &Some("schedule".to_string()) {
+        conditions.push(
+            format!(
+                "(scheduled_at <= '{}' and scheduled_at <> '')",
+                view_range_end
+            )
+            .as_str()
+            .to_string(),
+        );
+    //conditions.push("scheduled_at <> ''".to_string());
+    } else if view_type == &Some("all".to_string()) {
+        conditions.push(
+            format!("((scheduled_at <= '{}' and scheduled_at <> '') or (due_date <= '{}' and due_date <> ''))", view_range_end, view_range_end)
                 .as_str()
                 .to_string(),
         );
@@ -32,8 +114,9 @@ pub fn generate_get_condition(
         context_id,
         due_date,
         scheduled_at,
-        is_repeat,
-        is_recurrence,
+        &None,
+        &None,
+        &None,
     );
 }
 
@@ -43,8 +126,9 @@ pub fn generate_condition(
     context_id: &Option<i64>,
     due_date: &Option<&str>,
     scheduled_at: &Option<&str>,
-    is_repeat: &Option<u8>,
-    is_recurrence: &Option<u8>,
+    repeat: &Option<&str>,
+    recurrence: &Option<&str>,
+    state_id: &Option<i64>,
 ) -> Vec<String> {
     let mut conditions: Vec<String> = vec![];
     if body.is_some() {
@@ -83,17 +167,21 @@ pub fn generate_condition(
         );
     }
 
-    if is_repeat.is_some() {
+    if repeat.is_some() {
+        conditions.push(format!("repeat = {}", repeat.unwrap()).as_str().to_string());
+    }
+
+    if recurrence.is_some() {
         conditions.push(
-            format!("is_repeat = {}", is_repeat.unwrap())
+            format!("recurrence = {}", recurrence.unwrap())
                 .as_str()
                 .to_string(),
         );
     }
 
-    if is_recurrence.is_some() {
+    if state_id.is_some() {
         conditions.push(
-            format!("is_recurrence = {}", is_recurrence.unwrap())
+            format!("state_id = {}", state_id.unwrap())
                 .as_str()
                 .to_string(),
         );

@@ -1,5 +1,6 @@
 use clap::ArgMatches;
 use log::{debug, info};
+use taskoo_core::error::TaskooError;
 use taskoo_core::operation::{execute, DeleteOperation};
 
 pub struct Delete;
@@ -8,7 +9,7 @@ pub struct Delete;
 // taskoo delete 1
 // taskoo delete 1..4
 impl Delete {
-    pub fn delete(matches: &ArgMatches) {
+    pub fn delete(matches: &ArgMatches) -> Result<(), TaskooError> {
         info!("Process delete command!");
         let delete_config: Vec<_> = matches.values_of("task_ids").unwrap().collect();
 
@@ -40,15 +41,10 @@ impl Delete {
         let mut operation = DeleteOperation {
             database_manager: None,
             task_ids: task_ids,
+            result: None
         };
 
-        match execute(&mut operation) {
-            Ok(_) => {
-                println!("Finished deleting tasks");
-            }
-            Err(e) => {
-                eprintln!("Failed {}", e);
-            }
-        }
+        execute(&mut operation)?;
+        Ok(())
     }
 }

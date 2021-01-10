@@ -1,5 +1,7 @@
 pub mod operation;
+pub mod command;
 pub mod error;
-mod core;
+pub mod core;
+
 mod util;
 mod db;

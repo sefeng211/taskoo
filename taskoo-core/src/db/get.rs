@@ -1,7 +1,8 @@
 use super::query_helper::generate_get_condition;
 use crate::db::task_helper::{convert_rows_into_task, Task};
+use crate::error::TaskooError;
 use log::debug;
-use rusqlite::{Connection, Error as DbError, Result, NO_PARAMS};
+use rusqlite::{Result, Transaction, NO_PARAMS};
 
 fn task_matches_tag_ids(task: &Task, tag_ids: &Vec<i64>) -> bool {
     for tag_id in tag_ids.iter() {
@@ -13,7 +14,7 @@ fn task_matches_tag_ids(task: &Task, tag_ids: &Vec<i64>) -> bool {
 }
 
 pub fn get(
-    conn: &Connection,
+    conn: &Transaction,
     priority: &Option<u8>,
     context_id: &Option<i64>,
     tag_ids: &Vec<i64>,
@@ -21,7 +22,7 @@ pub fn get(
     scheduled_at: &Option<&str>,
     is_repeat: &Option<u8>,
     is_recurrence: &Option<u8>,
-) -> Result<Vec<Task>, DbError> {
+) -> Result<Vec<Task>, TaskooError> {
     let conditions = generate_get_condition(
         &None,
         priority,
@@ -38,7 +39,7 @@ pub fn get(
 
     let final_argument = format!(
         "
-    SELECT *, GROUP_CONCAT(task_tag.tag_id) as concat_tag_ids, GROUP_CONCAT(task_tag.name) FROM task
+    SELECT task.id as id, body, priority, created_at, due_date, scheduled_at, due_repeat, scheduled_repeat, context.name, state.name, GROUP_CONCAT(task_tag.tag_id) as concat_tag_ids, GROUP_CONCAT(task_tag.name) FROM task
     INNER JOIN context
     on context_id = context.id
     LEFT JOIN
@@ -47,6 +48,8 @@ pub fn get(
         INNER JOIN tag ON task_tag.tag_id = tag.id
         ) task_tag
     ON task.id = task_tag.task_id
+    INNER JOIN state
+    on state_id = state.id
     Where {}
     Group By task.id
     ",

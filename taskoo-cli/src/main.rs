@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use clap::{App, Arg};
 use dirs::config_dir;
 use ini::Ini;
@@ -6,13 +7,18 @@ use std::fs::create_dir_all;
 use std::fs::OpenOptions;
 
 mod commands;
+mod display;
+mod extra;
 mod option_parser;
 
 use commands::add::Add;
 use commands::delete::Delete;
+use commands::done::Done;
+use commands::info::Info;
 use commands::list::List;
 use commands::modify::Modify;
 use commands::review::Review;
+use commands::view::View;
 
 fn get_config() -> Ini {
     let mut config_dir_path = config_dir().expect("Unable to find user's config directory");
@@ -33,7 +39,7 @@ fn get_config() -> Ini {
         // Create default configuration
         let mut conf = Ini::new();
         conf.with_section(None::<String>)
-            .set("columns", "Id,Body,Tag,Created_At,Scheduled_At");
+            .set("columns", "Id,Body,Tag,Created_At,Scheduled_At,State");
         conf.with_section(Some("Id"))
             .set("color", "Yellow")
             .set("bold", "false");
@@ -49,6 +55,9 @@ fn get_config() -> Ini {
         conf.with_section(Some("Scheduled_At"))
             .set("color", "Yellow")
             .set("bold", "true");
+        conf.with_section(Some("Due"))
+            .set("color", "Yellow")
+            .set("bold", "true");
 
         conf.write_to_file(&config_file_path)
             .expect("Failed to write default configuation to the config file");
@@ -56,7 +65,7 @@ fn get_config() -> Ini {
     return Ini::load_from_file(config_file_path).unwrap();
 }
 
-fn main() {
+fn main() -> Result<()> {
     env_logger::init();
     let matches = App::new("Taskoo")
         .subcommand(
@@ -65,7 +74,7 @@ fn main() {
                 .arg(Arg::new("config").multiple(true)),
         )
         .subcommand(
-            App::new("list").about("List tasks").arg(
+            App::new("list").alias("ls").about("List tasks").arg(
                 Arg::new("arguments")
                     .about("Arguments")
                     .index(1)
@@ -73,7 +82,7 @@ fn main() {
                     .multiple(true),
             ),
         )
-        .subcommand(App::new("review").about("Reivew tasks"))
+        .subcommand(App::new("review").about("Review tasks interactively"))
         .subcommand(
             App::new("modify").about("Modify task").arg(
                 Arg::new("args")
@@ -91,19 +100,86 @@ fn main() {
         .subcommand(
             App::new("view")
                 .about("view tasks")
-                .arg(Arg::new("arguments").index(1).required(true)),
+                .arg(Arg::new("args").index(1).required(true).multiple(true)),
+        )
+        .subcommand(
+            App::new("info")
+                .about("Show detailed information about given task ids.")
+                .arg(Arg::new("task_ids").index(1).required(true).multiple(true)),
+        )
+        .subcommand(
+            App::new("done")
+                .about("Change the state of a task/tasks to done")
+                .arg(Arg::new("task_ids").index(1).required(true).multiple(true)),
         )
         .get_matches();
 
     if matches.is_present("add") {
-        Add::add(&matches.subcommand_matches("add").unwrap());
+        match Add::add(&matches.subcommand_matches("add").unwrap()).context("Add command") {
+            Err(e) => {
+                eprintln!("{:?}", e);
+            }
+            Ok(()) => {
+                println!("Task added");
+            }
+        }
     } else if matches.is_present("list") {
-        List::list(&matches.subcommand_matches("list").unwrap(), get_config());
+        let list_command = List::new(get_config());
+        match list_command
+            .list(&matches.subcommand_matches("list").unwrap())
+            .context("List command failed")
+        {
+            Err(e) => {
+                eprintln!("{:?}", e);
+            }
+            Ok(()) => {}
+        }
     } else if matches.is_present("delete") {
-        Delete::delete(&matches.subcommand_matches("delete").unwrap());
+        match Delete::delete(&matches.subcommand_matches("delete").unwrap())
+            .context("Delete command failed")
+        {
+            Err(e) => {
+                eprintln!("{:?}", e);
+            }
+            Ok(()) => {
+                println!("Tasks deleted!");
+            }
+        }
     } else if matches.is_present("review") {
-        Review::review();
+        match Review::review().context("Review command failed") {
+            Err(e) => {
+                eprintln!("{:?}", e);
+            }
+            Ok(()) => {}
+        }
     } else if matches.is_present("modify") {
-        Modify::modify(&matches.subcommand_matches("modify").unwrap());
+        match Modify::modify(&matches.subcommand_matches("modify").unwrap())
+            .context("Modify command failed")
+        {
+            Err(e) => {
+                eprintln!("{:?}", e);
+            }
+            Ok(()) => {
+                println!("Tasks modified!");
+            }
+        }
+    } else if matches.is_present("view") {
+        let view = View::new(get_config());
+        match view
+            .view(&matches.subcommand_matches("view").unwrap())
+            .context("View command failed")
+        {
+            Err(e) => {
+                eprintln!("{:?}", e);
+            }
+            Ok(()) => {}
+        }
+    } else if matches.is_present("done") {
+        let done = Done::new();
+        done.run(&matches.subcommand_matches("done").unwrap());
+    } else if matches.is_present("info") {
+        let info = Info::new();
+        info.run(&matches.subcommand_matches("info").unwrap());
     }
+    Ok(())
 }
