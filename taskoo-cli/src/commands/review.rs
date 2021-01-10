@@ -88,20 +88,11 @@ impl Review {
             if confirmation == Some(String::from("y")) || confirmation == Some(String::from("yes"))
             {
                 info!("Modify task {}", task.id);
-                let mut modify_operation = ModifyOperation {
-                    database_manager: None,
-                    result: vec![],
-                    task_ids: vec![task.id],
-                    body: None,
-                    priority: None,
-                    context_name: new_context,
-                    tag_names: vec![],
-                    due_date: new_due_date.as_deref(),
-                    scheduled_at: new_scheduled_at.as_deref(),
-                    repeat: None,
-                    recurrence: None,
-                    state_name: None,
-                };
+                let mut modify_operation = ModifyOperation::new(vec![task.id]);
+                modify_operation.context_name = new_context;
+                modify_operation.due_date = new_due_date.as_deref();
+                modify_operation.scheduled_at = new_scheduled_at.as_deref();
+
                 execute(&mut modify_operation)?;
             }
         }

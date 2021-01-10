@@ -22,8 +22,9 @@ impl Add {
         operation.context_name = option.context_name;
         operation.tag_names = option.tag_names;
         operation.due_date = option.due_date;
+        operation.due_repeat = option.due_repeat;
         operation.scheduled_at = option.scheduled_at;
-        operation.repeat = option.repetition;
+        operation.scheduled_repeat = option.scheudled_repeat;
         operation.state_name = option.state_name;
 
         execute(&mut operation)?;

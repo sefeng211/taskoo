@@ -179,8 +179,8 @@ impl DatabaseManager {
         tag_names: &Vec<String>,
         due_date: &Option<&str>,
         scheduled_at: &Option<&str>,
-        repeat: &Option<&str>,
-        recurrence: &Option<&str>,
+        due_repeat: &Option<&str>,
+        scheduled_repeat: &Option<&str>,
         state_name: &Option<&str>,
     ) -> Result<Vec<Task>, TaskooError> {
         let mut tx = self.conn.transaction()?;
@@ -229,8 +229,8 @@ impl DatabaseManager {
             tag_ids,
             &parsed_due_date.as_deref(),
             &parse_scheduled_at.as_deref(),
-            &repeat,
-            &recurrence,
+            &due_repeat,
+            &scheduled_repeat,
             &state_id,
         )?;
         tx.commit()?;

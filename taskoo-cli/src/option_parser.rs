@@ -5,8 +5,9 @@ use thiserror::Error;
 #[derive(Debug)]
 pub struct CommandOption<'a> {
     pub scheduled_at: Option<&'a str>,
-    pub repetition: Option<&'a str>,
+    pub scheudled_repeat: Option<&'a str>,
     pub due_date: Option<&'a str>,
+    pub due_repeat: Option<&'a str>,
     pub tag_names: Vec<String>,
     pub remove_tag_names: Vec<String>,
     pub task_ids: Vec<i64>,
@@ -18,8 +19,9 @@ pub struct CommandOption<'a> {
 pub fn generate_default_command_option<'a>() -> CommandOption<'a> {
     return CommandOption {
         scheduled_at: None,
-        repetition: None,
+        scheudled_repeat: None,
         due_date: None,
+        due_repeat: None,
         tag_names: vec![],
         task_ids: vec![],
         context_name: None,
@@ -37,11 +39,12 @@ pub fn parse_command_option<'a>(
 ) -> Result<CommandOption<'a>, CommandError> {
     let mut command_option = CommandOption {
         scheduled_at: None,
-        repetition: None,
+        scheudled_repeat: None,
         due_date: None,
         tag_names: vec![],
         task_ids: vec![],
         context_name: None,
+        due_repeat: None,
         state_name: None,
         body: None,
         remove_tag_names: vec![],
@@ -60,14 +63,25 @@ pub fn parse_command_option<'a>(
         if option.starts_with("s:") {
             start_parse_options = true;
             if command_option.scheduled_at.is_none() {
-                command_option.scheduled_at = Some(&option[2..]);
+                let period: Vec<&str> = option[2..].split("+").collect();
+                println!("{:?}", period);
+                command_option.scheduled_at = Some(&period[0]);
+                if period.len() > 1 {
+                    command_option.scheudled_repeat = Some(&period[1]);
+                }
+            // Check to see if users provide repetition
             } else {
                 return Err(CommandError::InvalidScheduleAt(option.to_string()));
             };
         } else if option.starts_with("d:") {
             start_parse_options = true;
             if command_option.due_date.is_none() {
-                command_option.due_date = Some(&option[2..]);
+                let period: Vec<&str> = option[2..].split("+").collect();
+                command_option.due_date = Some(&period[0]);
+                if period.len() > 1 {
+                    command_option.due_repeat = Some(&period[1]);
+                }
+            // Check to see if users provide repetition
             } else {
                 return Err(CommandError::InvalidDueDate(option.to_string()));
             };
@@ -77,12 +91,6 @@ pub fn parse_command_option<'a>(
                 command_option.context_name = Some(option[2..].to_string());
             } else {
                 return Err(CommandError::InvalidContextName(option.to_string()));
-            };
-        } else if option.starts_with("r:") {
-            if command_option.repetition.is_none() {
-                command_option.repetition = Some(&option[2..]);
-            } else {
-                return Err(CommandError::InvalidDueDate(option.to_string()));
             };
         } else if option.starts_with("+") {
             start_parse_options = true;

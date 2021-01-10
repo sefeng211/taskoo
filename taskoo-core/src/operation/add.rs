@@ -11,8 +11,8 @@ pub struct Add<'a> {
     pub tag_names: Vec<String>,
     pub due_date: Option<&'a str>,
     pub scheduled_at: Option<&'a str>,
-    pub repeat: Option<&'a str>,
-    pub recurrence: Option<&'a str>,
+    pub due_repeat: Option<&'a str>,
+    pub scheduled_repeat: Option<&'a str>,
     pub database_manager: Option<DatabaseManager>,
     pub result: Option<Vec<Task>>,
 }
@@ -26,8 +26,8 @@ impl Add<'_> {
             tag_names: vec![],
             due_date: None,
             scheduled_at: None,
-            repeat: None,
-            recurrence: None,
+            due_repeat: None,
+            scheduled_repeat: None,
             database_manager: None,
             result: None,
         }
@@ -48,8 +48,8 @@ impl Operation for Add<'_> {
             &self.tag_names,
             &self.due_date,
             &self.scheduled_at,
-            &self.repeat,
-            &self.recurrence,
+            &self.due_repeat,
+            &self.scheduled_repeat,
             &self.state_name,
         );
     }

@@ -13,11 +13,29 @@ pub struct ModifyOperation<'a> {
     pub tag_names: Vec<String>,
     pub due_date: Option<&'a str>,
     pub scheduled_at: Option<&'a str>,
-    pub recurrence: Option<&'a str>,
-    pub repeat: Option<&'a str>,
+    pub due_repeat: Option<&'a str>,
+    pub scheduled_repeat: Option<&'a str>,
     pub state_name: Option<&'a str>,
 }
 
+impl<'a> ModifyOperation<'a> {
+    pub fn new(task_ids: Vec<i64>) -> ModifyOperation<'a> {
+        ModifyOperation {
+            database_manager: None,
+            result: vec![],
+            task_ids: task_ids,
+            body: None,
+            priority: None,
+            context_name: None,
+            tag_names: vec![],
+            due_date: None,
+            scheduled_at: None,
+            due_repeat: None,
+            scheduled_repeat: None,
+            state_name: None,
+        }
+    }
+}
 impl<'a> Operation for ModifyOperation<'a> {
     fn init(&mut self) {
         if self.database_manager.is_none() {
@@ -36,8 +54,8 @@ impl<'a> Operation for ModifyOperation<'a> {
             &self.tag_names,
             &self.due_date,
             &self.scheduled_at,
-            &self.repeat,
-            &self.recurrence,
+            &self.due_repeat,
+            &self.scheduled_repeat,
             &self.state_name,
         );
     }
@@ -49,4 +67,3 @@ impl<'a> Operation for ModifyOperation<'a> {
         return &self.result;
     }
 }
-

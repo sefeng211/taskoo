@@ -126,8 +126,8 @@ pub fn generate_condition(
     context_id: &Option<i64>,
     due_date: &Option<&str>,
     scheduled_at: &Option<&str>,
-    repeat: &Option<&str>,
-    recurrence: &Option<&str>,
+    due_repeat: &Option<&str>,
+    scheduled_repeat: &Option<&str>,
     state_id: &Option<i64>,
 ) -> Vec<String> {
     let mut conditions: Vec<String> = vec![];
@@ -167,13 +167,17 @@ pub fn generate_condition(
         );
     }
 
-    if repeat.is_some() {
-        conditions.push(format!("repeat = {}", repeat.unwrap()).as_str().to_string());
+    if due_repeat.is_some() {
+        conditions.push(
+            format!("due_repeat = '{}'", due_repeat.unwrap())
+                .as_str()
+                .to_string(),
+        );
     }
 
-    if recurrence.is_some() {
+    if scheduled_repeat.is_some() {
         conditions.push(
-            format!("recurrence = {}", recurrence.unwrap())
+            format!("scheduled_repeat = '{}'", scheduled_repeat.unwrap())
                 .as_str()
                 .to_string(),
         );

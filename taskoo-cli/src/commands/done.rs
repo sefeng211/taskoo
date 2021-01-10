@@ -41,20 +41,8 @@ impl Done {
 
         debug!("Running Modify with {:?}", task_ids);
 
-        let mut operation = ModifyOperation {
-            database_manager: None,
-            result: vec![],
-            task_ids: task_ids,
-            body: None,
-            priority: None,
-            context_name: None,
-            tag_names: vec![],
-            due_date: None,
-            scheduled_at: None,
-            repeat: None,
-            recurrence: None,
-            state_name: Some("completed"),
-        };
+        let mut operation = ModifyOperation::new(task_ids);
+        operation.state_name = Some("completed");
         execute(&mut operation)?;
         Ok(())
     }

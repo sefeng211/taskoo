@@ -21,20 +21,14 @@ impl Modify {
         }
 
         debug!("Context Name {:?}", option.context_name);
-        let mut operation = ModifyOperation {
-            database_manager: None,
-            result: vec![],
-            task_ids: option.task_ids,
-            body: None,
-            priority: None,
-            context_name: option.context_name,
-            tag_names: option.tag_names,
-            due_date: option.due_date,
-            scheduled_at: option.scheduled_at,
-            repeat: None,
-            recurrence: None,
-            state_name: None,
-        };
+        let mut operation = ModifyOperation::new(option.task_ids);
+        operation.context_name = option.context_name;
+        operation.tag_names = option.tag_names;
+        operation.due_date = option.due_date;
+        operation.scheduled_at = option.scheduled_at;
+        operation.due_repeat = option.due_repeat;
+        operation.scheduled_repeat = option.scheudled_repeat;
+
         execute(&mut operation)?;
         Ok(())
     }
