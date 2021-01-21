@@ -10,7 +10,7 @@ use rusqlite::{named_params, Result, Transaction, NO_PARAMS};
 fn add_tag(conn: &Transaction, task_ids: &Vec<i64>, tag_ids: Vec<i64>) -> Result<(), TaskooError> {
     let mut statement = conn
         .prepare(
-            "INSERT INTO task_tag
+            "INSERT OR IGNORE INTO task_tag
         (task_id, tag_id)
         VALUES (:task_id, :tag_id)",
         )

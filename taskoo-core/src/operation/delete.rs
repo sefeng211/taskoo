@@ -1,7 +1,7 @@
 use crate::core::{ConfigManager, Operation};
 use crate::db::task_helper::Task;
 use crate::db::task_manager::DatabaseManager;
-use crate::error::TaskooError;
+use crate::error::*;
 
 pub struct DeleteOperation {
     pub task_ids: Vec<i64>,
@@ -10,10 +10,11 @@ pub struct DeleteOperation {
 }
 
 impl Operation for DeleteOperation {
-    fn init(&mut self) {
+    fn init(&mut self) -> Result<(), InitialError> {
         self.database_manager = Some(DatabaseManager::new(
-            &ConfigManager::init_and_get_database_path(),
+            &ConfigManager::init_and_get_database_path()?,
         ));
+        Ok(())
     }
     fn do_work(&mut self) -> Result<Vec<Task>, TaskooError> {
         return DatabaseManager::delete(self.database_manager.as_mut().unwrap(), &self.task_ids);

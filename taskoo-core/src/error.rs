@@ -1,6 +1,21 @@
 use chrono::format::ParseError;
+use ini::Error as IniParseError;
 use rusqlite::Error as SqlError;
+use std::io::Error as IoError;
 use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum InitialError {
+    #[error("IniError: Failed to parse the given ini file")]
+    IniError {
+        #[from]
+        source: IniParseError,
+    },
+    #[error("IniError: Failed to write the default config to file {path}")]
+    IoError { path: String, source: IoError },
+    #[error("Unable to find the path of the config directory")]
+    DirError(),
+}
 
 #[derive(Error, Debug)]
 pub enum TaskooError {
@@ -21,5 +36,7 @@ pub enum TaskooError {
     #[error("Invalid view type: {0}")]
     InvalidViewType(String),
     #[error("RRule parsing error: Can't parse {0}")]
-    RRuleParseError(String)
+    RRuleParseError(String),
+    #[error(transparent)]
+    InitialErrorIni(#[from] InitialError),
 }

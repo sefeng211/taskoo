@@ -1,4 +1,4 @@
-use chrono::{Date, DateTime, Duration, NaiveDate, Utc};
+use chrono::{Date, DateTime, Duration, Local, NaiveDate};
 use rusqlite::Result;
 use std::collections::HashMap;
 
@@ -175,7 +175,7 @@ fn test_view_schedule() -> Result<()> {
 fn test_view_schedule_today() -> Result<()> {
     let mut database_manager = DatabaseManager::new(&get_setting());
 
-    let expected = Utc::now() + Duration::days(0);
+    let expected = Local::today() + Duration::days(0);
     database_manager
         .add(
             "Test Body",
@@ -229,12 +229,10 @@ fn test_view_schedule_today() -> Result<()> {
 
     assert_eq!(rows.len(), 1);
 
-    let scheduled_at_parsed = Date::<Utc>::from_utc(
-        NaiveDate::parse_from_str(&rows[0].scheduled_at, "%Y-%m-%d").expect(""),
-        Utc,
-    );
+    let scheduled_at_parsed =
+        NaiveDate::parse_from_str(&rows[0].scheduled_at, "%Y-%m-%d").expect("");
 
-    assert_eq!(scheduled_at_parsed, expected.date());
+    assert_eq!(scheduled_at_parsed, expected.naive_local());
 
     Ok(())
 }
@@ -243,7 +241,7 @@ fn test_view_schedule_today() -> Result<()> {
 fn test_view_all_today() -> Result<()> {
     let mut database_manager = DatabaseManager::new(&get_setting());
 
-    let expected = Utc::now() + Duration::days(0);
+    let expected = Local::today() + Duration::days(0);
     database_manager
         .add(
             "Test Body",
@@ -283,12 +281,10 @@ fn test_view_all_today() -> Result<()> {
 
     assert_eq!(rows.len(), 2);
 
-    let scheduled_at_parsed = Date::<Utc>::from_utc(
-        NaiveDate::parse_from_str(&rows[0].scheduled_at, "%Y-%m-%d").expect(""),
-        Utc,
-    );
+    let scheduled_at_parsed =
+        NaiveDate::parse_from_str(&rows[0].scheduled_at, "%Y-%m-%d").expect("");
 
-    assert_eq!(scheduled_at_parsed, expected.date());
+    assert_eq!(scheduled_at_parsed, expected.naive_local());
 
     Ok(())
 }

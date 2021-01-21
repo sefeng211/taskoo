@@ -14,7 +14,7 @@ use crate::core::Operation;
 use crate::error::TaskooError;
 
 pub fn execute(op: &mut impl Operation) -> Result<(), TaskooError> {
-    op.init();
+    op.init()?;
     op.do_work().map(|tasks| {
         op.set_result(tasks);
     })?;

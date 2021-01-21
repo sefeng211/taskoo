@@ -1,7 +1,7 @@
 use crate::core::{ConfigManager, Operation};
 use crate::db::task_helper::Task;
 use crate::db::task_manager::DatabaseManager;
-use crate::error::TaskooError;
+use crate::error::*;
 
 /* Some of the view functionalities are overlap with list, however,
  * view should provide better API for clients */
@@ -27,12 +27,13 @@ impl View {
     }
 }
 impl Operation for View {
-    fn init(&mut self) {
+    fn init(&mut self) -> Result<(), InitialError> {
         if self.database_manager.is_none() {
             self.database_manager = Some(DatabaseManager::new(
-                &ConfigManager::init_and_get_database_path(),
+                &ConfigManager::init_and_get_database_path()?,
             ));
         }
+        Ok(())
     }
 
     fn do_work(&mut self) -> Result<Vec<Task>, TaskooError> {

@@ -1,5 +1,6 @@
 use crate::db::task_helper::Task;
-use crate::error::TaskooError;
+use crate::error::{InitialError, TaskooError};
+use shellexpand;
 use dirs::config_dir;
 use ini::Ini;
 use log::debug;
@@ -15,22 +16,29 @@ use crate::util::create_default_init;
 
 pub struct ConfigManager;
 impl ConfigManager {
-    pub fn init_and_get_database_path() -> HashMap<String, String> {
-        let config = &ConfigManager::get_config();
+    pub fn init_and_get_database_path() -> Result<HashMap<String, String>, InitialError> {
+        let config = &ConfigManager::get_config()?;
         let general_section = config.general_section();
         let database_path = general_section
             .get("db_path")
             .expect("Failed to get the location of the database file");
-        ConfigManager::ensure_db_file_exists(&database_path)
+        let expanded_db_path: &str = &shellexpand::tilde(database_path);
+        debug!("Expanded Database Path: {} \n", &expanded_db_path);
+        ConfigManager::ensure_db_file_exists(&expanded_db_path)
             .expect("Unable to create the database file");
 
         let mut setting = HashMap::new();
-        setting.insert("db_path".to_owned(), database_path.to_owned());
-        return setting;
+        setting.insert("db_path".to_owned(), expanded_db_path.to_owned());
+        return Ok(setting);
     }
 
-    fn get_config() -> Ini {
-        let mut config_dir_path = config_dir().expect("Unable to find user's config directory");
+    fn get_config() -> Result<Ini, InitialError> {
+        let mut config_dir_path = match config_dir() {
+            Some(path) => path,
+            None => {
+                return Err(InitialError::DirError());
+            }
+        };
         config_dir_path.push("taskoo");
 
         let mut config_file_path = config_dir_path.clone();
@@ -48,10 +56,13 @@ impl ConfigManager {
             debug!("Create default config file at {:?}", &config_file_path);
             create_default_init(&db_path)
                 .write_to_file(&config_file_path)
-                .unwrap();
+                .map_err(|error| InitialError::IoError {
+                    path: config_file_path.to_str().unwrap().to_string(),
+                    source: error,
+                })?;
         }
         debug!("Load config from file {:?}", &config_file_path);
-        return Ini::load_from_file(config_file_path).unwrap();
+        return Ok(Ini::load_from_file(config_file_path)?);
     }
 
     fn create_config_file(config: &mut std::path::PathBuf) -> Result<(), io::Error> {
@@ -65,7 +76,6 @@ impl ConfigManager {
     }
 
     fn ensure_db_file_exists(db_path: &str) -> Result<(), io::Error> {
-        debug!("Ensure database file {:?} exists \n", &db_path);
         if !Path::new(db_path).exists() {
             OpenOptions::new()
                 .write(true)
@@ -77,7 +87,7 @@ impl ConfigManager {
 }
 
 pub trait Operation {
-    fn init(&mut self);
+    fn init(&mut self) -> Result<(), InitialError>;
     fn do_work(&mut self) -> Result<Vec<Task>, TaskooError>;
     fn set_result(&mut self, result: Vec<Task>);
     fn get_result(&mut self) -> &Vec<Task>;

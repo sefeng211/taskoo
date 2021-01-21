@@ -9,9 +9,8 @@ use crate::db::query_helper::{
 use crate::db::task_helper::{Task, DEFAULT_CONTEXT, TASK_STATES};
 use crate::db::view::view;
 use crate::error::TaskooError;
-use chrono::{Date, DateTime, Duration, NaiveDate, Utc};
+use chrono::{Date, DateTime, Duration, Local, NaiveDate, Utc};
 use log::info;
-use rrule::RRule;
 use rusqlite::{named_params, Connection, Result, Transaction, NO_PARAMS};
 use std::collections::HashMap;
 
@@ -59,20 +58,13 @@ impl DatabaseManager {
         let mut tx = self.conn.transaction()?;
 
         let mut context_id: i64 = 1;
-        if context_name.is_some() {
-            context_id = DatabaseManager::convert_context_name_to_id(
-                &tx,
-                &context_name.as_ref().unwrap(),
-                true,
-            )?;
-        }
+        if let Some(context) = context_name {
+            context_id = DatabaseManager::convert_context_name_to_id(&tx, &context, true)?;
+        };
 
         let mut state_id = None;
-        if state_name.is_some() {
-            state_id = Some(DatabaseManager::convert_state_name_to_id(
-                &tx,
-                &state_name.as_ref().unwrap(),
-            )?);
+        if let Some(state) = state_name {
+            state_id = Some(DatabaseManager::convert_state_name_to_id(&tx, &state)?);
         }
 
         // Prepare the tag_ids
@@ -354,16 +346,14 @@ impl DatabaseManager {
     }
 
     pub fn parse_date_string(scheduled_at: &str) -> Result<String, TaskooError> {
+        let current_date: Date<Local> = Local::today();
         if scheduled_at == "tmr" || scheduled_at == "tomorrow" {
-            let current_datetime: DateTime<Utc> = Utc::now();
-            return Ok((current_datetime + Duration::days(1))
+            return Ok((current_date + Duration::days(1))
                 .format("%Y-%m-%d")
                 .to_string());
         } else if scheduled_at == "today" {
-            let current_datetime: DateTime<Utc> = Utc::now();
-            return Ok((current_datetime + Duration::days(0))
-                .format("%Y-%m-%d")
-                .to_string());
+            let current_datetime: Date<Local> = Local::today();
+            return Ok(current_date.format("%Y-%m-%d").to_string());
         } else if scheduled_at.ends_with("hours") {
             let scheduled_at_split: Vec<&str> = scheduled_at.split("hours").collect();
             let key: i64;
@@ -379,8 +369,7 @@ impl DatabaseManager {
                 }
             }
             // return now + x hours
-            let current_datetime: DateTime<Utc> = Utc::now();
-            return Ok((current_datetime + Duration::hours(key))
+            return Ok((current_date + Duration::hours(key))
                 .format("%Y-%m-%d")
                 .to_string());
         } else if scheduled_at.ends_with("days") {
@@ -398,8 +387,7 @@ impl DatabaseManager {
                 }
             }
             // return now + x days
-            let current_datetime: DateTime<Utc> = Utc::now();
-            return Ok((current_datetime + Duration::days(key))
+            return Ok((current_date + Duration::days(key))
                 .format("%Y-%m-%d")
                 .to_string());
         } else if scheduled_at.ends_with("weeks") {
@@ -416,8 +404,7 @@ impl DatabaseManager {
                 }
             };
             // return now + x days
-            let current_datetime: DateTime<Utc> = Utc::now();
-            return Ok((current_datetime + Duration::weeks(key))
+            return Ok((current_date + Duration::weeks(key))
                 .format("%Y-%m-%d")
                 .to_string());
         }
@@ -474,6 +461,7 @@ impl DatabaseManager {
     fn create_tag(tx: &Transaction, tag_name: &String) -> Result<i64, TaskooError> {
         let mut insert_into_tag = tx.prepare("INSERT OR IGNORE INTO tag (name) VALUES (:name)")?;
         insert_into_tag.execute_named(named_params! {":name": tag_name.trim()})?;
+        info!("Added a new tag: {}", tag_name);
         Ok(tx.last_insert_rowid())
     }
 

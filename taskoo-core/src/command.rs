@@ -6,12 +6,20 @@ use std::collections::HashMap;
 
 pub struct Command;
 impl Command {
+    pub fn get_context() -> Result<Vec<String>, TaskooError> {
+        return Command::context(None);
+    }
+
+    pub fn get_tags() -> Result<Vec<String>, TaskooError> {
+        return Command::tags(None);
+    }
+
     pub fn context(setting: Option<HashMap<String, String>>) -> Result<Vec<String>, TaskooError> {
         let database_manager;
         match setting {
             None => {
                 database_manager =
-                    DatabaseManager::new(&ConfigManager::init_and_get_database_path());
+                    DatabaseManager::new(&ConfigManager::init_and_get_database_path()?);
             }
             Some(info) => {
                 database_manager = DatabaseManager::new(&info);
@@ -26,8 +34,30 @@ impl Command {
         while let Some(row) = result.next()? {
             context_names.push(row.get(0)?);
         }
-
         Ok(context_names)
+    }
+
+    pub fn tags(setting: Option<HashMap<String, String>>) -> Result<Vec<String>, TaskooError> {
+        let database_manager;
+        match setting {
+            None => {
+                database_manager =
+                    DatabaseManager::new(&ConfigManager::init_and_get_database_path()?);
+            }
+            Some(info) => {
+                database_manager = DatabaseManager::new(&info);
+            }
+        }
+
+        let mut statement = database_manager.conn.prepare("SELECT name FROM tag")?;
+
+        let mut result = statement.query(NO_PARAMS)?;
+
+        let mut tag_names: Vec<String> = vec![];
+        while let Some(row) = result.next()? {
+            tag_names.push(row.get(0)?);
+        }
+        Ok(tag_names)
     }
 }
 

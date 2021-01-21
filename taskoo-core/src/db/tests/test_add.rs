@@ -4,7 +4,7 @@ use std::collections::HashMap;
 // Note this useful idiom: importing names from outer (for mod tests) scope.
 use crate::db::task_helper::convert_rows_into_task;
 use crate::db::task_manager::DatabaseManager;
-use chrono::{Date, DateTime, Duration, NaiveDate, Utc};
+use chrono::{Date, DateTime, Duration, Local, NaiveDate, Utc};
 
 use more_asserts::*;
 
@@ -167,7 +167,7 @@ fn test_add_exist_tag() -> Result<()> {
 fn test_add_scheduled_at_days() -> Result<()> {
     let mut database_manager = DatabaseManager::new(&get_setting());
 
-    let start = Utc::now() + Duration::days(2);
+    let start = Local::today() + Duration::days(2);
     database_manager
         .add(
             "Test Body",
@@ -182,7 +182,7 @@ fn test_add_scheduled_at_days() -> Result<()> {
         )
         .expect("");
 
-    let end = Utc::now() + Duration::days(2);
+    let end = Local::today() + Duration::days(2);
 
     let mut tasks = database_manager
         .get(
@@ -199,13 +199,11 @@ fn test_add_scheduled_at_days() -> Result<()> {
     assert_eq!(tasks.len(), 1);
 
     // Scheduled_at should be in between start and end;
-    let scheduled_at_parsed = Date::<Utc>::from_utc(
-        NaiveDate::parse_from_str(&tasks[0].scheduled_at, "%Y-%m-%d").expect(""),
-        Utc,
-    );
+    let scheduled_at_parsed =
+        NaiveDate::parse_from_str(&tasks[0].scheduled_at, "%Y-%m-%d").expect("");
 
-    assert_ge!(scheduled_at_parsed, start.date());
-    assert_le!(scheduled_at_parsed, end.date());
+    assert_ge!(scheduled_at_parsed, start.naive_local());
+    assert_le!(scheduled_at_parsed, end.naive_local());
     Ok(())
 }
 
@@ -214,7 +212,7 @@ fn test_add_scheduled_at_days() -> Result<()> {
 fn test_add_scheduled_at_hours() -> Result<()> {
     let mut database_manager = DatabaseManager::new(&get_setting());
 
-    let start = Utc::now() + Duration::hours(11);
+    let start = Local::today() + Duration::hours(11);
     database_manager
         .add(
             "Test Body",
@@ -229,7 +227,7 @@ fn test_add_scheduled_at_hours() -> Result<()> {
         )
         .expect("");
 
-    let end = Utc::now() + Duration::hours(11);
+    let end = Local::today() + Duration::hours(11);
     let mut tasks = database_manager
         .get(
             &None,
@@ -245,13 +243,11 @@ fn test_add_scheduled_at_hours() -> Result<()> {
     assert_eq!(tasks.len(), 1);
 
     // Scheduled_at should be in between start and end;
-    let scheduled_at_parsed = Date::<Utc>::from_utc(
-        NaiveDate::parse_from_str(&tasks[0].scheduled_at, "%Y-%m-%d").expect(""),
-        Utc,
-    );
+    let scheduled_at_parsed =
+        NaiveDate::parse_from_str(&tasks[0].scheduled_at, "%Y-%m-%d").expect("");
 
-    assert_ge!(scheduled_at_parsed, start.date());
-    assert_le!(scheduled_at_parsed, end.date());
+    assert_ge!(scheduled_at_parsed, start.naive_local());
+    assert_le!(scheduled_at_parsed, end.naive_local());
     Ok(())
 }
 
@@ -259,7 +255,7 @@ fn test_add_scheduled_at_hours() -> Result<()> {
 fn test_add_scheduled_at_weeks() -> Result<()> {
     let mut database_manager = DatabaseManager::new(&get_setting());
 
-    let start = Utc::now() + Duration::weeks(1);
+    let start = Local::today() + Duration::weeks(1);
     database_manager
         .add(
             "Test Body",
@@ -274,7 +270,7 @@ fn test_add_scheduled_at_weeks() -> Result<()> {
         )
         .expect("");
 
-    let end = Utc::now() + Duration::weeks(1);
+    let end = Local::today() + Duration::weeks(1);
     let mut tasks = database_manager
         .get(
             &None,
@@ -290,13 +286,11 @@ fn test_add_scheduled_at_weeks() -> Result<()> {
     assert_eq!(tasks.len(), 1);
 
     // Scheduled_at should be in between start and end;
-    let scheduled_at_parsed = Date::<Utc>::from_utc(
-        NaiveDate::parse_from_str(&tasks[0].scheduled_at, "%Y-%m-%d").expect(""),
-        Utc,
-    );
+    let scheduled_at_parsed =
+        NaiveDate::parse_from_str(&tasks[0].scheduled_at, "%Y-%m-%d").expect("");
 
-    assert_ge!(scheduled_at_parsed, start.date());
-    assert_le!(scheduled_at_parsed, end.date());
+    assert_ge!(scheduled_at_parsed, start.naive_local());
+    assert_le!(scheduled_at_parsed, end.naive_local());
     Ok(())
 }
 
@@ -340,7 +334,7 @@ fn test_add_scheduled_at_raw_timestamp() -> Result<()> {
 fn test_add_scheduled_at_tmr() -> Result<()> {
     let mut database_manager = DatabaseManager::new(&get_setting());
 
-    let expected = Utc::now() + Duration::days(1);
+    let expected = Local::today() + Duration::days(1);
     database_manager
         .add(
             "Test Body",
@@ -370,12 +364,10 @@ fn test_add_scheduled_at_tmr() -> Result<()> {
     assert_eq!(tasks.len(), 1);
 
     // Scheduled_at should be in between start and end;
-    let scheduled_at_parsed = Date::<Utc>::from_utc(
-        NaiveDate::parse_from_str(&tasks[0].scheduled_at, "%Y-%m-%d").expect(""),
-        Utc,
-    );
+    let scheduled_at_parsed =
+        NaiveDate::parse_from_str(&tasks[0].scheduled_at, "%Y-%m-%d").expect("");
 
-    assert_ge!(scheduled_at_parsed, expected.date());
+    assert_ge!(scheduled_at_parsed, expected.naive_local());
     Ok(())
 }
 
@@ -383,7 +375,7 @@ fn test_add_scheduled_at_tmr() -> Result<()> {
 fn test_add_scheduled_at_today() -> Result<()> {
     let mut database_manager = DatabaseManager::new(&get_setting());
 
-    let expected = Utc::now() + Duration::days(0);
+    let expected = Local::today() + Duration::days(0);
     database_manager
         .add(
             "Test Body",
@@ -413,12 +405,10 @@ fn test_add_scheduled_at_today() -> Result<()> {
     assert_eq!(tasks.len(), 1);
 
     // Scheduled_at should be in between start and end;
-    let scheduled_at_parsed = Date::<Utc>::from_utc(
-        NaiveDate::parse_from_str(&tasks[0].scheduled_at, "%Y-%m-%d").expect(""),
-        Utc,
-    );
+    let scheduled_at_parsed =
+        NaiveDate::parse_from_str(&tasks[0].scheduled_at, "%Y-%m-%d").expect("");
 
-    assert_ge!(scheduled_at_parsed, expected.date());
+    assert_ge!(scheduled_at_parsed, expected.naive_local());
     Ok(())
 }
 #[test]
@@ -484,14 +474,12 @@ fn test_add_repeat_scheduled_task() -> Result<()> {
         .get(&None, &None, &vec![], &None, &None, &None, &None)
         .unwrap();
 
-    let expected = Utc::now() + Duration::weeks(2);
+    let expected = Local::today() + Duration::weeks(2);
 
     assert_eq!(tasks.len(), 1);
-    let scheduled_at_parsed = Date::<Utc>::from_utc(
-        NaiveDate::parse_from_str(&tasks[0].scheduled_at, "%Y-%m-%d").expect(""),
-        Utc,
-    );
-    assert_ge!(scheduled_at_parsed, expected.date());
+    let scheduled_at_parsed =
+        NaiveDate::parse_from_str(&tasks[0].scheduled_at, "%Y-%m-%d").expect("");
+    assert_ge!(scheduled_at_parsed, expected.naive_local());
     assert_ge!(tasks[0].state_name, "ready".to_string());
 
     database_manager
@@ -513,12 +501,10 @@ fn test_add_repeat_scheduled_task() -> Result<()> {
         .get(&None, &None, &vec![], &None, &None, &None, &None)
         .unwrap();
 
-    let expected = Utc::now() + Duration::weeks(3);
-    let scheduled_at_parsed = Date::<Utc>::from_utc(
-        NaiveDate::parse_from_str(&tasks[0].scheduled_at, "%Y-%m-%d").expect(""),
-        Utc,
-    );
-    assert_ge!(scheduled_at_parsed, expected.date());
+    let expected = Local::today() + Duration::weeks(3);
+    let scheduled_at_parsed =
+        NaiveDate::parse_from_str(&tasks[0].scheduled_at, "%Y-%m-%d").expect("");
+    assert_ge!(scheduled_at_parsed, expected.naive_local());
     assert_ge!(tasks[0].state_name, "completed".to_string());
     Ok(())
 }
@@ -545,14 +531,11 @@ fn test_add_repeat_due_task() -> Result<()> {
         .get(&None, &None, &vec![], &None, &None, &None, &None)
         .unwrap();
 
-    let expected = Utc::now() + Duration::weeks(2);
+    let expected = Local::now() + Duration::weeks(2);
 
     assert_eq!(tasks.len(), 1);
-    let due_date_parsed = Date::<Utc>::from_utc(
-        NaiveDate::parse_from_str(&tasks[0].due_date, "%Y-%m-%d").expect(""),
-        Utc,
-    );
-    assert_ge!(due_date_parsed, expected.date());
+    let due_date_parsed = NaiveDate::parse_from_str(&tasks[0].due_date, "%Y-%m-%d").expect("");
+    assert_ge!(due_date_parsed, expected.date().naive_local());
     assert_ge!(tasks[0].state_name, "ready".to_string());
 
     database_manager
@@ -574,12 +557,9 @@ fn test_add_repeat_due_task() -> Result<()> {
         .get(&None, &None, &vec![], &None, &None, &None, &None)
         .unwrap();
 
-    let expected = Utc::now() + Duration::weeks(3);
-    let due_date_parsed = Date::<Utc>::from_utc(
-        NaiveDate::parse_from_str(&tasks[0].due_date, "%Y-%m-%d").expect(""),
-        Utc,
-    );
-    assert_ge!(due_date_parsed, expected.date());
+    let expected = Local::now() + Duration::weeks(3);
+    let due_date_parsed = NaiveDate::parse_from_str(&tasks[0].due_date, "%Y-%m-%d").expect("");
+    assert_ge!(due_date_parsed, expected.date().naive_local());
     assert_ge!(tasks[0].state_name, "completed".to_string());
     Ok(())
 }
