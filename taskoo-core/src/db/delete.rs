@@ -3,13 +3,12 @@ use crate::error::TaskooError;
 use rusqlite::{named_params, Result, Transaction};
 
 pub fn delete(conn: &Transaction, task_ids: &Vec<i64>) -> Result<Vec<Task>, TaskooError> {
-    // TODO query on tag id
-    // TODO convert to and_then
     if task_ids.is_empty() {
         return Ok(vec![]);
     }
 
-    let mut statement = conn.prepare(
+    let mut delete_tag_state = conn.prepare("DELETE FROM task_tag where task_id = :task_id")?;
+    let mut delete_task_state = conn.prepare(
         "
             DELETE FROM task where id = :task_id;
     ",
@@ -26,7 +25,10 @@ pub fn delete(conn: &Transaction, task_ids: &Vec<i64>) -> Result<Vec<Task>, Task
     // the task ids to that table and then do a delete query based on
     // that temporary table.
     for task_id in task_ids_str.iter() {
-        statement.execute_named(named_params! {
+        delete_tag_state.execute_named(named_params! {
+            ":task_id": task_id,
+        })?;
+        delete_task_state.execute_named(named_params! {
             ":task_id": task_id,
         })?;
     }

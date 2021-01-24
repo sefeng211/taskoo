@@ -156,6 +156,7 @@ impl DatabaseManager {
     }
 
     pub fn delete(&mut self, task_ids: &Vec<i64>) -> Result<Vec<Task>, TaskooError> {
+        info!("deleting tasks {:?}", task_ids);
         let tx = self.conn.transaction()?;
         let tasks = delete(&tx, &task_ids)?;
         tx.commit()?;
