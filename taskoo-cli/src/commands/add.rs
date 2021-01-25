@@ -2,14 +2,14 @@ use clap::ArgMatches;
 use taskoo_core::error::TaskooError;
 use taskoo_core::operation::{Add as AddOp, execute};
 
-use crate::option_parser::{generate_default_command_option, parse_command_option};
+use crate::option_parser::{CommandOption, parse_command_option};
 //use crate::option_parser::parse_command_option;
 //use log::{debug, error, info, log_enabled, Level};
 pub struct Add;
 
 impl Add {
     pub fn add(matches: &ArgMatches) -> Result<(), TaskooError> {
-        let mut option = generate_default_command_option();
+        let mut option = CommandOption::new();
 
         if matches.is_present("config") {
             let config: Vec<&str> = matches.values_of("config").unwrap().collect();

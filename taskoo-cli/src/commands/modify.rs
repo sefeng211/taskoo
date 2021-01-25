@@ -3,8 +3,7 @@ use clap::ArgMatches;
 use taskoo_core::error::TaskooError;
 use taskoo_core::operation::{execute, ModifyOperation};
 
-use crate::option_parser::{generate_default_command_option, parse_command_option};
-//use crate::option_parser::parse_command_option;
+use crate::option_parser::{CommandOption, parse_command_option};
 use log::{debug, info};
 pub struct Modify;
 
@@ -12,7 +11,7 @@ impl Modify {
     pub fn modify(matches: &ArgMatches) -> Result<()> {
         info!("Processing Modify Task");
 
-        let mut option = generate_default_command_option();
+        let mut option = CommandOption::new();
 
         if matches.is_present("args") {
             let config: Vec<&str> = matches.values_of("args").unwrap().collect();
@@ -28,6 +27,7 @@ impl Modify {
         operation.scheduled_at = option.scheduled_at;
         operation.due_repeat = option.due_repeat;
         operation.scheduled_repeat = option.scheudled_repeat;
+        operation.state_name = option.state_name.as_deref();
 
         execute(&mut operation)?;
         Ok(())

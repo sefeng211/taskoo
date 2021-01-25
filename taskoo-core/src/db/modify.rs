@@ -47,7 +47,7 @@ fn update_schedule_at_for_repeat(conn: &Transaction, task_id: &i64) -> Result<()
         debug!("Parsed schedule at {}", new_due_date);
 
         let mut statement =
-            conn.prepare("Update task SET due_date = :due_date WHERE id = :id")?;
+            conn.prepare("Update task SET due_date = :due_date, state_id = 1 WHERE id = :id")?;
         statement.execute_named(named_params! {
             ":due_date": new_due_date,
             ":id": task_id
@@ -64,7 +64,7 @@ fn update_schedule_at_for_repeat(conn: &Transaction, task_id: &i64) -> Result<()
         debug!("Parsed schedule at {}", new_schedule_at);
 
         let mut statement =
-            conn.prepare("Update task SET scheduled_at = :scheduled_at WHERE id = :id")?;
+            conn.prepare("Update task SET scheduled_at = :scheduled_at, state_id = 1 WHERE id = :id")?;
         statement.execute_named(named_params! {
             ":scheduled_at": new_schedule_at,
             ":id": task_id

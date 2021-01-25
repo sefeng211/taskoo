@@ -16,19 +16,21 @@ pub struct CommandOption<'a> {
     pub body: Option<String>,
 }
 
-pub fn generate_default_command_option<'a>() -> CommandOption<'a> {
-    return CommandOption {
-        scheduled_at: None,
-        scheudled_repeat: None,
-        due_date: None,
-        due_repeat: None,
-        tag_names: vec![],
-        task_ids: vec![],
-        context_name: None,
-        state_name: None,
-        body: None,
-        remove_tag_names: vec![],
-    };
+impl<'a> CommandOption<'a> {
+    pub fn new() -> CommandOption<'a> {
+        return CommandOption {
+            scheduled_at: None,
+            scheudled_repeat: None,
+            due_date: None,
+            due_repeat: None,
+            tag_names: vec![],
+            task_ids: vec![],
+            context_name: None,
+            state_name: None,
+            body: None,
+            remove_tag_names: vec![],
+        };
+    }
 }
 
 pub fn parse_command_option<'a>(
@@ -37,19 +39,7 @@ pub fn parse_command_option<'a>(
     parse_remove_tag_names: bool,
     parse_task_ids: bool,
 ) -> Result<CommandOption<'a>, CommandError> {
-    let mut command_option = CommandOption {
-        scheduled_at: None,
-        scheudled_repeat: None,
-        due_date: None,
-        tag_names: vec![],
-        task_ids: vec![],
-        context_name: None,
-        due_repeat: None,
-        state_name: None,
-        body: None,
-        remove_tag_names: vec![],
-    };
-
+    let mut command_option = CommandOption::new();
     let mut start_parse_options = false;
     let mut body: String = String::from("");
 
@@ -95,6 +85,13 @@ pub fn parse_command_option<'a>(
         } else if option.starts_with("+") {
             start_parse_options = true;
             command_option.tag_names.push(option[1..].to_string());
+        } else if option.starts_with("@") {
+            start_parse_options = true;
+            if command_option.state_name.is_none() {
+                command_option.state_name = Some(option[1..].to_string());
+            } else {
+                return Err(CommandError::InvalidContextName(option.to_string()));
+            }
         } else if option.starts_with("-") {
             start_parse_options = true;
             if parse_remove_tag_names {
@@ -200,6 +197,13 @@ mod tests {
         let option = vec!["THIS", "IS", "A", "BODY", "c:inbox"];
         let parsed_option = parse_command_option(&option, true, false, false).unwrap();
         assert_eq!(parsed_option.body, Some("THIS IS A BODY".to_string()));
+    }
+
+    #[test]
+    fn test_parse_state_name() {
+        let option = vec!["@ready"];
+        let parsed_option = parse_command_option(&option, true, false, false).unwrap();
+        assert_eq!(parsed_option.state_name, Some("ready".to_string()));
     }
 
     #[test]

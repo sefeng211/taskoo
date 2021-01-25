@@ -1,5 +1,5 @@
 use crate::display::Display;
-use crate::option_parser::{generate_default_command_option, parse_command_option};
+use crate::option_parser::{CommandOption, parse_command_option};
 use anyhow::{Context, Result};
 use clap::ArgMatches;
 use ini::Ini;

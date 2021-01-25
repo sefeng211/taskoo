@@ -180,7 +180,11 @@ impl Display {
         let mut tabbed_output = String::new();
 
         for task in operation.get_result().iter() {
+            if task.state_name == "completed" {
+                continue;
+            }
             let mut formated_body = String::clone(&task.body);
+
 
             for tag_name in task.tag_names.iter() {
                 let mut tag_output = String::from("+");
