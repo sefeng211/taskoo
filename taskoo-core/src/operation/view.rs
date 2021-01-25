@@ -10,8 +10,8 @@ pub struct View {
     pub view_range_start: Option<String>,
     pub view_range_end: String,
     pub context_name: String,
-    pub database_manager: Option<DatabaseManager>,
-    pub result: Vec<Task>,
+    database_manager: Option<DatabaseManager>,
+    result: Vec<Task>,
 }
 
 impl View {

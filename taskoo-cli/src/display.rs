@@ -185,7 +185,6 @@ impl Display {
             }
             let mut formated_body = String::clone(&task.body);
 
-
             for tag_name in task.tag_names.iter() {
                 let mut tag_output = String::from("+");
                 tag_output.push_str(tag_name);
@@ -198,16 +197,6 @@ impl Display {
                 );
             }
 
-            //let mut formated_tag_names = String::new();
-            //for tag_name in task.tag_names.iter() {
-                //formated_tag_names.push_str("+");
-                //formated_tag_names.push_str(tag_name);
-                //formated_tag_names.push_str(" ");
-            //}
-
-            //if !formated_tag_names.is_empty() {
-                //formated_tag_names.pop();
-            //}
             let mut id = task.id.to_string();
             if !task.due_repeat.is_empty() || !task.scheduled_repeat.is_empty() {
                 id.push_str("(R)");

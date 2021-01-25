@@ -11,8 +11,8 @@ pub struct Get<'a> {
     pub scheduled_at: Option<&'a str>,
     pub is_repeat: Option<u8>,
     pub is_recurrence: Option<u8>,
-    pub database_manager: Option<DatabaseManager>,
-    pub result: Vec<Task>,
+    database_manager: Option<DatabaseManager>,
+    result: Vec<Task>,
 }
 
 impl<'a> Get<'a> {
@@ -30,6 +30,7 @@ impl<'a> Get<'a> {
         }
     }
 }
+
 impl<'a> Operation for Get<'a> {
     fn init(&mut self) -> Result<(), InitialError> {
         self.database_manager = Some(DatabaseManager::new(

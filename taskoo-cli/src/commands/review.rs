@@ -1,14 +1,13 @@
 use dialoguer::{theme::ColorfulTheme, Confirm, Input, MultiSelect, Select};
-
-use taskoo_core::command::Command;
+use taskoo_core::core::Operation;
 use taskoo_core::error::TaskooError;
+use taskoo_core::command::Command;
 
 use log::{debug, info};
 use std::io;
 use std::io::Write;
-use taskoo_core::operation::{execute, Get as GetOperation, ModifyOperation};
+use taskoo_core::operation::{execute, Get as GetOperation, ModifyOperation, DeleteOperation};
 use yansi::Color;
-//use std::io::*;
 use yansi::Paint;
 
 pub struct Review;
@@ -19,10 +18,10 @@ impl Review {
 
         execute(&mut operation)?;
 
-        let need_review_tasks = operation.result;
+        let need_review_tasks = operation.get_result();
 
         if need_review_tasks.len() == 0 {
-            println!("There's nothing to review!");
+            println!("Nothing to review!");
             return Ok(());
         }
         // TODO: This is too simple, ideally we want to have auto-completion
@@ -32,7 +31,10 @@ impl Review {
             println!(
                 "{} {}",
                 Paint::new("Task:").fg(Color::Magenta).bold().to_string(),
-                Paint::new(task.body.clone()).fg(Color::Yellow).bold().to_string()
+                Paint::new(task.body.clone())
+                    .fg(Color::Yellow)
+                    .bold()
+                    .to_string()
             );
 
             println!("");
@@ -105,12 +107,10 @@ impl Review {
             }
 
             if Confirm::with_theme(&ColorfulTheme::default())
-                .with_prompt("Do you want to continue?")
+                .with_prompt("Do you want to modify the task as above?")
                 .interact()
                 .unwrap()
             {
-                println!("Looks like you want to continue");
-
                 info!("Modify task {}", task.id);
                 let mut modify_operation = ModifyOperation::new(vec![task.id]);
                 modify_operation.context_name = new_context;
@@ -119,8 +119,22 @@ impl Review {
                 modify_operation.tag_names = new_tags;
 
                 execute(&mut modify_operation)?;
+                println!("Task Modified!");
             } else {
-                println!("nevermind then :(");
+                if Confirm::with_theme(&ColorfulTheme::default())
+                    .with_prompt("Do you want to delete the task?")
+                    .interact()
+                    .unwrap()
+                {
+                    let mut operation = DeleteOperation {
+                        database_manager: None,
+                        task_ids: vec![task.id],
+                        result: None
+                    };
+                    execute(&mut operation)?;
+                } else {
+                    println!("Task Unmodified");
+                }
             }
         }
         Ok(())

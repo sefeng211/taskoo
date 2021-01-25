@@ -13,9 +13,10 @@ pub struct Add<'a> {
     pub scheduled_at: Option<&'a str>,
     pub due_repeat: Option<&'a str>,
     pub scheduled_repeat: Option<&'a str>,
-    pub database_manager: Option<DatabaseManager>,
-    pub result: Option<Vec<Task>>,
+    database_manager: Option<DatabaseManager>,
+    result: Option<Vec<Task>>,
 }
+
 impl Add<'_> {
     pub fn new(body: &str) -> Add {
         Add {

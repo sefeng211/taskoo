@@ -4,8 +4,6 @@ use crate::db::task_manager::DatabaseManager;
 use crate::error::*;
 
 pub struct ModifyOperation<'a> {
-    pub database_manager: Option<DatabaseManager>,
-    pub result: Vec<Task>,
     pub task_ids: Vec<i64>,
     pub body: Option<&'a str>,
     pub priority: Option<u8>,
@@ -16,6 +14,8 @@ pub struct ModifyOperation<'a> {
     pub due_repeat: Option<&'a str>,
     pub scheduled_repeat: Option<&'a str>,
     pub state_name: Option<&'a str>,
+    database_manager: Option<DatabaseManager>,
+    result: Vec<Task>,
 }
 
 impl<'a> ModifyOperation<'a> {
