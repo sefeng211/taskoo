@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "taskoo-cli",
+    "taskoo-core"
+]
