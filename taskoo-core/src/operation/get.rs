@@ -43,6 +43,11 @@ impl<'a> Operation for Get<'a> {
         for tag in self.tag_names.iter_mut() {
             *tag = tag.to_lowercase();
         }
+        self.context_name = match &self.context_name {
+            Some(name) => Some(name.to_lowercase()),
+            None => None,
+        };
+
         return DatabaseManager::get(
             self.database_manager.as_mut().unwrap(),
             &self.priority,

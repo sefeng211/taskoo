@@ -125,6 +125,10 @@ impl DatabaseManager {
         is_repeat: &Option<u8>,
         is_recurrence: &Option<u8>,
     ) -> Result<Vec<Task>, TaskooError> {
+        info!(
+            "Doing Get Operation with context_name {:?}, tag {:?}",
+            context_name, tag_names
+        );
         // Prepare the context_id, default to Inbox context
         let mut context_id: i64 = 1;
         let tx = self.conn.transaction()?;
@@ -456,6 +460,7 @@ impl DatabaseManager {
         let mut insert_into_context =
             tx.prepare("INSERT OR IGNORE INTO context (name) VALUES (:name)")?;
         insert_into_context.execute_named(named_params! {":name": context_name.trim()})?;
+        info!("Created context {}", context_name);
         Ok(tx.last_insert_rowid())
     }
 

@@ -42,6 +42,14 @@ impl Operation for Add<'_> {
         Ok(())
     }
     fn do_work(&mut self) -> Result<Vec<Task>, TaskooError> {
+        for tag in self.tag_names.iter_mut() {
+            *tag = tag.to_lowercase();
+        }
+
+        self.context_name = match &self.context_name {
+            Some(name) => Some(name.to_lowercase()),
+            None => None,
+        };
         return DatabaseManager::add(
             self.database_manager.as_mut().unwrap(),
             &self.body,

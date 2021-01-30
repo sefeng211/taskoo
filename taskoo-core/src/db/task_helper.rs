@@ -2,7 +2,7 @@ use rusqlite::Rows;
 
 pub const TASK_STATES: [&'static str; 4] = ["ready", "completed", "blocked", "started"];
 
-pub const DEFAULT_CONTEXT: [&'static str; 1] = ["Inbox"];
+pub const DEFAULT_CONTEXT: [&'static str; 1] = ["inbox"];
 
 #[derive(Debug)]
 pub struct Task {

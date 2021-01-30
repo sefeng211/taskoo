@@ -49,6 +49,14 @@ fn colorize<'a>(text: &'a str, is_bold: &str, color: &str) -> Paint<&'a str> {
     return paint;
 }
 
+fn to_first_letter_capitalized(s: &str) -> String {
+    let mut c = s.chars();
+    match c.next() {
+        None => String::new(),
+        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+    }
+}
+
 impl Display {
     pub fn display(
         context_name: &str,
@@ -62,12 +70,18 @@ impl Display {
         if processed_operation.1 == 0 {
             return Ok(String::from(""));
         }
+
         println!(
             "{}",
-            Paint::new(format!("{}({})", context_name, processed_operation.1))
-                .bold()
-                .fg(Color::Red)
+            Paint::new(format!(
+                "{}({})",
+                to_first_letter_capitalized(context_name),
+                processed_operation.1
+            ))
+            .bold()
+            .fg(Color::Red)
         );
+
         let mut final_tabbed_string = String::new();
         // Header
         final_tabbed_string.push_str(&Display::get_formatted_row(
