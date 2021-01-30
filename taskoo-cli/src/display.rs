@@ -54,20 +54,21 @@ impl Display {
         context_name: &str,
         operation: &mut impl Operation,
         config: &Ini,
+        display_completed: bool,
     ) -> Result<String, TaskooError> {
-        let processed_operation = Display::process_operation(operation, &config)?;
+        let processed_operation =
+            Display::process_operation(operation, &config, display_completed)?;
 
         if processed_operation.1 == 0 {
             return Ok(String::from(""));
         }
-        // Context Name
-        let mut final_tabbed_string = format!(
-            "{}\t\t\t\t\n",
+        println!(
+            "{}",
             Paint::new(format!("{}({})", context_name, processed_operation.1))
                 .bold()
                 .fg(Color::Red)
         );
-        // let mut final_tabbed_string = String::new();
+        let mut final_tabbed_string = String::new();
         // Header
         final_tabbed_string.push_str(&Display::get_formatted_row(
             &Paint::new("Id").underline().bold().to_string(),
@@ -174,15 +175,23 @@ impl Display {
     fn process_operation(
         operation: &mut impl Operation,
         config: &Ini,
+        display_completed: bool,
     ) -> Result<(String, usize), TaskooError> {
         // TODO Why &mut operation doesn't work?
         execute(operation)?;
         let mut tabbed_output = String::new();
 
-        for task in operation.get_result().iter() {
-            if task.state_name == "completed" {
-                continue;
-            }
+        let result = if !display_completed {
+            operation
+                .get_result()
+                .iter()
+                .filter(|&task| task.state_name != "completed")
+                .collect::<Vec<_>>()
+        } else {
+            operation.get_result().iter().collect::<Vec<_>>()
+        };
+
+        for task in &result {
             let mut formated_body = String::clone(&task.body);
 
             for tag_name in task.tag_names.iter() {
@@ -210,7 +219,7 @@ impl Display {
                 &config,
             ));
         }
-        Ok((tabbed_output, operation.get_result().iter().count()))
+        Ok((tabbed_output, result.len()))
     }
 
     pub fn print(data: &String) {

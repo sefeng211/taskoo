@@ -39,6 +39,10 @@ impl<'a> Operation for Get<'a> {
         Ok(())
     }
     fn do_work(&mut self) -> Result<Vec<Task>, TaskooError> {
+        // Treat all tag names as lowercase
+        for tag in self.tag_names.iter_mut() {
+            *tag = tag.to_lowercase();
+        }
         return DatabaseManager::get(
             self.database_manager.as_mut().unwrap(),
             &self.priority,

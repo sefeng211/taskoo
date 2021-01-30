@@ -54,7 +54,6 @@ pub fn parse_command_option<'a>(
             start_parse_options = true;
             if command_option.scheduled_at.is_none() {
                 let period: Vec<&str> = option[2..].split("+").collect();
-                println!("{:?}", period);
                 command_option.scheduled_at = Some(&period[0]);
                 if period.len() > 1 {
                     command_option.scheudled_repeat = Some(&period[1]);
@@ -71,7 +70,6 @@ pub fn parse_command_option<'a>(
                 if period.len() > 1 {
                     command_option.due_repeat = Some(&period[1]);
                 }
-            // Check to see if users provide repetition
             } else {
                 return Err(CommandError::InvalidDueDate(option.to_string()));
             };

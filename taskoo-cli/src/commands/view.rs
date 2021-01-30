@@ -27,7 +27,7 @@ impl View {
             operation.view_type = Some(config[0].to_string());
 
             let tabbed_string =
-                Display::display(&context.to_string(), &mut operation, &self.config)?;
+                Display::display(&context.to_string(), &mut operation, &self.config, false)?;
 
             if tabbed_string.len() > 0 {
                 Display::print(&tabbed_string);

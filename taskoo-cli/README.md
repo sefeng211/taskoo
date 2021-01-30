@@ -17,5 +17,8 @@ taskoo add I am a body c:Someday p:taskoo @Started +Work
  - Project
  - State (Not customizable)
 
-State: Ready, Completed, Blocked, Started
+State: `Ready`, `Completed`, `Blocked`, `Started`
 
+## List
+`task list`: List all tasks
+`task list c:Work`: List all tasks in `Work` context

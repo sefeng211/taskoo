@@ -52,6 +52,8 @@ fn update_schedule_at_for_repeat(conn: &Transaction, task_id: &i64) -> Result<()
             ":due_date": new_due_date,
             ":id": task_id
         })?;
+    } else {
+        info!("No due repetition");
     }
 
     if scheduled_repeat.len() > 0 {
@@ -69,6 +71,8 @@ fn update_schedule_at_for_repeat(conn: &Transaction, task_id: &i64) -> Result<()
             ":scheduled_at": new_schedule_at,
             ":id": task_id
         })?;
+    } else {
+        info!("No schedule repetition");
     }
     Ok(())
 }

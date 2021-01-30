@@ -35,24 +35,28 @@ impl List {
                 Display::print(&final_tabbed_string);
             } else {
                 let context_names = Command::context(None)?;
-                let mut final_tabbed_string = String::new();
                 for context in context_names.iter() {
+                    let mut final_tabbed_string = String::new();
                     final_tabbed_string.push_str(&self.get_tasks(
                         context,
                         option.tag_names.clone(),
                         option.due_date.clone(),
                         option.scheduled_at.clone(),
                     )?);
+                    if !final_tabbed_string.is_empty() {
+                        Display::print(&final_tabbed_string);
+                    }
                 }
-                Display::print(&final_tabbed_string);
             }
         } else {
             let context_names = Command::context(None).unwrap();
-            let mut final_tabbed_string = String::new();
             for context in context_names.iter() {
+                let mut final_tabbed_string = String::new();
                 final_tabbed_string.push_str(&self.get_tasks_for_context(context)?);
+                if !final_tabbed_string.is_empty() {
+                    Display::print(&final_tabbed_string);
+                }
             }
-            Display::print(&final_tabbed_string);
         }
         Ok(())
     }
@@ -68,13 +72,12 @@ impl List {
         due_date: Option<&str>,
         scheduled_at: Option<&str>,
     ) -> Result<String, TaskooError> {
-        // Rows
         let mut operation = GetOp::new();
         operation.context_name = Some(context_name.to_string());
         operation.tag_names = tag_names;
         operation.due_date = due_date;
         operation.scheduled_at = scheduled_at;
 
-        return Display::display(&context_name, &mut operation, &self.config);
+        return Display::display(&context_name, &mut operation, &self.config, false);
     }
 }
