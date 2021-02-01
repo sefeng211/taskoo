@@ -2,6 +2,8 @@ use clap::ArgMatches;
 use log::info;
 
 use anyhow::Result;
+use taskoo_core::core::Operation;
+use taskoo_core::operation::{execute, Get as GetOp};
 pub struct Info;
 
 impl Info {
@@ -34,6 +36,18 @@ impl Info {
         } else {
             for item in done_config.iter() {
                 task_ids.push(item.parse().expect("Invalid task id provided"));
+            }
+        }
+
+        info!("Task ids: {:?}", task_ids);
+
+        for id in task_ids {
+            let mut operation = GetOp::new();
+            operation.task_id = Some(id);
+            execute(&mut operation)?;
+
+            for task in operation.get_result().iter() {
+                println!("{:?}", task);
             }
         }
         Ok(())

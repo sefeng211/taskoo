@@ -20,7 +20,7 @@ pub fn view(
 
     let final_argument = format!(
         "
-    SELECT task.id as id, body, priority, created_at, due_date, scheduled_at, due_repeat, scheduled_repeat, context.name, state.name, GROUP_CONCAT(task_tag.tag_id) as concat_tag_ids, GROUP_CONCAT(task_tag.name) FROM task
+    SELECT task.id as id, body, priority, created_at, due_date, scheduled_at, due_repeat, scheduled_repeat, context.name, state.name, annotation, GROUP_CONCAT(task_tag.tag_id) as concat_tag_ids, GROUP_CONCAT(task_tag.name) FROM task
     INNER JOIN context
     on context_id = context.id
     LEFT JOIN

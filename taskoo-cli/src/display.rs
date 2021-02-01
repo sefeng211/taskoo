@@ -1,52 +1,123 @@
 use ini::Ini;
-use log::debug;
+use log::info;
 use std::io::Write;
 use tabwriter::TabWriter;
 use taskoo_core::core::Operation;
 use taskoo_core::error::TaskooError;
-use taskoo_core::operation::execute;
+use taskoo_core::operation::{execute, Task};
 use yansi::Color;
 use yansi::Paint;
+use terminal_size::{Width, Height, terminal_size};
+
 pub struct Display;
 
-fn colorize<'a>(text: &'a str, is_bold: &str, color: &str) -> Paint<&'a str> {
-    debug!(
-        "Colorized {} with bold {} and color {}",
-        text, is_bold, color
-    );
-    let mut paint = Paint::new(text);
-    if is_bold == "true" || is_bold == "True" {
-        paint = paint.bold();
+enum DisplayColumn {
+    Id,
+    Body,
+    Created,
+    Scheduled,
+    Due,
+}
+
+impl DisplayColumn {
+    fn get_header(&self) -> String {
+        match *self {
+            DisplayColumn::Id => Paint::new("Id")
+                .bold()
+                .fg(Color::Red)
+                .underline()
+                .to_string(),
+            DisplayColumn::Body => Paint::new("Body")
+                .fg(Color::White)
+                .bold()
+                .underline()
+                .to_string(),
+            DisplayColumn::Created => Paint::new("Created   ")
+                .fg(Color::Green)
+                .bold()
+                .underline()
+                .to_string(),
+            DisplayColumn::Scheduled => Paint::new("Scheduled ")
+                .fg(Color::Blue)
+                .bold()
+                .underline()
+                .to_string(),
+            DisplayColumn::Due => Paint::new("Due       ")
+                .fg(Color::Magenta)
+                .bold()
+                .underline()
+                .to_string(),
+        }
     }
 
-    match color {
-        "yellow" => {
-            paint = paint.fg(Color::Yellow);
+    fn get_data(&self, task: &Task, is_started: bool) -> String {
+        match *self {
+            DisplayColumn::Id => {
+                let mut task_id = task.id.to_string();
+                if !task.due_repeat.is_empty() || !task.scheduled_repeat.is_empty() {
+                    task_id.push_str("(R)");
+                }
+                Paint::new(task_id).fg(Color::Red).to_string()
+            }
+            DisplayColumn::Body => {
+                let mut task_body = String::clone(&task.body);
+                // Append tags to the end of task body
+                for tag_name in task.tag_names.iter() {
+                    let mut tag_output = String::from("+");
+                    tag_output.push_str(tag_name);
+                    task_body.push_str(" ");
+                    task_body.push_str(
+                        &Paint::new(tag_output)
+                            .underline()
+                            .fg(Color::Yellow)
+                            .to_string(),
+                    );
+                }
+
+                let color = if is_started {
+                    Color::Magenta
+                } else {
+                    Color::White
+                };
+                Paint::new(task_body).fg(color).to_string()
+            }
+            DisplayColumn::Created => Paint::new(task.created_at.clone())
+                .fg(Color::Green)
+                .to_string(),
+            DisplayColumn::Scheduled => Paint::new(task.scheduled_at.clone())
+                .fg(Color::Blue)
+                .to_string(),
+            DisplayColumn::Due => Paint::new(task.due_date.clone())
+                .fg(Color::Magenta)
+                .to_string(),
         }
-        "black" => {
-            paint = paint.fg(Color::Black);
-        }
-        "red" => {
-            paint = paint.fg(Color::Red);
-        }
-        "green" => {
-            paint = paint.fg(Color::Green);
-        }
-        "blue" => {
-            paint = paint.fg(Color::Blue);
-        }
-        "magenta" => {
-            paint = paint.fg(Color::Magenta);
-        }
-        "cyan" => {
-            paint = paint.fg(Color::Cyan);
-        }
-        "white" => {
-            paint = paint.fg(Color::White);
-        }
-        _ => {}
     }
-    return paint;
+}
+
+fn get_output_columns() -> Vec<DisplayColumn> {
+    let size = terminal_size();
+    return if let Some((Width(w), Height(h))) = size {
+        info!("Your terminal is {} cols wide and {} lines tall", w, h);
+        if w <= 80 {
+            vec![DisplayColumn::Id, DisplayColumn::Body]
+        } else {
+            vec![
+                DisplayColumn::Id,
+                DisplayColumn::Body,
+                DisplayColumn::Created,
+                DisplayColumn::Scheduled,
+                DisplayColumn::Due,
+            ]
+        }
+    } else {
+        vec![
+            DisplayColumn::Id,
+            DisplayColumn::Body,
+            DisplayColumn::Created,
+            DisplayColumn::Scheduled,
+            DisplayColumn::Due,
+        ]
+    };
 }
 
 fn to_first_letter_capitalized(s: &str) -> String {
@@ -79,111 +150,50 @@ impl Display {
                 processed_operation.1
             ))
             .bold()
-            .fg(Color::Red)
+            .fg(Color::Cyan)
         );
 
-        let mut final_tabbed_string = String::new();
-        // Header
-        final_tabbed_string.push_str(&Display::get_formatted_row(
-            &Paint::new("Id").underline().bold().to_string(),
-            &Paint::new("Body").underline().bold().to_string(),
-            &Paint::new("Created   ").underline().bold().to_string(),
-            &Paint::new("Scheduled ").underline().bold().to_string(),
-            &Paint::new("Due       ").underline().bold().to_string(),
+        let mut final_tabbed_string = String::from(&Display::get_formatted_row_for_header(
+            get_output_columns(),
             &config,
         ));
+
         final_tabbed_string.push_str(&processed_operation.0);
-        //final_tabbed_string.push_str("\t\t\t\t\t\n");
+
         Ok(final_tabbed_string)
     }
-
-    fn get_formatted_row(
-        id: &str,
-        body: &str,
-        //tag: &str,
-        created_at: &str,
-        scheduled_at: &str,
-        due_date: &str,
-        config: &Ini,
+    fn get_formatted_row_for_header(
+        columns_to_output: Vec<DisplayColumn>,
+        _config: &Ini,
     ) -> String {
-        return format!(
-            "{}\t{}\t{}\t{}\t{}\n",
-            colorize(
-                id,
-                &config
-                    .section(Some("Id"))
-                    .unwrap()
-                    .get("bold")
-                    .unwrap()
-                    .to_lowercase(),
-                &config
-                    .section(Some("Id"))
-                    .unwrap()
-                    .get("color")
-                    .unwrap()
-                    .to_lowercase()
-            ),
-            colorize(
-                body,
-                &config
-                    .section(Some("Body"))
-                    .unwrap()
-                    .get("bold")
-                    .unwrap()
-                    .to_lowercase(),
-                &config
-                    .section(Some("Body"))
-                    .unwrap()
-                    .get("color")
-                    .unwrap()
-                    .to_lowercase()
-            ),
-            colorize(
-                created_at,
-                &config
-                    .section(Some("Created_At"))
-                    .unwrap()
-                    .get("bold")
-                    .unwrap()
-                    .to_lowercase(),
-                &config
-                    .section(Some("Created_At"))
-                    .unwrap()
-                    .get("color")
-                    .unwrap()
-                    .to_lowercase()
-            ),
-            colorize(
-                scheduled_at,
-                &config
-                    .section(Some("Scheduled_At"))
-                    .unwrap()
-                    .get("bold")
-                    .unwrap()
-                    .to_lowercase(),
-                &config
-                    .section(Some("Scheduled_At"))
-                    .unwrap()
-                    .get("color")
-                    .unwrap()
-                    .to_lowercase()
-            ),
-            colorize(
-                due_date,
-                &config
-                    .section(Some("Due"))
-                    .unwrap()
-                    .get("bold")
-                    .unwrap()
-                    .to_lowercase(),
-                &config
-                    .section(Some("Due"))
-                    .unwrap()
-                    .get("color")
-                    .unwrap()
-                    .to_lowercase()
-            )
-        );
+        let mut output = String::new();
+        for column in columns_to_output.iter() {
+            let data = column.get_header();
+            output.push_str(&data);
+            output.push_str("\t");
+        }
+        if !output.is_empty() {
+            output.push_str("\n");
+        }
+        return output;
+    }
+
+    fn get_formatted_row_for_task(
+        columns_to_output: Vec<DisplayColumn>,
+        task: &Task,
+        _config: &Ini,
+        is_started: bool,
+    ) -> String {
+        let mut output = String::new();
+        for column in columns_to_output.iter() {
+            let data = column.get_data(&task, is_started);
+            output.push_str(&data);
+            output.push_str("\t");
+        }
+        if !output.is_empty() {
+            output.push_str("\n");
+        }
+        return output;
     }
 
     fn process_operation(
@@ -195,7 +205,7 @@ impl Display {
         execute(operation)?;
         let mut tabbed_output = String::new();
 
-        let result = if !display_completed {
+        let mut result = if !display_completed {
             operation
                 .get_result()
                 .iter()
@@ -204,6 +214,8 @@ impl Display {
         } else {
             operation.get_result().iter().collect::<Vec<_>>()
         };
+
+        result.sort_by(|task2, task1| task1.created_at.cmp(&task2.created_at));
 
         for task in &result {
             let mut formated_body = String::clone(&task.body);
@@ -224,13 +236,12 @@ impl Display {
             if !task.due_repeat.is_empty() || !task.scheduled_repeat.is_empty() {
                 id.push_str("(R)");
             }
-            tabbed_output.push_str(&Display::get_formatted_row(
-                &id,
-                &formated_body,
-                &task.created_at,
-                &task.scheduled_at,
-                &task.due_date,
+
+            tabbed_output.push_str(&Display::get_formatted_row_for_task(
+                get_output_columns(),
+                task,
                 &config,
+                task.state_name == "start", // TODO: This should be started
             ));
         }
         Ok((tabbed_output, result.len()))

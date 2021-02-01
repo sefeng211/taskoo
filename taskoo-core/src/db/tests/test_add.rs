@@ -11,7 +11,7 @@ use more_asserts::*;
 fn get_setting() -> HashMap<String, String> {
     let mut setting = HashMap::new();
     setting.insert("db_path".to_owned(), ":memory:".to_owned());
-    setting.insert("context".to_owned(), "Inbox, Work, Life".to_owned());
+    setting.insert("context".to_owned(), "inbox, Work, Life".to_owned());
     return setting;
 }
 
@@ -33,17 +33,8 @@ fn test_add_simple() -> Result<()> {
         )
         .unwrap();
 
-    //
-    {
-        let mut statement = database_manager.conn.prepare("SELECT * from task INNER JOIN context on context_id = 1 INNER JOIN state on state_id = state.id Where context_id = 1 Group By task.id").unwrap();
-        let mut rows = statement.query(NO_PARAMS).unwrap();
-        while let Some(row) = rows.next().unwrap() {
-            println!("11111");
-        }
-    }
-    //
     let mut tasks = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None)
         .unwrap();
 
     assert_eq!(tasks.len(), 1);
@@ -58,7 +49,7 @@ fn test_add_simple() -> Result<()> {
     assert_eq!(tasks[0].id, 1);
     assert_eq!(tasks[0].body, "Test Body");
     assert_eq!(tasks[0].priority, 0);
-    assert_eq!(tasks[0].context_name, "Inbox");
+    assert_eq!(tasks[0].context_name, "inbox");
     // TODO: Improve the assert_eq here to ensure the auto created `created_at` timestamp is
     // correct
     assert_eq!(created_at_datetime, current_datetime.date());
@@ -94,7 +85,6 @@ fn test_add_complex() -> Result<()> {
             &None,
             &Some("Work".to_string()),
             &vec![],
-            &None,
             &None,
             &None,
             &None,
@@ -192,7 +182,6 @@ fn test_add_scheduled_at_days() -> Result<()> {
             &None,
             &None,
             &None,
-            &None,
         )
         .unwrap();
 
@@ -233,7 +222,6 @@ fn test_add_scheduled_at_hours() -> Result<()> {
             &None,
             &Some("Work".to_string()),
             &vec![],
-            &None,
             &None,
             &None,
             &None,
@@ -279,7 +267,6 @@ fn test_add_scheduled_at_weeks() -> Result<()> {
             &None,
             &None,
             &None,
-            &None,
         )
         .unwrap();
 
@@ -320,7 +307,6 @@ fn test_add_scheduled_at_raw_timestamp() -> Result<()> {
             &None,
             &None,
             &None,
-            &None,
         )
         .unwrap();
 
@@ -354,7 +340,6 @@ fn test_add_scheduled_at_tmr() -> Result<()> {
             &None,
             &Some("Work".to_string()),
             &vec![],
-            &None,
             &None,
             &None,
             &None,
@@ -398,7 +383,6 @@ fn test_add_scheduled_at_today() -> Result<()> {
             &None,
             &None,
             &None,
-            &None,
         )
         .unwrap();
 
@@ -420,7 +404,7 @@ fn test_add_completed_task() -> Result<()> {
             "Test Body",
             &None,
             &None,
-            &vec!["Completed".to_owned()],
+            &vec!["completed".to_owned()],
             &None,
             &None,
             &None,
@@ -429,22 +413,8 @@ fn test_add_completed_task() -> Result<()> {
         )
         .expect("");
 
-    // TODO: Why this doesn't work
-    //let mut operation = GetOperation {
-    //priority: None,
-    //context_name: None,
-    //due_date: None,
-    //is_repeat: None,
-    //is_recurrence: None,
-    //scheduled_at: None,
-    //database_manager: Some(database_manager2),
-    //tag_names: vec![],
-    //result: vec![],
-    //};
-    //execute(&mut operation).expect("");
-
     let rows = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None)
         .unwrap();
 
     assert_eq!(rows.len(), 1);
@@ -471,7 +441,7 @@ fn test_add_repeat_scheduled_task() -> Result<()> {
         .expect("");
 
     let tasks = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None)
         .unwrap();
 
     let expected = Local::today() + Duration::weeks(2);
@@ -498,7 +468,7 @@ fn test_add_repeat_scheduled_task() -> Result<()> {
         .unwrap();
 
     let tasks = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None)
         .unwrap();
 
     let expected = Local::today() + Duration::weeks(3);
@@ -528,7 +498,7 @@ fn test_add_repeat_due_task() -> Result<()> {
         .expect("");
 
     let tasks = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None)
         .unwrap();
 
     let expected = Local::now() + Duration::weeks(2);
@@ -554,12 +524,50 @@ fn test_add_repeat_due_task() -> Result<()> {
         .unwrap();
 
     let tasks = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None)
         .unwrap();
 
     let expected = Local::now() + Duration::weeks(3);
     let due_date_parsed = NaiveDate::parse_from_str(&tasks[0].due_date, "%Y-%m-%d").expect("");
     assert_ge!(due_date_parsed, expected.date().naive_local());
     assert_ge!(tasks[0].state_name, "completed".to_string());
+    Ok(())
+}
+
+#[test]
+fn test_add_annotation() -> Result<()> {
+    let mut database_manager = DatabaseManager::new(&get_setting());
+
+    database_manager
+        .add(
+            "Test Body",
+            &None,
+            &None,
+            &vec![],
+            &None,
+            &None,
+            &None,
+            &None,
+            &None,
+        )
+        .unwrap();
+
+    let mut tasks = database_manager
+        .get(&None, &None, &vec![], &None, &None, &None)
+        .unwrap();
+
+    assert_eq!(tasks.len(), 1);
+
+    assert_eq!(tasks[0].annotation, "");
+
+    database_manager
+        .add_annotation(1, String::from("This is my annotation"))
+        .unwrap();
+
+    let mut tasks = database_manager
+        .get(&None, &None, &vec![], &None, &None, &None)
+        .unwrap();
+    assert_eq!(tasks[0].annotation, String::from("This is my annotation"));
+
     Ok(())
 }

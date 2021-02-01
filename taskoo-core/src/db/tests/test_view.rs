@@ -8,8 +8,8 @@ use crate::db::task_manager::DatabaseManager;
 fn get_setting() -> HashMap<String, String> {
     let mut setting = HashMap::new();
     setting.insert("db_path".to_owned(), ":memory:".to_owned());
-    setting.insert("tag".to_owned(), "Ready, Blocked, Completed".to_owned());
-    setting.insert("context".to_owned(), "Inbox, Work, Life".to_owned());
+    setting.insert("tag".to_owned(), "ready, blocked, completed".to_owned());
+    setting.insert("context".to_owned(), "inbox, work, life".to_owned());
     return setting;
 }
 
@@ -47,7 +47,7 @@ fn test_view_due() -> Result<()> {
 
     let rows = database_manager
         .view(
-            &"Inbox".to_string(),
+            &"inbox".to_string(),
             &Some("due".to_string()),
             &None,
             &"2020-11-13".to_string(),
@@ -95,7 +95,7 @@ fn test_view_overdue() -> Result<()> {
 
     let rows = database_manager
         .view(
-            &"Inbox".to_string(),
+            &"inbox".to_string(),
             &Some("overdue".to_string()),
             &None,
             &"2020-11-13".to_string(),
@@ -157,7 +157,7 @@ fn test_view_schedule() -> Result<()> {
 
     let rows = database_manager
         .view(
-            &"Inbox".to_string(),
+            &"inbox".to_string(),
             &Some("schedule".to_string()),
             &None,
             &"2020-11-13".to_string(),
@@ -220,7 +220,7 @@ fn test_view_schedule_today() -> Result<()> {
 
     let rows = database_manager
         .view(
-            &"Inbox".to_string(),
+            &"inbox".to_string(),
             &Some("schedule".to_string()),
             &None,
             &"today".to_string(),
@@ -272,7 +272,7 @@ fn test_view_all_today() -> Result<()> {
 
     let rows = database_manager
         .view(
-            &"Inbox".to_string(),
+            &"inbox".to_string(),
             &Some("all".to_string()),
             &None,
             &"today".to_string(),

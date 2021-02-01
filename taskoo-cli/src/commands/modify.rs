@@ -1,6 +1,5 @@
 use anyhow::{Context, Result};
 use clap::ArgMatches;
-use taskoo_core::error::TaskooError;
 use taskoo_core::operation::{execute, ModifyOperation};
 
 use crate::option_parser::{parse_command_option, CommandOption};

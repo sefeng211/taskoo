@@ -3,7 +3,7 @@ use taskoo_core::core::Operation;
 use taskoo_core::error::TaskooError;
 use taskoo_core::command::Command;
 
-use log::{debug, info};
+use log::{info};
 use std::io;
 use std::io::Write;
 use taskoo_core::operation::{execute, Get as GetOperation, ModifyOperation, DeleteOperation};
@@ -129,7 +129,7 @@ impl Review {
                     let mut operation = DeleteOperation {
                         database_manager: None,
                         task_ids: vec![task.id],
-                        result: None
+                        result: None,
                     };
                     execute(&mut operation)?;
                 } else {

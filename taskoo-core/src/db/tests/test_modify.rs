@@ -8,7 +8,7 @@ fn get_setting() -> HashMap<String, String> {
     let mut setting = HashMap::new();
     setting.insert("db_path".to_owned(), ":memory:".to_owned());
     setting.insert("tag".to_owned(), "Ready, Blocked".to_owned());
-    setting.insert("context".to_owned(), "Inbox, Work, Life".to_owned());
+    setting.insert("context".to_owned(), "inbox, Work, Life".to_owned());
     return setting;
 }
 
@@ -31,7 +31,7 @@ fn test_modify_single() -> Result<()> {
         .unwrap();
 
     let tasks = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None)
         .unwrap();
 
     assert_eq!(tasks.len(), 1);
@@ -56,7 +56,6 @@ fn test_modify_single() -> Result<()> {
             &None,
             &Some("Work".to_string()),
             &vec![],
-            &None,
             &None,
             &None,
             &None,
@@ -96,7 +95,7 @@ fn test_modify_single_with_tag() -> Result<()> {
         .unwrap();
 
     let tasks = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None)
         .unwrap();
 
     assert_eq!(tasks.len(), 1);
@@ -121,7 +120,6 @@ fn test_modify_single_with_tag() -> Result<()> {
             &None,
             &Some("Work".to_string()),
             &vec![],
-            &None,
             &None,
             &None,
             &None,
@@ -162,7 +160,7 @@ fn test_modify_tag_only() -> Result<()> {
         .unwrap();
 
     let tasks = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None)
         .unwrap();
 
     assert_eq!(tasks.len(), 1);
@@ -185,9 +183,8 @@ fn test_modify_tag_only() -> Result<()> {
     let tasks = database_manager
         .get(
             &None,
-            &Some("Inbox".to_string()),
+            &Some("inbox".to_string()),
             &vec![],
-            &None,
             &None,
             &None,
             &None,

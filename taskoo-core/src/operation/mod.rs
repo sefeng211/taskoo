@@ -12,6 +12,7 @@ pub use view::*;
 
 use crate::core::Operation;
 use crate::error::TaskooError;
+pub use crate::db::task_helper::Task;
 
 pub fn execute(op: &mut impl Operation) -> Result<(), TaskooError> {
     op.init()?;

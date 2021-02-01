@@ -1,4 +1,4 @@
-use crate::db::add::add;
+use crate::db::add::{add, add_annotation};
 use crate::db::delete::delete;
 use crate::db::get::get;
 use crate::db::modify::modify;
@@ -57,9 +57,9 @@ impl DatabaseManager {
         // Prepare the context_id
         let mut tx = self.conn.transaction()?;
 
-        let mut context_id: i64 = 1;
-        if let Some(context) = context_name {
-            context_id = DatabaseManager::convert_context_name_to_id(&tx, &context, true)?;
+        let context_id: i64 = match context_name {
+            Some(context) => DatabaseManager::convert_context_name_to_id(&tx, &context, true)?,
+            None => 1, // default to `Inbox` context
         };
 
         let mut state_id = None;
@@ -115,6 +115,17 @@ impl DatabaseManager {
         Ok(tasks)
     }
 
+    pub fn add_annotation(
+        &mut self,
+        task_id: i64,
+        annotation: String,
+    ) -> Result<Vec<Task>, TaskooError> {
+        let mut tx = self.conn.transaction()?;
+        let tasks = add_annotation(&mut tx, task_id, annotation)?;
+        tx.commit()?;
+        Ok(tasks)
+    }
+
     pub fn get(
         &mut self,
         priority: &Option<u8>,
@@ -122,8 +133,7 @@ impl DatabaseManager {
         tag_names: &Vec<String>,
         due_date: &Option<&str>,
         scheduled_at: &Option<&str>,
-        is_repeat: &Option<u8>,
-        is_recurrence: &Option<u8>,
+        task_id: &Option<i64>,
     ) -> Result<Vec<Task>, TaskooError> {
         info!(
             "Doing Get Operation with context_name {:?}, tag {:?}",
@@ -152,8 +162,7 @@ impl DatabaseManager {
             &tag_ids,
             &due_date,
             &scheduled_at,
-            &is_repeat,
-            &is_recurrence,
+            &task_id,
         )?;
         tx.commit()?;
         Ok(tasks)
@@ -357,7 +366,6 @@ impl DatabaseManager {
                 .format("%Y-%m-%d")
                 .to_string());
         } else if scheduled_at == "today" {
-            let current_datetime: Date<Local> = Local::today();
             return Ok(current_date.format("%Y-%m-%d").to_string());
         } else if scheduled_at.ends_with("hours") {
             let scheduled_at_split: Vec<&str> = scheduled_at.split("hours").collect();

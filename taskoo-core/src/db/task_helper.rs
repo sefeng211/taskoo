@@ -19,6 +19,7 @@ pub struct Task {
     pub scheduled_repeat: String,
     pub is_completed: bool,
     pub state_name: String,
+    pub annotation: String,
 }
 
 pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
@@ -27,7 +28,7 @@ pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
     while let Some(row) = rows.next().unwrap() {
         // TODO convert context_id to context_name
         let mut tag_names: Vec<String> = vec![];
-        match row.get(11) {
+        match row.get(12) {
             Ok(names) => {
                 let temp: String = names;
                 for n in temp.split(",") {
@@ -38,7 +39,7 @@ pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
         }
 
         let mut tag_ids: Vec<i64> = vec![];
-        match row.get(10) {
+        match row.get(11) {
             Ok(ids) => {
                 let temp: String = ids;
                 for n in temp.split(",") {
@@ -48,7 +49,8 @@ pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
             Err(_) => {}
         }
 
-        let is_completed = tag_names.contains(&"Completed".to_string());
+        // TODO Hard-coded Completed
+        let is_completed = tag_names.contains(&"completed".to_string());
         let task = Task {
             id: row.get(0).unwrap(),
             body: row.get(1).unwrap(),
@@ -62,6 +64,7 @@ pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
             scheduled_repeat: row.get(7).unwrap(),
             context_name: row.get(8).unwrap(),
             state_name: row.get(9).unwrap(),
+            annotation: row.get(10).unwrap_or("".to_string()),
             is_completed: is_completed,
         };
 

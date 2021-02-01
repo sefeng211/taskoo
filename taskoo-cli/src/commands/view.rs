@@ -1,11 +1,10 @@
 use crate::display::Display;
-use crate::option_parser::{CommandOption, parse_command_option};
-use anyhow::{Context, Result};
+use anyhow::{Result};
 use clap::ArgMatches;
 use ini::Ini;
 use log::{debug, info};
 use taskoo_core::command::Command;
-use taskoo_core::operation::{execute, View as ViewOperation};
+use taskoo_core::operation::{View as ViewOperation};
 
 pub struct View {
     config: Ini,

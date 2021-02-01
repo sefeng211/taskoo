@@ -10,6 +10,7 @@ pub const CREATE_TASK_TABLE_QUERY: &str = "
         due_repeat TEXT nullable,
         scheduled_repeat TEXT nullable,
         state_id INTEGER nullable,
+        annotation TEXT nullabe,
         FOREIGN KEY(context_id) REFERENCES context(id),
         FOREIGN KEY(state_id) REFERENCES state(id)
     )";
@@ -105,8 +106,6 @@ pub fn generate_get_condition(
     context_id: &Option<i64>,
     due_date: &Option<&str>,
     scheduled_at: &Option<&str>,
-    is_repeat: &Option<u8>,
-    is_recurrence: &Option<u8>,
 ) -> Vec<String> {
     return generate_condition(
         body,

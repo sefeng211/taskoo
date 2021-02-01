@@ -22,3 +22,6 @@ State: `Ready`, `Completed`, `Blocked`, `Started`
 ## List
 `task list`: List all tasks
 `task list c:Work`: List all tasks in `Work` context
+
+
+Tasks are sorted by `State: Started` -> `Priority` ->`Created At`

@@ -1,6 +1,4 @@
 use crate::extra::CommandError;
-use log::error;
-use thiserror::Error;
 
 #[derive(Debug)]
 pub struct CommandOption<'a> {

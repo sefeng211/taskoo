@@ -73,6 +73,6 @@ mod tests {
     #[test]
     fn test_get_context() {
         let context_names = Command::context(Some(get_setting())).unwrap();
-        assert_eq!(context_names, vec!["Inbox"]);
+        assert_eq!(context_names, vec!["inbox"]);
     }
 }

@@ -31,7 +31,7 @@ fn test_delete_simple() -> Result<()> {
         .expect("");
 
     let rows = database_manager
-        .get(&None, &None, &vec![], &None, &None, &Some(1), &None)
+        .get(&None, &None, &vec![], &None, &None, &Some(1))
         .unwrap();
 
     assert_eq!(rows.len(), 1);
@@ -39,7 +39,7 @@ fn test_delete_simple() -> Result<()> {
     database_manager.delete(&vec![1]).unwrap();
 
     let rows = database_manager
-        .get(&None, &None, &vec![], &None, &None, &Some(1), &None)
+        .get(&None, &None, &vec![], &None, &None, &Some(1))
         .unwrap();
 
     assert_eq!(rows.len(), 0);
@@ -79,7 +79,7 @@ fn test_delete_multiple() -> Result<()> {
         .expect("");
 
     let rows = database_manager
-        .get(&None, &None, &vec![], &None, &None, &Some(1), &None)
+        .get(&None, &None, &vec![], &None, &None, &None)
         .unwrap();
 
     assert_eq!(rows.len(), 2);
@@ -87,7 +87,7 @@ fn test_delete_multiple() -> Result<()> {
     database_manager.delete(&vec![1, 2]).unwrap();
 
     let bb = database_manager
-        .get(&None, &None, &vec![], &None, &None, &Some(1), &None)
+        .get(&None, &None, &vec![], &None, &None, &None)
         .unwrap();
 
     assert_eq!(bb.len(), 0);

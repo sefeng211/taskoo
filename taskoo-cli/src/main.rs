@@ -13,7 +13,7 @@ mod option_parser;
 
 use commands::add::Add;
 use commands::delete::Delete;
-use commands::done::Done;
+use commands::state_changer::StateChanger;
 use commands::info::Info;
 use commands::list::List;
 use commands::modify::Modify;
@@ -108,8 +108,18 @@ fn main() -> Result<()> {
                 .arg(Arg::new("task_ids").index(1).required(true).multiple(true)),
         )
         .subcommand(
+            App::new("start")
+                .about("Change the stae of a task/tasks to start")
+                .arg(Arg::new("task_ids").index(1).required(true).multiple(true)),
+        )
+        .subcommand(
             App::new("done")
                 .about("Change the state of a task/tasks to done")
+                .arg(Arg::new("task_ids").index(1).required(true).multiple(true)),
+        )
+        .subcommand(
+            App::new("annotate")
+                .about("Add annoatation to a task")
                 .arg(Arg::new("task_ids").index(1).required(true).multiple(true)),
         )
         .get_matches();
@@ -175,11 +185,50 @@ fn main() -> Result<()> {
             Ok(()) => {}
         }
     } else if matches.is_present("done") {
-        let done = Done::new();
-        done.run(&matches.subcommand_matches("done").unwrap());
+        // TODO: Task state should not be hard-coded
+        let state_changer = StateChanger::new("completed");
+        match state_changer
+            .run(&matches.subcommand_matches("done").unwrap())
+            .context("Failed to complete a task")
+        {
+            Err(e) => {
+                eprintln!("{:?}", e);
+            }
+            Ok(()) => {}
+        }
     } else if matches.is_present("info") {
         let info = Info::new();
-        info.run(&matches.subcommand_matches("info").unwrap());
+        match info
+            .run(&matches.subcommand_matches("info").unwrap())
+            .context("Failed to run info on task")
+        {
+            Err(e) => {
+                eprintln!("{:?}", e);
+            }
+            Ok(()) => {}
+        }
+    } else if matches.is_present("start") {
+        let state_changer = StateChanger::new("start");
+        match state_changer
+            .run(&matches.subcommand_matches("start").unwrap())
+            .context("Failed to run start command")
+        {
+            Err(e) => {
+                eprintln!("{:?}", e);
+            }
+            Ok(()) => {}
+        }
+    } else if matches.is_present("annotate") {
+        match Add::add_annoation(&matches.subcommand_matches("annotate").unwrap())
+            .context("Add command")
+        {
+            Err(e) => {
+                eprintln!("{:?}", e);
+            }
+            Ok(()) => {
+                println!("Added annotation");
+            }
+        }
     }
     Ok(())
 }

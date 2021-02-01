@@ -8,8 +8,8 @@ use crate::db::task_manager::DatabaseManager;
 fn get_setting() -> HashMap<String, String> {
     let mut setting = HashMap::new();
     setting.insert("db_path".to_owned(), ":memory:".to_owned());
-    setting.insert("tag".to_owned(), "Ready, Blocked, Completed".to_owned());
-    setting.insert("context".to_owned(), "Inbox, Work, Life".to_owned());
+    setting.insert("tag".to_owned(), "ready, blocked, completed".to_owned());
+    setting.insert("context".to_owned(), "inbox, work, life".to_owned());
     return setting;
 }
 
@@ -32,7 +32,7 @@ fn test_get_simple() -> Result<()> {
         .expect("");
 
     let rows = database_manager
-        .get(&None, &None, &vec![], &None, &None, &Some(1), &None)
+        .get(&None, &None, &vec![], &None, &None, &Some(1))
         .unwrap();
 
     assert_eq!(rows.len(), 1);
@@ -46,7 +46,7 @@ fn test_get_simple() -> Result<()> {
     assert_eq!(rows[0].id, 1);
     assert_eq!(rows[0].body, "Test Body");
     assert_eq!(rows[0].priority, 0);
-    assert_eq!(rows[0].context_name, "Inbox");
+    assert_eq!(rows[0].context_name, "inbox");
     assert_eq!(created_at_datetime, current_datetime.date());
     assert_eq!(rows[0].due_date.is_empty(), true);
     assert_eq!(rows[0].scheduled_at.is_empty(), false);
@@ -110,7 +110,6 @@ fn test_get_all_for_context() -> Result<()> {
             &None,
             &None,
             &None,
-            &None,
         )
         .unwrap();
 
@@ -167,7 +166,7 @@ fn test_get_with_tag_ids() -> Result<()> {
         .expect("");
 
     let rows = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None)
         .unwrap();
 
     assert_eq!(rows.len(), 3);
@@ -177,7 +176,6 @@ fn test_get_with_tag_ids() -> Result<()> {
             &None,
             &None,
             &vec!["Completed".to_string()],
-            &None,
             &None,
             &None,
             &None,

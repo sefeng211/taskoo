@@ -17,6 +17,13 @@ pub struct Add<'a> {
     result: Option<Vec<Task>>,
 }
 
+pub struct AddAnnotation {
+    pub task_id: i64,
+    pub annotation: String,
+    database_manager: Option<DatabaseManager>,
+    result: Option<Vec<Task>>,
+}
+
 impl Add<'_> {
     pub fn new(body: &str) -> Add {
         Add {
@@ -34,6 +41,18 @@ impl Add<'_> {
         }
     }
 }
+
+impl AddAnnotation {
+    pub fn new(task_id: i64, annotation: String) -> AddAnnotation {
+        AddAnnotation {
+            task_id: task_id,
+            annotation: annotation,
+            database_manager: None,
+            result: None,
+        }
+    }
+}
+
 impl Operation for Add<'_> {
     fn init(&mut self) -> Result<(), InitialError> {
         self.database_manager = Some(DatabaseManager::new(
@@ -41,6 +60,7 @@ impl Operation for Add<'_> {
         ));
         Ok(())
     }
+
     fn do_work(&mut self) -> Result<Vec<Task>, TaskooError> {
         for tag in self.tag_names.iter_mut() {
             *tag = tag.to_lowercase();
@@ -64,6 +84,29 @@ impl Operation for Add<'_> {
         );
     }
     fn set_result(&mut self, _result: Vec<Task>) {}
+    fn get_result(&mut self) -> &Vec<Task> {
+        return &self.result.as_ref().unwrap();
+    }
+}
+
+impl Operation for AddAnnotation {
+    fn init(&mut self) -> Result<(), InitialError> {
+        self.database_manager = Some(DatabaseManager::new(
+            &ConfigManager::init_and_get_database_path()?,
+        ));
+        Ok(())
+    }
+
+    fn do_work(&mut self) -> Result<Vec<Task>, TaskooError> {
+        return DatabaseManager::add_annotation(
+            self.database_manager.as_mut().unwrap(),
+            self.task_id,
+            self.annotation.clone(),
+        );
+    }
+
+    fn set_result(&mut self, _result: Vec<Task>) {}
+
     fn get_result(&mut self) -> &Vec<Task> {
         return &self.result.as_ref().unwrap();
     }

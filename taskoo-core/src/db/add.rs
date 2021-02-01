@@ -36,8 +36,8 @@ pub fn add(
     let mut statement = tx.prepare(
         "
     INSERT INTO task
-    (body, priority, context_id, due_date, scheduled_at, due_repeat, scheduled_repeat, state_id) VALUES
-    (:body, :priority, :context_id, :due_date, :scheduled_at, :due_repeat, :scheduled_repeat, :state_id)",
+    (body, priority, context_id, due_date, scheduled_at, due_repeat, scheduled_repeat, state_id, annotation) VALUES
+    (:body, :priority, :context_id, :due_date, :scheduled_at, :due_repeat, :scheduled_repeat, :state_id, :annotation)",
     )?;
 
     statement.execute_named(named_params! {
@@ -48,10 +48,30 @@ pub fn add(
         ":scheduled_at": scheduled_at.unwrap_or(""),
         ":due_repeat": due_repeat.unwrap_or(""),
         ":scheduled_repeat": scheduled_repeat.unwrap_or(""),
-        ":state_id": state_id.unwrap_or(1)
+        ":state_id": state_id.unwrap_or(1),
+        ":annotation": ""
     })?;
 
     add_tag(&tx, tag_ids)?;
+
+    Ok(vec![])
+}
+
+pub fn add_annotation(
+    tx: &mut Transaction,
+    task_id: i64,
+    annotation: String,
+) -> Result<Vec<Task>, TaskooError> {
+    let mut statement = tx.prepare(
+        "
+        Update task set annotation = :annotation where id = :task_id
+        ",
+    )?;
+
+    statement.execute_named(named_params! {
+        ":annotation": annotation,
+        ":task_id": task_id
+    })?;
 
     Ok(vec![])
 }

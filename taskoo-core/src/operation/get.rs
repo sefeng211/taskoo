@@ -9,8 +9,7 @@ pub struct Get<'a> {
     pub tag_names: Vec<String>,
     pub due_date: Option<&'a str>,
     pub scheduled_at: Option<&'a str>,
-    pub is_repeat: Option<u8>,
-    pub is_recurrence: Option<u8>,
+    pub task_id: Option<i64>,
     database_manager: Option<DatabaseManager>,
     result: Vec<Task>,
 }
@@ -23,8 +22,7 @@ impl<'a> Get<'a> {
             tag_names: vec![],
             due_date: None,
             scheduled_at: None,
-            is_repeat: None,
-            is_recurrence: None,
+            task_id: None,
             database_manager: None,
             result: vec![],
         }
@@ -38,6 +36,7 @@ impl<'a> Operation for Get<'a> {
         ));
         Ok(())
     }
+
     fn do_work(&mut self) -> Result<Vec<Task>, TaskooError> {
         // Treat all tag names as lowercase
         for tag in self.tag_names.iter_mut() {
@@ -55,8 +54,7 @@ impl<'a> Operation for Get<'a> {
             &self.tag_names,
             &self.due_date,
             &self.scheduled_at,
-            &self.is_repeat,
-            &self.is_recurrence,
+            &self.task_id
         );
     }
 

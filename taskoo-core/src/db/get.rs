@@ -20,18 +20,18 @@ pub fn get(
     tag_ids: &Vec<i64>,
     due_date: &Option<&str>,
     scheduled_at: &Option<&str>,
-    is_repeat: &Option<u8>,
-    is_recurrence: &Option<u8>,
+    task_id: &Option<i64>,
 ) -> Result<Vec<Task>, TaskooError> {
-    let conditions = generate_get_condition(
-        &None,
-        priority,
-        context_id,
-        due_date,
-        scheduled_at,
-        is_repeat,
-        is_recurrence,
-    );
+    let conditions = match task_id {
+        Some(id) => vec![format!("task.id = {}", id)],
+        None => generate_get_condition(
+            &None,
+            priority,
+            context_id,
+            due_date,
+            scheduled_at,
+        ),
+    };
 
     assert!(!conditions.is_empty());
 
@@ -39,7 +39,7 @@ pub fn get(
 
     let final_argument = format!(
         "
-    SELECT task.id as id, body, priority, created_at, due_date, scheduled_at, due_repeat, scheduled_repeat, context.name, state.name, GROUP_CONCAT(task_tag.tag_id) as concat_tag_ids, GROUP_CONCAT(task_tag.name) FROM task
+    SELECT task.id as id, body, priority, created_at, due_date, scheduled_at, due_repeat, scheduled_repeat, context.name, state.name, task.annotation, GROUP_CONCAT(task_tag.tag_id) as concat_tag_ids, GROUP_CONCAT(task_tag.name) FROM task
     INNER JOIN context
     on context_id = context.id
     LEFT JOIN

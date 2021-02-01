@@ -2,13 +2,9 @@ use crate::display::Display;
 use crate::option_parser::parse_command_option;
 use clap::ArgMatches;
 use ini::Ini;
-use log::debug;
 use taskoo_core::command::Command;
 use taskoo_core::error::TaskooError;
-use taskoo_core::operation::{execute, Get as GetOp};
-
-use std::io::Write;
-use tabwriter::TabWriter;
+use taskoo_core::operation::{Get as GetOp};
 
 pub struct List {
     config: Ini,

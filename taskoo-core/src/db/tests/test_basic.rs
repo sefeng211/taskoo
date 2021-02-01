@@ -52,7 +52,7 @@ fn test_ensure_context_is_created() -> Result<(), DbError> {
     while let Some(names) = rows.next().expect("") {
         context_names.push(names.get(0).unwrap());
     }
-    assert_eq!(context_names, ["Inbox"]);
+    assert_eq!(context_names, ["inbox"]);
     Ok(())
 }
 

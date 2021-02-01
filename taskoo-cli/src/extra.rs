@@ -1,6 +1,5 @@
 use thiserror::Error;
 use std::num::ParseIntError;
-use taskoo_core::error::TaskooError;
 
 #[derive(Error, Debug)]
 pub enum CommandError {
