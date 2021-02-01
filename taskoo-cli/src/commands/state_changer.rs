@@ -1,0 +1,52 @@
+use clap::ArgMatches;
+use log::{debug, info};
+use taskoo_core::error::TaskooError;
+use taskoo_core::operation::{execute, ModifyOperation};
+
+pub struct StateChanger<'a> {
+    state: &'a str
+}
+
+impl<'a> StateChanger<'a> {
+    pub fn new(state: &str) -> StateChanger {
+        StateChanger {state: state}
+    }
+
+    pub fn run(&self, matches: &ArgMatches) -> Result<(), TaskooError> {
+        info!("Running done command");
+
+        let done_config: Vec<_> = matches.values_of("task_ids").unwrap().collect();
+
+        let mut task_ids: Vec<i64> = vec![];
+
+        // TODO: This can be abstruct into a function and reused
+        if done_config.len() == 1 {
+            if done_config[0].contains("..") {
+                let ranged_selection = done_config[0].split("..").collect::<Vec<&str>>();
+                if ranged_selection.len() != 2 {
+                    eprintln!("Invalid range provided {}", done_config[0]);
+                }
+                let start = ranged_selection[0]
+                    .parse::<i64>()
+                    .expect("Can't find valid start from provided range");
+                let end = ranged_selection[1]
+                    .parse::<i64>()
+                    .expect("Can't find valid end from provided range");
+                task_ids = (start..=end).collect::<Vec<i64>>();
+            } else {
+                task_ids.push(done_config[0].parse().expect("Invalid task id provided"));
+            }
+        } else {
+            for item in done_config.iter() {
+                task_ids.push(item.parse().expect("Invalid task id provided"));
+            }
+        }
+
+        debug!("Running Modify with {:?}", task_ids);
+
+        let mut operation = ModifyOperation::new(task_ids);
+        operation.state_name = Some(self.state);
+        execute(&mut operation)?;
+        Ok(())
+    }
+}
