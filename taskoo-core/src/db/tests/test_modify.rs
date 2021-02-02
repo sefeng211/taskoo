@@ -48,6 +48,7 @@ fn test_modify_single() -> Result<()> {
             &None,
             &None,
             &None,
+            &vec![]
         )
         .unwrap();
 
@@ -112,6 +113,7 @@ fn test_modify_single_with_tag() -> Result<()> {
             &None,
             &None,
             &None,
+            &vec![]
         )
         .unwrap();
 
@@ -177,6 +179,7 @@ fn test_modify_tag_only() -> Result<()> {
             &None,
             &None,
             &None,
+            &vec![]
         )
         .unwrap();
 
@@ -198,3 +201,4 @@ fn test_modify_tag_only() -> Result<()> {
 
     Ok(())
 }
+

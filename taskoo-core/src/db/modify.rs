@@ -25,6 +25,30 @@ fn add_tag(conn: &Transaction, task_ids: &Vec<i64>, tag_ids: Vec<i64>) -> Result
     Ok(())
 }
 
+fn remove_tag(
+    conn: &Transaction,
+    task_ids: &Vec<i64>,
+    tag_ids: Vec<i64>,
+) -> Result<(), TaskooError> {
+    info!(
+        "Removing tag_ids: {:?} from task_ids {:?}",
+        tag_ids, task_ids
+    );
+    let mut statement = conn
+        .prepare("DELETE FROM task_tag WHERE task_id = :task_id and tag_id = :tag_id")
+        .expect("Failed to prepare the DELETE FROM task_tag query");
+
+    for task_id in task_ids.iter() {
+        for tag_id in tag_ids.iter() {
+            debug!("Removing tag_id: {} from task_id {}", tag_id, task_id);
+            statement.execute_named(named_params! {
+            ":task_id": task_id,
+            ":tag_id": tag_id})?;
+        }
+    }
+    Ok(())
+}
+
 fn update_schedule_at_for_repeat(conn: &Transaction, task_id: &i64) -> Result<(), TaskooError> {
     let get_task_repetition_query = format!(
         "SELECT due_repeat, scheduled_repeat from task where id = {}",
@@ -65,8 +89,8 @@ fn update_schedule_at_for_repeat(conn: &Transaction, task_id: &i64) -> Result<()
         let new_schedule_at = DatabaseManager::parse_date_string(&scheduled_repeat)?;
         debug!("Parsed schedule at {}", new_schedule_at);
 
-        let mut statement =
-            conn.prepare("Update task SET scheduled_at = :scheduled_at, state_id = 1 WHERE id = :id")?;
+        let mut statement = conn
+            .prepare("Update task SET scheduled_at = :scheduled_at, state_id = 1 WHERE id = :id")?;
         statement.execute_named(named_params! {
             ":scheduled_at": new_schedule_at,
             ":id": task_id
@@ -89,6 +113,7 @@ pub fn modify(
     repeat: &Option<&str>,
     recurrence: &Option<&str>,
     state_id: &Option<i64>,
+    tag_ids_to_remove: Vec<i64>,
 ) -> Result<Vec<Task>, TaskooError> {
     // Prepare the statement
     let conditions = generate_condition(
@@ -103,7 +128,7 @@ pub fn modify(
     );
 
     // TODO: Return Error here
-    if conditions.is_empty() && tag_ids.is_empty() {
+    if conditions.is_empty() && tag_ids.is_empty() && tag_ids_to_remove.is_empty() {
         info!("Conditions and tag_ids are both empty, nothing is going to be modified");
         return Ok(vec![]);
     }
@@ -124,6 +149,7 @@ pub fn modify(
     }
 
     add_tag(&tx, &task_ids, tag_ids)?;
+    remove_tag(&tx, &task_ids, tag_ids_to_remove)?;
 
     // If the task is marked to completed, update the scheduled_at
     // based on repeat

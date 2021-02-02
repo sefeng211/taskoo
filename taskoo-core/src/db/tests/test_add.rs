@@ -464,6 +464,7 @@ fn test_add_repeat_scheduled_task() -> Result<()> {
             &None,
             &None,
             &Some("completed"),
+            &vec![]
         )
         .unwrap();
 
@@ -520,6 +521,7 @@ fn test_add_repeat_due_task() -> Result<()> {
             &None,
             &None,
             &Some("completed"),
+            &vec![]
         )
         .unwrap();
 

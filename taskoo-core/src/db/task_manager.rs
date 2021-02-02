@@ -15,6 +15,7 @@ use rusqlite::{named_params, Connection, Result, Transaction, NO_PARAMS};
 use std::collections::HashMap;
 
 // TODO: Rename it to TaskManager or create another struct to contain it
+#[derive(Debug)]
 pub struct DatabaseManager {
     pub conn: Connection,
     setting: HashMap<String, String>,
@@ -188,6 +189,7 @@ impl DatabaseManager {
         due_repeat: &Option<&str>,
         scheduled_repeat: &Option<&str>,
         state_name: &Option<&str>,
+        tags_to_remove: &Vec<String>,
     ) -> Result<Vec<Task>, TaskooError> {
         let mut tx = self.conn.transaction()?;
         if task_ids.is_empty() {
@@ -211,9 +213,14 @@ impl DatabaseManager {
         };
         // Prepare the tag_ids
         let mut tag_ids: Vec<i64> = vec![];
+        let mut tag_ids_to_remove: Vec<i64> = vec![];
 
         for tag_name in tag_names.iter() {
             tag_ids.push(DatabaseManager::convert_tag_name_to_id(&tx, &tag_name)?);
+        }
+
+        for tag_name in tags_to_remove.iter() {
+            tag_ids_to_remove.push(DatabaseManager::convert_tag_name_to_id(&tx, &tag_name)?);
         }
 
         let parse_scheduled_at = match scheduled_at {
@@ -238,6 +245,7 @@ impl DatabaseManager {
             &due_repeat,
             &scheduled_repeat,
             &state_id,
+            tag_ids_to_remove
         )?;
         tx.commit()?;
         Ok(tasks)

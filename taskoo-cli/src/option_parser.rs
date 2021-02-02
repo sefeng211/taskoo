@@ -7,7 +7,7 @@ pub struct CommandOption<'a> {
     pub due_date: Option<&'a str>,
     pub due_repeat: Option<&'a str>,
     pub tag_names: Vec<String>,
-    pub remove_tag_names: Vec<String>,
+    pub tags_to_remove: Vec<String>,
     pub task_ids: Vec<i64>,
     pub context_name: Option<String>,
     pub state_name: Option<String>,
@@ -26,7 +26,7 @@ impl<'a> CommandOption<'a> {
             context_name: None,
             state_name: None,
             body: None,
-            remove_tag_names: vec![],
+            tags_to_remove: vec![],
         };
     }
 }
@@ -34,7 +34,7 @@ impl<'a> CommandOption<'a> {
 pub fn parse_command_option<'a>(
     options: &Vec<&'a str>,
     parse_body: bool,
-    parse_remove_tag_names: bool,
+    parse_tags_to_remove: bool,
     parse_task_ids: bool,
 ) -> Result<CommandOption<'a>, CommandError> {
     let mut command_option = CommandOption::new();
@@ -78,6 +78,13 @@ pub fn parse_command_option<'a>(
             } else {
                 return Err(CommandError::InvalidContextName(option.to_string()));
             };
+        } else if option.starts_with("+-") {
+            start_parse_options = true;
+            if parse_tags_to_remove {
+                command_option.tags_to_remove.push(option[2..].to_string());
+            } else {
+                return Err(CommandError::InvalidTagName(option.to_string()));
+            }
         } else if option.starts_with("+") {
             start_parse_options = true;
             command_option.tag_names.push(option[1..].to_string());
@@ -87,15 +94,6 @@ pub fn parse_command_option<'a>(
                 command_option.state_name = Some(option[1..].to_string());
             } else {
                 return Err(CommandError::InvalidContextName(option.to_string()));
-            }
-        } else if option.starts_with("-") {
-            start_parse_options = true;
-            if parse_remove_tag_names {
-                command_option
-                    .remove_tag_names
-                    .push(option[1..].to_string());
-            } else {
-                return Err(CommandError::InvalidTagName(option.to_string()));
             }
         } else {
             if !start_parse_options {
@@ -164,7 +162,7 @@ mod tests {
     #[should_panic]
     fn test_parse_due_date_error() {
         let option = vec!["d:2020-11-11", "d:2020-11-11"];
-        let parsed_option = parse_command_option(&option, false, false, false).unwrap();
+        let _ = parse_command_option(&option, false, false, false).unwrap();
     }
 
     #[test]
@@ -203,18 +201,18 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_remove_tag_names() {
-        let option = vec!["-Tag1", "-Tag2"];
+    fn test_parse_tags_to_remove() {
+        let option = vec!["+-Tag1", "+-Tag2"];
         let parsed_option = parse_command_option(&option, true, true, false).unwrap();
-        assert_eq!(parsed_option.remove_tag_names, vec!["Tag1", "Tag2"]);
+        assert_eq!(parsed_option.tags_to_remove, vec!["Tag1", "Tag2"]);
     }
 
     #[test]
     #[should_panic]
-    fn test_parse_remove_tag_names_when_no_need() {
-        let option = vec!["-Tag1", "-Tag2"];
+    fn test_parse_tags_to_remove_when_no_need() {
+        let option = vec!["+-Tag1", "+-Tag2"];
         let parsed_option = parse_command_option(&option, true, false, false).unwrap();
-        assert_eq!(parsed_option.remove_tag_names, vec!["Tag1", "Tag2"]);
+        assert_eq!(parsed_option.tags_to_remove, vec!["Tag1", "Tag2"]);
     }
 
     #[test]

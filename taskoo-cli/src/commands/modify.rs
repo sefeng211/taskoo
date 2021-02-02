@@ -17,7 +17,6 @@ impl Modify {
                 .context("Unable to parse the provided option for modify")?;
         }
 
-        debug!("Context Name {:?}", option.context_name);
         let mut operation = ModifyOperation::new(option.task_ids);
         operation.context_name = option.context_name;
         operation.tag_names = option.tag_names;
@@ -25,8 +24,10 @@ impl Modify {
         operation.scheduled_at = option.scheduled_at;
         operation.due_repeat = option.due_repeat;
         operation.scheduled_repeat = option.scheudled_repeat;
+        operation.tags_to_remove = option.tags_to_remove;
         operation.state_name = option.state_name.as_deref();
 
+        debug!("Executing ModifyOperation {:?}", operation);
         execute(&mut operation)?;
         Ok(())
     }
