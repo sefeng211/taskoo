@@ -74,12 +74,11 @@ impl DisplayColumn {
                     );
                 }
 
-                let color = if is_started {
-                    Color::Magenta
+                if is_started {
+                    return Paint::new(task_body).fg(Color::Magenta).bold().to_string();
                 } else {
-                    Color::White
+                    return Paint::new(task_body).fg(Color::White).to_string();
                 };
-                Paint::new(task_body).fg(color).to_string()
             }
             DisplayColumn::Created => Paint::new(task.created_at.clone())
                 .fg(Color::Green)

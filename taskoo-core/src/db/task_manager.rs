@@ -55,20 +55,19 @@ impl DatabaseManager {
         scheduled_repeat: &Option<&str>,
         state_name: &Option<String>,
     ) -> Result<Vec<Task>, TaskooError> {
-        // Prepare the context_id
         let mut tx = self.conn.transaction()?;
 
+        // Each task must have a context associated with it
         let context_id: i64 = match context_name {
             Some(context) => DatabaseManager::convert_context_name_to_id(&tx, &context, true)?,
             None => 1, // default to `Inbox` context
         };
 
-        let mut state_id = None;
-        if let Some(state) = state_name {
-            state_id = Some(DatabaseManager::convert_state_name_to_id(&tx, &state)?);
-        }
+        let state_id = match state_name {
+            Some(state) => Some(DatabaseManager::convert_state_name_to_id(&tx, &state)?),
+            None => None,
+        };
 
-        // Prepare the tag_ids
         let mut tag_ids: Vec<i64> = vec![];
         for tag_name in tag_names.iter() {
             tag_ids.push(DatabaseManager::convert_tag_name_to_id(&tx, &tag_name)?);
@@ -76,10 +75,7 @@ impl DatabaseManager {
 
         // Parse the scheduled_at string!
         let parse_scheduled_at = match scheduled_at {
-            Some(period) => {
-                let parsed = DatabaseManager::parse_date_string(period)?;
-                Some(parsed)
-            }
+            Some(period) => Some(DatabaseManager::parse_date_string(period)?),
             None => None,
         };
 
@@ -245,7 +241,7 @@ impl DatabaseManager {
             &due_repeat,
             &scheduled_repeat,
             &state_id,
-            tag_ids_to_remove
+            tag_ids_to_remove,
         )?;
         tx.commit()?;
         Ok(tasks)

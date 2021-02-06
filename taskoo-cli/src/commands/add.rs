@@ -32,6 +32,10 @@ impl Add {
         operation.state_name = option.state_name;
 
         execute(&mut operation)?;
+        let result = &operation.get_result();
+        assert_eq!(result.len(), 1);
+
+        println!("{:?}", result[0]);
         Ok(())
     }
 

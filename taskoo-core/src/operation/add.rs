@@ -70,6 +70,7 @@ impl Operation for Add<'_> {
             Some(name) => Some(name.to_lowercase()),
             None => None,
         };
+
         return DatabaseManager::add(
             self.database_manager.as_mut().unwrap(),
             &self.body,
@@ -83,7 +84,11 @@ impl Operation for Add<'_> {
             &self.state_name,
         );
     }
-    fn set_result(&mut self, _result: Vec<Task>) {}
+
+    fn set_result(&mut self, result: Vec<Task>) {
+        self.result = Some(result);
+    }
+
     fn get_result(&mut self) -> &Vec<Task> {
         return &self.result.as_ref().unwrap();
     }
