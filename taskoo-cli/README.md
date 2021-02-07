@@ -24,4 +24,7 @@ State: `Ready`, `Completed`, `Blocked`, `Started`
 `task list c:Work`: List all tasks in `Work` context
 
 
+## Clean
+To remove `context` or `tag`
+
 Tasks are sorted by `State: Started` -> `Priority` ->`Created At`

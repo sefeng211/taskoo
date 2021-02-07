@@ -51,7 +51,7 @@ pub fn parse_command_option<'a>(
         if option.starts_with("s:") {
             start_parse_options = true;
             if command_option.scheduled_at.is_none() {
-                let period: Vec<&str> = option[2..].split("+").collect();
+                let period: Vec<&str> = option[2 ..].split("+").collect();
                 command_option.scheduled_at = Some(&period[0]);
                 if period.len() > 1 {
                     command_option.scheudled_repeat = Some(&period[1]);
@@ -63,7 +63,7 @@ pub fn parse_command_option<'a>(
         } else if option.starts_with("d:") {
             start_parse_options = true;
             if command_option.due_date.is_none() {
-                let period: Vec<&str> = option[2..].split("+").collect();
+                let period: Vec<&str> = option[2 ..].split("+").collect();
                 command_option.due_date = Some(&period[0]);
                 if period.len() > 1 {
                     command_option.due_repeat = Some(&period[1]);
@@ -74,24 +74,24 @@ pub fn parse_command_option<'a>(
         } else if option.starts_with("c:") {
             start_parse_options = true;
             if command_option.context_name.is_none() {
-                command_option.context_name = Some(option[2..].to_string());
+                command_option.context_name = Some(option[2 ..].to_string());
             } else {
                 return Err(CommandError::InvalidContextName(option.to_string()));
             };
         } else if option.starts_with("+-") {
             start_parse_options = true;
             if parse_tags_to_remove {
-                command_option.tags_to_remove.push(option[2..].to_string());
+                command_option.tags_to_remove.push(option[2 ..].to_string());
             } else {
                 return Err(CommandError::InvalidTagName(option.to_string()));
             }
         } else if option.starts_with("+") {
             start_parse_options = true;
-            command_option.tag_names.push(option[1..].to_string());
+            command_option.tag_names.push(option[1 ..].to_string());
         } else if option.starts_with("@") {
             start_parse_options = true;
             if command_option.state_name.is_none() {
-                command_option.state_name = Some(option[1..].to_string());
+                command_option.state_name = Some(option[1 ..].to_string());
             } else {
                 return Err(CommandError::InvalidContextName(option.to_string()));
             }
@@ -117,7 +117,7 @@ pub fn parse_command_option<'a>(
                             .expect("Can't find valid end from provided range");
                         command_option
                             .task_ids
-                            .append(&mut (start..=end).collect::<Vec<i64>>());
+                            .append(&mut (start ..= end).collect::<Vec<i64>>());
                     } else {
                         command_option.task_ids.push(option.parse()?);
                     }

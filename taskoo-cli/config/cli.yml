@@ -1,0 +1,90 @@
+name: Taskoo
+version: "1.0.0"
+author: Sean Feng <sean@seanfeng.dev>
+about: A CLI task management application written in Rust, with GTD method in mind
+subcommands:
+  - add:
+      about: Add a task
+      args:
+        - arguments:
+            about: |
+              Include the body of the task (required)
+
+              Usage:
+                taskoo add This is my body
+                taskoo add This is my body +tag1 +tag2
+                taskoo add This is my body +tag1 +tag2 c:gtd
+                taskoo add This is my body +tag1 +tag2 c:gtd @waiting
+            index: 1
+            required: false
+            multiple: true
+  - list:
+      alias: ls
+      about: Lists tasks
+      args:
+        - arguments:
+            about: Aplly filters to search tasks
+            index: 1
+            required: false
+            multiple: true
+  - review:
+      about: Review tasks interactively
+      args:
+        - arguments:
+            about: Apply filters to search tasks
+            index: 1
+            required: false
+            multiple: true
+  - modify:
+      about: Modify tasks
+      args:
+        - args:
+            allow_hyphen_values: true
+            index: 1
+            required: true
+            multiple: true
+  - delete:
+      about: Delete tasks
+      args:
+        - task_ids:
+            index: 1
+            required: true
+            multiple: true
+  - view:
+      about: View tasks
+      args:
+        - args:
+            index: 1
+            required: true
+            multiple: true
+  - info:
+      about: Show information about given task ids
+      args:
+        - task_id:
+            index: 1
+            required: true
+        - attribute:
+            index: 2
+            required: false
+  - start:
+      about: Change the state of task/tasks to start
+      args:
+        - task_ids:
+            index: 1
+            required: true
+            multiple: true
+  - done:
+      about: Change the state of task/tasks to done
+      args:
+        - task_ids:
+            index: 1
+            required: true
+            multiple: true
+  - annotate:
+      about: Add annotation to a task
+      alias: anno
+      args:
+        - task_id:
+            index: 1
+            required: true
+

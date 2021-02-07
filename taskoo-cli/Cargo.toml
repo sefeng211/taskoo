@@ -4,21 +4,25 @@ version = "0.1.0"
 authors = ["Sean Feng <sean@seanfeng.dev>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
-clap = "3.0.0-beta.2"
+clap = { version = "3.0.0-beta.2", features = ["yaml"] }
+
 taskoo-core = { path = "../taskoo-core" }
 comfy-table = "1.3.0"
 yansi = "0.5.0"
 log = "0.4.0"
 env_logger = "0.8.2"
-thiserror = "1.0.22"
+thiserror = "1.0.23"
 rust-ini = "0.16.0"
 dirs = "3.0"
 anyhow = "1.0.37"
 shrust = "0.0.7"
-dialoguer = "0.7.1"
 terminal_size = "0.1.16"
+ctrlc = { version = "3.0", features = ["termination"] }
+
+# Using this commit allows Confirm prompt to return None
+dialoguer = { git = "https://github.com/mitsuhiko/dialoguer.git", rev = "64f5f9c6f597f674db5a1e7ce57b1fc12931f764" }
+
 
 [dependencies.tabwriter]
 version = "1.2.1"

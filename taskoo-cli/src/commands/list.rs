@@ -1,10 +1,14 @@
-use crate::display::Display;
-use crate::option_parser::parse_command_option;
 use clap::ArgMatches;
 use ini::Ini;
+
+use taskoo_core::operation::Task;
 use taskoo_core::command::Command;
 use taskoo_core::error::TaskooError;
-use taskoo_core::operation::{Get as GetOp};
+use taskoo_core::operation::{Get as GetOp, execute};
+use taskoo_core::core::Operation;
+
+use crate::display::Display;
+use crate::option_parser::{CommandOption, parse_command_option};
 
 pub struct List {
     config: Ini,
@@ -21,34 +25,38 @@ impl List {
             let config: Vec<&str> = matches.values_of("arguments").unwrap().collect();
             let option = parse_command_option(&config, false, false, false).unwrap();
             if option.context_name.is_some() {
-                let mut final_tabbed_string = String::new();
-                final_tabbed_string.push_str(&self.get_tasks(
-                    &option.context_name.unwrap(),
-                    option.tag_names,
-                    option.due_date,
-                    option.scheduled_at,
-                )?);
-                Display::print(&final_tabbed_string);
+                // Apply the filter to a particular context
+                let context_name = option.context_name.clone().unwrap();
+                let mut operations_tuple =
+                    List::get_operations(option, Some(vec![context_name.to_string()]))?;
+
+                assert_eq!(operations_tuple.len(), 1);
+                let operation_tuple = &mut operations_tuple[0];
+                let tabbed_string = String::from(
+                    &self.process_operation(&operation_tuple.0, &mut operation_tuple.1)?,
+                );
+                Display::print(&tabbed_string);
             } else {
-                let context_names = Command::context(None)?;
-                for context in context_names.iter() {
-                    let mut final_tabbed_string = String::new();
-                    final_tabbed_string.push_str(&self.get_tasks(
-                        context,
-                        option.tag_names.clone(),
-                        option.due_date.clone(),
-                        option.scheduled_at.clone(),
-                    )?);
+                // Apply the filter to all context
+                //let context_names = Command::context(None)?;
+                let mut operations_tuple = List::get_operations(option, None)?;
+                for operation_tuple in operations_tuple.iter_mut() {
+                    let final_tabbed_string = String::from(
+                        &self.process_operation(&operation_tuple.0, &mut operation_tuple.1)?,
+                    );
+                    // Skip the contexts that doesn't have tasks
                     if !final_tabbed_string.is_empty() {
                         Display::print(&final_tabbed_string);
                     }
                 }
             }
         } else {
-            let context_names = Command::context(None).unwrap();
-            for context in context_names.iter() {
-                let mut final_tabbed_string = String::new();
-                final_tabbed_string.push_str(&self.get_tasks_for_context(context)?);
+            let mut operation_tuples = List::get_operations(CommandOption::new(), None)?;
+            for operation_tuple in operation_tuples.iter_mut() {
+                let final_tabbed_string = String::from(
+                    &self.process_operation(&operation_tuple.0, &mut operation_tuple.1)?,
+                );
+                // Skip the contexts that doesn't have tasks
                 if !final_tabbed_string.is_empty() {
                     Display::print(&final_tabbed_string);
                 }
@@ -57,23 +65,36 @@ impl List {
         Ok(())
     }
 
-    fn get_tasks_for_context(&self, context_name: &str) -> Result<String, TaskooError> {
-        return self.get_tasks(context_name, vec![], None, None);
-    }
-
-    fn get_tasks(
+    fn process_operation(
         &self,
         context_name: &str,
-        tag_names: Vec<String>,
-        due_date: Option<&str>,
-        scheduled_at: Option<&str>,
+        operation: &mut GetOp,
     ) -> Result<String, TaskooError> {
-        let mut operation = GetOp::new();
-        operation.context_name = Some(context_name.to_string());
-        operation.tag_names = tag_names;
-        operation.due_date = due_date;
-        operation.scheduled_at = scheduled_at;
+        return Display::display(&context_name, operation, &self.config, false);
+    }
 
-        return Display::display(&context_name, &mut operation, &self.config, false);
+    pub fn get_operations(
+        command_option: CommandOption,
+        some_context_names: Option<Vec<String>>,
+    ) -> Result<Vec<(String, GetOp)>, TaskooError> {
+        let context_names = match some_context_names {
+            Some(context_names) => context_names,
+            None => {
+                // If no context names are passed, use all context
+                let context_names = Command::context(None)?;
+                context_names
+            }
+        };
+
+        let mut result = vec![];
+        for context in context_names.iter() {
+            let mut operation = GetOp::new();
+            operation.context_name = Some(context.to_string());
+            operation.tag_names = command_option.tag_names.clone();
+            operation.due_date = command_option.due_date;
+            operation.scheduled_at = command_option.scheduled_at;
+            result.push((context.to_string(), operation));
+        }
+        Ok(result)
     }
 }

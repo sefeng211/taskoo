@@ -1,5 +1,9 @@
+#![feature(backtrace)]
+
 use anyhow::{Context, Result};
-use clap::{App, Arg};
+//use clap::{App, Arg};
+use clap::{App, load_yaml};
+
 use dirs::config_dir;
 use ini::Ini;
 use log::info;
@@ -8,6 +12,7 @@ use std::fs::OpenOptions;
 
 mod commands;
 mod display;
+mod error;
 mod extra;
 mod option_parser;
 
@@ -67,70 +72,16 @@ fn get_config() -> Ini {
 
 fn main() -> Result<()> {
     env_logger::init();
-    let matches = App::new("Taskoo")
-        .subcommand(
-            App::new("add")
-                .about("add a task")
-                .arg(Arg::new("config").multiple(true)),
-        )
-        .subcommand(
-            App::new("list").alias("ls").about("List tasks").arg(
-                Arg::new("arguments")
-                    .about("Arguments")
-                    .index(1)
-                    .required(false)
-                    .multiple(true),
-            ),
-        )
-        .subcommand(App::new("review").about("Review tasks interactively"))
-        .subcommand(
-            App::new("modify").about("Modify task").arg(
-                Arg::new("args")
-                    .allow_hyphen_values(true) // This doesn't really work see: https://github.com/clap-rs/clap/issues/1437
-                    .index(1)
-                    .required(true)
-                    .multiple(true),
-            ),
-        )
-        .subcommand(
-            App::new("delete")
-                .about("delete tasks")
-                .arg(Arg::new("task_ids").index(1).required(true).multiple(true)),
-        )
-        .subcommand(
-            App::new("view")
-                .about("view tasks")
-                .arg(Arg::new("args").index(1).required(true).multiple(true)),
-        )
-        .subcommand(
-            App::new("info")
-                .about("Show detailed information about given task ids.")
-                .arg(Arg::new("task_ids").index(1).required(true).multiple(true)),
-        )
-        .subcommand(
-            App::new("start")
-                .about("Change the stae of a task/tasks to start")
-                .arg(Arg::new("task_ids").index(1).required(true).multiple(true)),
-        )
-        .subcommand(
-            App::new("done")
-                .about("Change the state of a task/tasks to done")
-                .arg(Arg::new("task_ids").index(1).required(true).multiple(true)),
-        )
-        .subcommand(
-            App::new("annotate")
-                .about("Add annoatation to a task")
-                .arg(Arg::new("task_ids").index(1).required(true).multiple(true)),
-        )
-        .get_matches();
+    let yaml = load_yaml!("../config/cli.yml");
+    let matches = App::from(yaml).get_matches();
 
     if matches.is_present("add") {
         match Add::add(&matches.subcommand_matches("add").unwrap()).context("Add command") {
             Err(e) => {
                 eprintln!("{:?}", e);
             }
-            Ok(()) => {
-                println!("Task added");
+            Ok(message) => {
+                println!("{}", message);
             }
         }
     } else if matches.is_present("list") {
@@ -156,7 +107,11 @@ fn main() -> Result<()> {
             }
         }
     } else if matches.is_present("review") {
-        match Review::review().context("Review command failed") {
+        let review_command = Review::new(get_config());
+        match review_command
+            .review(&matches.subcommand_matches("review").unwrap())
+            .context("Review command failed")
+        {
             Err(e) => {
                 eprintln!("{:?}", e);
             }
@@ -200,7 +155,7 @@ fn main() -> Result<()> {
         let info = Info::new();
         match info
             .run(&matches.subcommand_matches("info").unwrap())
-            .context("Failed to run info on task")
+            .context("Failed to run <info> command")
         {
             Err(e) => {
                 eprintln!("{:?}", e);
@@ -220,13 +175,13 @@ fn main() -> Result<()> {
         }
     } else if matches.is_present("annotate") {
         match Add::add_annoation(&matches.subcommand_matches("annotate").unwrap())
-            .context("Add command")
+            .context("Failed to run <annotate> command")
         {
             Err(e) => {
                 eprintln!("{:?}", e);
             }
-            Ok(()) => {
-                println!("Added annotation");
+            Ok(message) => {
+                println!("{}", message);
             }
         }
     }

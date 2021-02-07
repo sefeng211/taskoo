@@ -1,9 +1,13 @@
+use std::backtrace::Backtrace;
 use clap::ArgMatches;
 use log::info;
-
 use anyhow::Result;
+
 use taskoo_core::core::Operation;
 use taskoo_core::operation::{execute, Get as GetOp};
+
+use crate::error::ClientError;
+
 pub struct Info;
 
 impl Info {
@@ -11,44 +15,39 @@ impl Info {
         Info
     }
 
-    pub fn run(&self, matches: &ArgMatches) -> Result<()> {
+    pub fn run(&self, matches: &ArgMatches) -> Result<(), ClientError> {
         info!("Running info command");
-        let done_config: Vec<_> = matches.values_of("task_ids").unwrap().collect();
-
-        let mut task_ids: Vec<i64> = vec![];
-
-        if done_config.len() == 1 {
-            if done_config[0].contains("..") {
-                let ranged_selection = done_config[0].split("..").collect::<Vec<&str>>();
-                if ranged_selection.len() != 2 {
-                    eprintln!("Invalid range provided {}", done_config[0]);
-                }
-                let start = ranged_selection[0]
-                    .parse::<i64>()
-                    .expect("Can't find valid start from provided range");
-                let end = ranged_selection[1]
-                    .parse::<i64>()
-                    .expect("Can't find valid end from provided range");
-                task_ids = (start..=end).collect::<Vec<i64>>();
-            } else {
-                task_ids.push(done_config[0].parse().expect("Invalid task id provided"));
+        let task_id = match matches.value_of("task_id") {
+            Some(raw_task_id) => raw_task_id.parse::<i64>().map_err(|_error| {
+                ClientError::ParseError(String::from(raw_task_id), String::from("i64"))
+            })?,
+            None => {
+                return Err(ClientError::MissingAttrError {
+                    attr: String::from("task_id"),
+                    backtrace: Backtrace::capture(),
+                });
             }
-        } else {
-            for item in done_config.iter() {
-                task_ids.push(item.parse().expect("Invalid task id provided"));
-            }
+        };
+
+        info!("Task id: {:?}", task_id);
+        let mut operation = GetOp::new();
+        operation.task_id = Some(task_id);
+        execute(&mut operation)?;
+
+        let tasks = &operation.get_result();
+        if tasks.len() != 1 {
+            return Err(ClientError::UnexpectedFailure(
+                String::from(
+                    "AddAnnotation operation failed in an unexpected way, please consider to report it",
+                ),
+                Backtrace::capture(),
+            ));
         }
 
-        info!("Task ids: {:?}", task_ids);
-
-        for id in task_ids {
-            let mut operation = GetOp::new();
-            operation.task_id = Some(id);
-            execute(&mut operation)?;
-
-            for task in operation.get_result().iter() {
-                println!("{:?}", task);
-            }
+        if let Some(attr) = matches.value_of("attribute") {
+            println!("{}", tasks[0].get_string_value(attr)?);
+        } else {
+            println!("{:?}", tasks[0]);
         }
         Ok(())
     }

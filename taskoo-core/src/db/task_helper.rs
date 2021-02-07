@@ -1,4 +1,5 @@
 use rusqlite::Rows;
+use crate::error::TaskooError;
 
 pub const TASK_STATES: [&'static str; 4] = ["ready", "completed", "blocked", "started"];
 
@@ -22,6 +23,14 @@ pub struct Task {
     pub annotation: String,
 }
 
+impl Task {
+    pub fn get_string_value(&self, attr: &str) -> Result<String, TaskooError> {
+        match attr {
+            "annotation" => Ok(self.annotation.clone()),
+            _ => Err(TaskooError::InvalidOption(String::from(attr))),
+        }
+    }
+}
 pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
     let mut tasks: Vec<Task> = vec![];
 
