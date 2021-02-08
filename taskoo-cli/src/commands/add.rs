@@ -16,8 +16,8 @@ pub struct Add;
 impl Add {
     pub fn add(matches: &ArgMatches) -> Result<String, ClientError> {
         let mut option = CommandOption::new();
-        if matches.is_present("config") {
-            let config: Vec<&str> = matches.values_of("config").unwrap().collect();
+        if matches.is_present("arguments") {
+            let config: Vec<&str> = matches.values_of("arguments").unwrap().collect();
             option = parse_command_option(&config, true, false, false).unwrap();
         }
 
