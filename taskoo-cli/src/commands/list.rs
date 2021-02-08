@@ -21,26 +21,47 @@ impl List {
 
     pub fn list(&self, matches: &ArgMatches) -> Result<(), TaskooError> {
         // TODO Read context from the configuration file
-        if matches.is_present("arguments") {
-            let config: Vec<&str> = matches.values_of("arguments").unwrap().collect();
-            let option = parse_command_option(&config, false, false, false).unwrap();
-            if option.context_name.is_some() {
-                // Apply the filter to a particular context
-                let context_name = option.context_name.clone().unwrap();
-                let mut operations_tuple =
-                    List::get_operations(option, Some(vec![context_name.to_string()]))?;
+        match matches.values_of("arguments") {
+            Some(arguments) => {
+                let config: Vec<&str> = arguments.collect();
+                let option = parse_command_option(&config, false, false, false).unwrap();
 
-                assert_eq!(operations_tuple.len(), 1);
-                let operation_tuple = &mut operations_tuple[0];
-                let tabbed_string = String::from(
-                    &self.process_operation(&operation_tuple.0, &mut operation_tuple.1)?,
-                );
-                Display::print(&tabbed_string);
-            } else {
-                // Apply the filter to all context
-                //let context_names = Command::context(None)?;
-                let mut operations_tuple = List::get_operations(option, None)?;
-                for operation_tuple in operations_tuple.iter_mut() {
+                match option.context_name {
+                    Some(ref context) => {
+                        let context_name = context.clone();
+                        let mut operations_tuple =
+                            List::get_operations(option, Some(vec![context_name.to_string()]))?;
+
+                        assert_eq!(operations_tuple.len(), 1);
+                        let operation_tuple = &mut operations_tuple[0];
+                        let tabbed_string = String::from(
+                            &self.process_operation(&operation_tuple.0, &mut operation_tuple.1)?,
+                        );
+                        Display::print(&tabbed_string);
+                        Ok(())
+                    }
+                    None => {
+                        // Apply the filter to all context
+                        //let context_names = Command::context(None)?;
+                        let mut operations_tuple = List::get_operations(option, None)?;
+                        for operation_tuple in operations_tuple.iter_mut() {
+                            let final_tabbed_string =
+                                String::from(&self.process_operation(
+                                    &operation_tuple.0,
+                                    &mut operation_tuple.1,
+                                )?);
+                            // Skip the contexts that doesn't have tasks
+                            if !final_tabbed_string.is_empty() {
+                                Display::print(&final_tabbed_string);
+                            }
+                        }
+                        Ok(())
+                    }
+                }
+            }
+            None => {
+                let mut operation_tuples = List::get_operations(CommandOption::new(), None)?;
+                for operation_tuple in operation_tuples.iter_mut() {
                     let final_tabbed_string = String::from(
                         &self.process_operation(&operation_tuple.0, &mut operation_tuple.1)?,
                     );
@@ -49,20 +70,9 @@ impl List {
                         Display::print(&final_tabbed_string);
                     }
                 }
-            }
-        } else {
-            let mut operation_tuples = List::get_operations(CommandOption::new(), None)?;
-            for operation_tuple in operation_tuples.iter_mut() {
-                let final_tabbed_string = String::from(
-                    &self.process_operation(&operation_tuple.0, &mut operation_tuple.1)?,
-                );
-                // Skip the contexts that doesn't have tasks
-                if !final_tabbed_string.is_empty() {
-                    Display::print(&final_tabbed_string);
-                }
+                Ok(())
             }
         }
-        Ok(())
     }
 
     fn process_operation(
