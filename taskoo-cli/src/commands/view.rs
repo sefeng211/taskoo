@@ -3,7 +3,7 @@ use anyhow::{Result};
 use clap::ArgMatches;
 use ini::Ini;
 use log::{debug, info};
-use taskoo_core::command::Command;
+use taskoo_core::command::{ContextCommand, SimpleCommand};
 use taskoo_core::operation::{View as ViewOperation};
 
 pub struct View {
@@ -21,7 +21,8 @@ impl View {
         let config: Vec<&str> = matches.values_of("args").unwrap().collect();
         debug!("Parsed Option {:?}", config);
 
-        for context in Command::context(None)?.iter() {
+        let command = ContextCommand::new()?;
+        for context in command.get_all()?.iter() {
             let mut operation = ViewOperation::new(context.to_string(), config[1].to_string());
             operation.view_type = Some(config[0].to_string());
 

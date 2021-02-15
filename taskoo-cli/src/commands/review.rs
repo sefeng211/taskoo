@@ -1,5 +1,5 @@
 use taskoo_core::core::Operation;
-use taskoo_core::command::Command;
+use taskoo_core::command::{ContextCommand, TagCommand, SimpleCommand};
 use taskoo_core::operation::Task;
 use taskoo_core::operation::{execute, Get as GetOperation, ModifyOperation, DeleteOperation};
 
@@ -113,7 +113,8 @@ impl Review {
         }
 
         println!("");
-        let context_names = Command::get_context()?;
+        let context_command = ContextCommand::new()?;
+        let context_names = context_command.get_all()?;
 
         let selection = Select::with_theme(&ColorfulTheme::default())
             .with_prompt("Select a context (Press 'q' or 'Esc' to enter a new context)")
@@ -128,7 +129,8 @@ impl Review {
             Review::ask_attribute("New Context?: ")
         };
 
-        let tags = Command::tags(None)?;
+        let tag_command = TagCommand::new()?;
+        let tags = tag_command.get_all()?;
         let mut defaults = vec![];
         for _ in tags.iter() {
             defaults.push(false);

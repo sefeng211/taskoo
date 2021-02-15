@@ -6,3 +6,4 @@ pub mod review;
 pub mod modify;
 pub mod view;
 pub mod info;
+pub mod remove;

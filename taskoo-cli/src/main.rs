@@ -24,6 +24,7 @@ use commands::list::List;
 use commands::modify::Modify;
 use commands::review::Review;
 use commands::view::View;
+use commands::remove::Remove;
 
 fn get_config() -> Ini {
     let mut config_dir_path = config_dir().expect("Unable to find user's config directory");
@@ -176,6 +177,17 @@ fn main() -> Result<()> {
     } else if matches.is_present("annotate") {
         match Add::add_annoation(&matches.subcommand_matches("annotate").unwrap())
             .context("Failed to run <annotate> command")
+        {
+            Err(e) => {
+                eprintln!("{:?}", e);
+            }
+            Ok(message) => {
+                println!("{}", message);
+            }
+        }
+    } else if matches.is_present("remove") {
+        match Remove::remove(&matches.subcommand_matches("remove").unwrap())
+            .context("Failed to run <remove> command")
         {
             Err(e) => {
                 eprintln!("{:?}", e);

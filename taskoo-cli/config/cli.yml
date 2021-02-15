@@ -87,4 +87,12 @@ subcommands:
         - task_id:
             index: 1
             required: true
+  - remove:
+      about: Remove context or tag
+      alias: rm
+      args:
+        - type:
+            index: 1
+            required: true
+            possible_values: ["context", "tag"]
 

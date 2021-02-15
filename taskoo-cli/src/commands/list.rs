@@ -2,7 +2,8 @@ use clap::ArgMatches;
 use ini::Ini;
 
 use taskoo_core::operation::Task;
-use taskoo_core::command::Command;
+use taskoo_core::command::ContextCommand;
+use taskoo_core::command::SimpleCommand;
 use taskoo_core::error::TaskooError;
 use taskoo_core::operation::{Get as GetOp, execute};
 use taskoo_core::core::Operation;
@@ -42,7 +43,6 @@ impl List {
                     }
                     None => {
                         // Apply the filter to all context
-                        //let context_names = Command::context(None)?;
                         let mut operations_tuple = List::get_operations(option, None)?;
                         for operation_tuple in operations_tuple.iter_mut() {
                             let final_tabbed_string =
@@ -91,7 +91,8 @@ impl List {
             Some(context_names) => context_names,
             None => {
                 // If no context names are passed, use all context
-                let context_names = Command::context(None)?;
+                let command = ContextCommand::new()?;
+                let context_names = command.get_all()?;
                 context_names
             }
         };
