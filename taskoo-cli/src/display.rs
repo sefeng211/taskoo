@@ -14,6 +14,7 @@ pub struct Display;
 enum DisplayColumn {
     Id,
     Body,
+    Priority,
     Created,
     Scheduled,
     Due,
@@ -28,6 +29,11 @@ impl DisplayColumn {
                 .underline()
                 .to_string(),
             DisplayColumn::Body => Paint::new("Body")
+                .fg(Color::White)
+                .bold()
+                .underline()
+                .to_string(),
+            DisplayColumn::Priority => Paint::new("Prio")
                 .fg(Color::White)
                 .bold()
                 .underline()
@@ -61,6 +67,12 @@ impl DisplayColumn {
             }
             DisplayColumn::Body => {
                 let mut task_body = String::clone(&task.body);
+
+                // Tasks with annotation will have a star with it
+                if !task.annotation.is_empty() {
+                    task_body.push_str(&Paint::new("*").fg(Color::White).bold().to_string());
+                }
+
                 // Append tags to the end of task body
                 for tag_name in task.tag_names.iter() {
                     let mut tag_output = String::from("+");
@@ -73,13 +85,15 @@ impl DisplayColumn {
                             .to_string(),
                     );
                 }
-
                 if is_started {
                     return Paint::new(task_body).fg(Color::Magenta).bold().to_string();
                 } else {
                     return Paint::new(task_body).fg(Color::White).to_string();
                 };
             }
+            DisplayColumn::Priority => Paint::new(task.priority.clone())
+                .fg(Color::White)
+                .to_string(),
             DisplayColumn::Created => Paint::new(task.created_at.clone())
                 .fg(Color::Green)
                 .to_string(),
@@ -103,6 +117,7 @@ fn get_output_columns() -> Vec<DisplayColumn> {
             vec![
                 DisplayColumn::Id,
                 DisplayColumn::Body,
+                DisplayColumn::Priority,
                 DisplayColumn::Created,
                 DisplayColumn::Scheduled,
                 DisplayColumn::Due,
@@ -112,6 +127,7 @@ fn get_output_columns() -> Vec<DisplayColumn> {
         vec![
             DisplayColumn::Id,
             DisplayColumn::Body,
+            DisplayColumn::Priority,
             DisplayColumn::Created,
             DisplayColumn::Scheduled,
             DisplayColumn::Due,
