@@ -24,7 +24,7 @@ fn add_tag(conn: &Transaction, tag_ids: Vec<i64>) -> Result<(), TaskooError> {
 pub fn add(
     tx: &mut Transaction,
     body: &str,
-    priority: &Option<u8>,
+    priority: &Option<String>,
     context_id: &i64,
     tag_ids: Vec<i64>,
     due_date: &Option<&str>,
@@ -36,13 +36,12 @@ pub fn add(
     let mut statement = tx.prepare(
         "
     INSERT INTO task
-    (body, priority, context_id, due_date, scheduled_at, due_repeat, scheduled_repeat, state_id, annotation) VALUES
-    (:body, :priority, :context_id, :due_date, :scheduled_at, :due_repeat, :scheduled_repeat, :state_id, :annotation)",
+    (body, context_id, due_date, scheduled_at, due_repeat, scheduled_repeat, state_id, annotation) VALUES
+    (:body, :context_id, :due_date, :scheduled_at, :due_repeat, :scheduled_repeat, :state_id, :annotation)",
     )?;
 
     statement.execute_named(named_params! {
         ":body": body,
-        ":priority": priority.unwrap_or(0),
         ":context_id": context_id,
         ":due_date": due_date.unwrap_or(""),
         ":scheduled_at": scheduled_at.unwrap_or(""),
@@ -60,7 +59,7 @@ pub fn add(
     // between add.rs, get.rs and view.rs
     let get_last_insert_task_statement = format!(
         "
-    SELECT task.id as id, body, priority, created_at, due_date, scheduled_at, due_repeat, scheduled_repeat, context.name, state.name, task.annotation, GROUP_CONCAT(task_tag.tag_id) as concat_tag_ids, GROUP_CONCAT(task_tag.name) FROM task
+    SELECT task.id as id, body, priority_task.name, created_at, due_date, scheduled_at, due_repeat, scheduled_repeat, context.name, state.name, task.annotation, GROUP_CONCAT(task_tag.tag_id) as concat_tag_ids, GROUP_CONCAT(task_tag.name) FROM task
     INNER JOIN context
     on context_id = context.id
     LEFT JOIN
@@ -71,6 +70,12 @@ pub fn add(
     ON task.id = task_tag.task_id
     INNER JOIN state
     on state_id = state.id
+    LEFT JOIN
+        (
+        SELECT priority.name, priority_task.task_id FROM priority
+        INNER JOIN priority_task ON priority_task.priority_id = priority.id
+        ) priority_task
+    on task.id = priority_task.task_id
     Where task.id = :task_id
     Group By task.id
     ");

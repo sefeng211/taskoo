@@ -5,8 +5,9 @@ use crate::db::modify::modify;
 use crate::db::query_helper::{
     CREATE_CONTEXT_TABLE_QUERY, CREATE_DEPENDENCY_TABLE_QUERY, CREATE_STATE_TABLE_QUERY,
     CREATE_TAG_TABLE_QUERY, CREATE_TASK_TABLE_QUERY, CREATE_TASK_TAG_TABLE_QUERY,
+    CREATE_PRIORITY_TABLE_QUERY, CREATE_PRIORITY_TASK_TABLE_QUERY,
 };
-use crate::db::task_helper::{Task, DEFAULT_CONTEXT, TASK_STATES};
+use crate::db::task_helper::{Task, DEFAULT_CONTEXT, TASK_STATES, PRIORITIES};
 use crate::db::view::view;
 use crate::error::TaskooError;
 use chrono::{Date, DateTime, Duration, Local, NaiveDate, Utc};
@@ -46,7 +47,7 @@ impl DatabaseManager {
     pub fn add(
         &mut self,
         body: &str,
-        priority: &Option<u8>,
+        priority: &Option<String>,
         context_name: &Option<String>,
         tag_names: &Vec<String>,
         due_date: &Option<&str>,
@@ -345,7 +346,6 @@ impl DatabaseManager {
             return Ok(row.get(0).unwrap());
         }
         return DatabaseManager::create_state(tx, state_name);
-    }
 
     fn convert_tag_name_to_id(tx: &Transaction, tag_name: &String) -> Result<i64, TaskooError> {
         let mut statement = tx
@@ -447,9 +447,10 @@ impl DatabaseManager {
         self.conn
             .execute(CREATE_DEPENDENCY_TABLE_QUERY, NO_PARAMS)?;
         self.conn.execute(CREATE_CONTEXT_TABLE_QUERY, NO_PARAMS)?;
+        self.conn.execute(CREATE_STATE_TABLE_QUERY, NO_PARAMS)?;
+        self.conn.execute(CREATE_PRIORITY_TABLE_QUERY, NO_PARAMS)?;
         self.conn
-            .execute(CREATE_STATE_TABLE_QUERY, NO_PARAMS)
-            .unwrap();
+            .execute(CREATE_PRIORITY_TASK_TABLE_QUERY, NO_PARAMS)?;
 
         let tx = self.conn.transaction()?;
         {
@@ -463,6 +464,13 @@ impl DatabaseManager {
                 DatabaseManager::create_context(&tx, &c.to_string())?;
             }
         }
+
+        {
+            for c in PRIORITIES.iter() {
+                DatabaseManager::create_priority(&tx, &c.to_string())?;
+            }
+        }
+
         tx.commit()?;
         Ok(())
     }
@@ -488,6 +496,14 @@ impl DatabaseManager {
             tx.prepare("INSERT OR IGNORE INTO state (name) VALUES (:name)")?;
         insert_into_state
             .execute_named(named_params! {":name": state_name.trim().to_lowercase()})?;
+        Ok(tx.last_insert_rowid())
+    }
+
+    fn create_priority(tx: &Transaction, priority_name: &String) -> Result<i64, TaskooError> {
+        let mut insert_into_state =
+            tx.prepare("INSERT OR IGNORE INTO priority (name) VALUES (:name)")?;
+        insert_into_state
+            .execute_named(named_params! {":name": priority_name.trim().to_lowercase()})?;
         Ok(tx.last_insert_rowid())
     }
 }

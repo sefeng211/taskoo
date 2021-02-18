@@ -5,11 +5,13 @@ pub const TASK_STATES: [&'static str; 4] = ["ready", "completed", "blocked", "st
 
 pub const DEFAULT_CONTEXT: [&'static str; 1] = ["inbox"];
 
+pub const PRIORITIES: [&'static str; 3] = ["H", "M", "L"];
+
 #[derive(Debug)]
 pub struct Task {
     pub id: i64,
     pub body: String,
-    pub priority: i64,
+    pub priority: String,
     pub context_name: String,
     pub tag_names: Vec<String>,
     pub tag_ids: Vec<i64>,
@@ -63,11 +65,11 @@ pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
         let task = Task {
             id: row.get(0).unwrap(),
             body: row.get(1).unwrap(),
-            priority: row.get(2).unwrap(),
+            priority: row.get(2).unwrap_or("".to_string()),
             tag_names: tag_names,
             tag_ids: tag_ids,
             created_at: row.get(3).unwrap(),
-            due_date: row.get(4).unwrap(),
+            due_date: row.get(4).unwrap_or("".to_string()),
             scheduled_at: row.get(5).unwrap(),
             due_repeat: row.get(6).unwrap(),
             scheduled_repeat: row.get(7).unwrap(),

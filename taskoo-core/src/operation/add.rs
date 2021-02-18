@@ -5,7 +5,7 @@ use crate::error::*;
 
 pub struct Add<'a> {
     pub body: &'a str,
-    pub priority: Option<u8>,
+    pub priority: Option<String>,
     pub context_name: Option<String>,
     pub state_name: Option<String>,
     pub tag_names: Vec<String>,
