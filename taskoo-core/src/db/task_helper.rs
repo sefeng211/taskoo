@@ -5,11 +5,13 @@ pub const TASK_STATES: [&'static str; 4] = ["ready", "completed", "blocked", "st
 
 pub const DEFAULT_CONTEXT: [&'static str; 1] = ["inbox"];
 
+pub const PRIORITIES: [&'static str; 3] = ["H", "M", "L"];
+
 #[derive(Debug)]
 pub struct Task {
     pub id: i64,
     pub body: String,
-    pub priority: i64,
+    pub priority: String,
     pub context_name: String,
     pub tag_names: Vec<String>,
     pub tag_ids: Vec<i64>,
@@ -18,7 +20,6 @@ pub struct Task {
     pub scheduled_at: String,
     pub due_repeat: String,
     pub scheduled_repeat: String,
-    pub is_completed: bool,
     pub state_name: String,
     pub annotation: String,
 }
@@ -30,7 +31,20 @@ impl Task {
             _ => Err(TaskooError::InvalidOption(String::from(attr))),
         }
     }
+    pub fn is_completed(&self) -> bool {
+        return self.state_name == "completed";
+    }
+    pub fn is_started(&self) -> bool {
+        return self.state_name == "started";
+    }
+    pub fn is_ready(&self) -> bool {
+        return self.state_name == "ready";
+    }
+    pub fn is_blocked(&self) -> bool {
+        return self.state_name == "blocked";
+    }
 }
+
 pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
     let mut tasks: Vec<Task> = vec![];
 
@@ -58,23 +72,20 @@ pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
             Err(_) => {}
         }
 
-        // TODO Hard-coded Completed
-        let is_completed = tag_names.contains(&"completed".to_string());
         let task = Task {
             id: row.get(0).unwrap(),
             body: row.get(1).unwrap(),
-            priority: row.get(2).unwrap(),
+            priority: row.get(2).unwrap_or("".to_string()),
             tag_names: tag_names,
             tag_ids: tag_ids,
             created_at: row.get(3).unwrap(),
-            due_date: row.get(4).unwrap(),
+            due_date: row.get(4).unwrap_or("".to_string()),
             scheduled_at: row.get(5).unwrap(),
             due_repeat: row.get(6).unwrap(),
             scheduled_repeat: row.get(7).unwrap(),
             context_name: row.get(8).unwrap(),
             state_name: row.get(9).unwrap(),
             annotation: row.get(10).unwrap_or("".to_string()),
-            is_completed: is_completed,
         };
 
         tasks.push(task);

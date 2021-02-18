@@ -40,7 +40,7 @@ fn test_modify_single() -> Result<()> {
         .modify(
             &vec![1],
             &Some("New Body"),
-            &Some(2),
+            &Some(String::from("H")),
             &Some("Work".to_string()),
             &vec![],
             &Some("2020-11-10"),
@@ -67,7 +67,7 @@ fn test_modify_single() -> Result<()> {
 
     assert_eq!(tasks[0].id, 1);
     assert_eq!(tasks[0].body, "New Body");
-    assert_eq!(tasks[0].priority, 2);
+    assert_eq!(tasks[0].priority, "h");
     assert_eq!(tasks[0].context_name, "Work");
     assert_eq!(tasks[0].due_date, "2020-11-10");
     assert_eq!(tasks[0].scheduled_at, "2020-11-11");
@@ -105,7 +105,7 @@ fn test_modify_single_with_tag() -> Result<()> {
         .modify(
             &vec![1],
             &Some("New Body"),
-            &Some(2),
+            &Some(String::from("H")),
             &Some("Work".to_string()),
             &vec!["Blocked".to_string()],
             &Some("2020-11-10"),
@@ -132,7 +132,6 @@ fn test_modify_single_with_tag() -> Result<()> {
 
     assert_eq!(tasks[0].id, 1);
     assert_eq!(tasks[0].body, "New Body");
-    assert_eq!(tasks[0].priority, 2);
     assert_eq!(tasks[0].tag_names, ["Blocked".to_string()]);
     assert_eq!(tasks[0].context_name, "Work");
     assert_eq!(tasks[0].due_date, "2020-11-10");

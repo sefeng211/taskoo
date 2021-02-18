@@ -5,8 +5,9 @@ use crate::db::modify::modify;
 use crate::db::query_helper::{
     CREATE_CONTEXT_TABLE_QUERY, CREATE_DEPENDENCY_TABLE_QUERY, CREATE_STATE_TABLE_QUERY,
     CREATE_TAG_TABLE_QUERY, CREATE_TASK_TABLE_QUERY, CREATE_TASK_TAG_TABLE_QUERY,
+    CREATE_PRIORITY_TABLE_QUERY, CREATE_PRIORITY_TASK_TABLE_QUERY,
 };
-use crate::db::task_helper::{Task, DEFAULT_CONTEXT, TASK_STATES};
+use crate::db::task_helper::{Task, DEFAULT_CONTEXT, TASK_STATES, PRIORITIES};
 use crate::db::view::view;
 use crate::error::TaskooError;
 use chrono::{Date, DateTime, Duration, Local, NaiveDate, Utc};
@@ -46,13 +47,14 @@ impl DatabaseManager {
     pub fn add(
         &mut self,
         body: &str,
-        priority: &Option<u8>,
+        priority: &Option<String>,
         context_name: &Option<String>,
         tag_names: &Vec<String>,
         due_date: &Option<&str>,
         scheduled_at: &Option<&str>,
         due_repeat: &Option<&str>,
         scheduled_repeat: &Option<&str>,
+        annotation: &Option<&str>,
         state_name: &Option<String>,
     ) -> Result<Vec<Task>, TaskooError> {
         let mut tx = self.conn.transaction()?;
@@ -96,16 +98,24 @@ impl DatabaseManager {
             None => None,
         };
 
+        let priority_id = match priority {
+            Some(priority_type) => Some(DatabaseManager::convert_priority_type_to_id(
+                &tx,
+                &priority_type,
+            )?),
+            None => None,
+        };
         let tasks = add(
             &mut tx,
             &body,
-            &priority,
+            &priority_id,
             &context_id,
             tag_ids,
             &parsed_due_date.as_deref(),
             &parse_scheduled_at.as_deref(),
             &parsed_due_repeat.as_deref(),
             &parsed_schedued_repeat.as_deref(),
+            &annotation,
             &state_id,
         )?;
         tx.commit()?;
@@ -177,7 +187,7 @@ impl DatabaseManager {
         &mut self,
         task_ids: &Vec<i64>,
         body: &Option<&str>,
-        priority: &Option<u8>,
+        priority: &Option<String>,
         context_name: &Option<String>,
         tag_names: &Vec<String>,
         due_date: &Option<&str>,
@@ -211,6 +221,13 @@ impl DatabaseManager {
         let mut tag_ids: Vec<i64> = vec![];
         let mut tag_ids_to_remove: Vec<i64> = vec![];
 
+        let priority_id = match priority {
+            Some(priority_type) => Some(DatabaseManager::convert_priority_type_to_id(
+                &tx,
+                &priority_type,
+            )?),
+            None => None,
+        };
         for tag_name in tag_names.iter() {
             tag_ids.push(DatabaseManager::convert_tag_name_to_id(&tx, &tag_name)?);
         }
@@ -233,7 +250,7 @@ impl DatabaseManager {
             &mut tx,
             &task_ids,
             &body,
-            &priority,
+            &priority_id,
             &context_id,
             tag_ids,
             &parsed_due_date.as_deref(),
@@ -334,19 +351,31 @@ impl DatabaseManager {
     }
 
     fn convert_state_name_to_id(tx: &Transaction, state_name: &String) -> Result<i64, TaskooError> {
-        let mut statement = tx
-            .prepare("SELECT id FROM state WHERE name=(:state_name)")
-            .unwrap();
-        let mut result = statement
-            .query_named(named_params! {":state_name": state_name})
-            .unwrap();
+        let mut statement = tx.prepare("SELECT id FROM state WHERE name=(:state_name)")?;
+        let mut result = statement.query_named(named_params! {":state_name": state_name})?;
 
-        while let Some(row) = result.next().expect("") {
-            return Ok(row.get(0).unwrap());
+        while let Some(row) = result.next()? {
+            return Ok(row.get(0)?);
         }
         return DatabaseManager::create_state(tx, state_name);
     }
 
+    fn convert_priority_type_to_id(
+        tx: &Transaction,
+        priority_type: &String,
+    ) -> Result<i64, TaskooError> {
+        let lower_priority_type = priority_type.clone().to_lowercase();
+        let mut statement = tx.prepare("SELECT id FROM priority WHERE name=(:priority_type)")?;
+        let mut result = statement.query_named(named_params! {":priority_type": lower_priority_type})?;
+        while let Some(row) = result.next()? {
+            return Ok(row.get(0)?);
+        }
+        println!("2");
+        Err(TaskooError::InvalidOption(String::from(format!(
+            "Invalid priority {} is provided",
+            priority_type
+        ))))
+    }
     fn convert_tag_name_to_id(tx: &Transaction, tag_name: &String) -> Result<i64, TaskooError> {
         let mut statement = tx
             .prepare("SELECT id FROM tag where name=(:tag_name)")
@@ -447,9 +476,10 @@ impl DatabaseManager {
         self.conn
             .execute(CREATE_DEPENDENCY_TABLE_QUERY, NO_PARAMS)?;
         self.conn.execute(CREATE_CONTEXT_TABLE_QUERY, NO_PARAMS)?;
+        self.conn.execute(CREATE_STATE_TABLE_QUERY, NO_PARAMS)?;
+        self.conn.execute(CREATE_PRIORITY_TABLE_QUERY, NO_PARAMS)?;
         self.conn
-            .execute(CREATE_STATE_TABLE_QUERY, NO_PARAMS)
-            .unwrap();
+            .execute(CREATE_PRIORITY_TASK_TABLE_QUERY, NO_PARAMS)?;
 
         let tx = self.conn.transaction()?;
         {
@@ -463,6 +493,13 @@ impl DatabaseManager {
                 DatabaseManager::create_context(&tx, &c.to_string())?;
             }
         }
+
+        {
+            for c in PRIORITIES.iter() {
+                DatabaseManager::create_priority(&tx, &c.to_string())?;
+            }
+        }
+
         tx.commit()?;
         Ok(())
     }
@@ -488,6 +525,14 @@ impl DatabaseManager {
             tx.prepare("INSERT OR IGNORE INTO state (name) VALUES (:name)")?;
         insert_into_state
             .execute_named(named_params! {":name": state_name.trim().to_lowercase()})?;
+        Ok(tx.last_insert_rowid())
+    }
+
+    fn create_priority(tx: &Transaction, priority_name: &String) -> Result<i64, TaskooError> {
+        let mut insert_into_state =
+            tx.prepare("INSERT OR IGNORE INTO priority (name) VALUES (:name)")?;
+        insert_into_state
+            .execute_named(named_params! {":name": priority_name.trim().to_lowercase()})?;
         Ok(tx.last_insert_rowid())
     }
 }

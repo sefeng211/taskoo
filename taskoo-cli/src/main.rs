@@ -142,7 +142,7 @@ fn main() -> Result<()> {
         }
     } else if matches.is_present("done") {
         // TODO: Task state should not be hard-coded
-        let state_changer = StateChanger::new("completed");
+        let state_changer = StateChanger::to_completed();
         match state_changer
             .run(&matches.subcommand_matches("done").unwrap())
             .context("Failed to complete a task")
@@ -150,7 +150,37 @@ fn main() -> Result<()> {
             Err(e) => {
                 eprintln!("{:?}", e);
             }
-            Ok(()) => {}
+            Ok(message) => {
+                println!("Tasks: {}, state changed to {}", message, "done")
+            }
+        }
+    } else if matches.is_present("ready") {
+        // TODO: Task state should not be hard-coded
+        let state_changer = StateChanger::to_ready();
+        match state_changer
+            .run(&matches.subcommand_matches("ready").unwrap())
+            .context("Failed to complete a task")
+        {
+            Err(e) => {
+                eprintln!("{:?}", e);
+            }
+            Ok(message) => {
+                println!("Tasks: {}, state changed to {}", message, "ready")
+            }
+        }
+    } else if matches.is_present("block") {
+        // TODO: Task state should not be hard-coded
+        let state_changer = StateChanger::to_blocked();
+        match state_changer
+            .run(&matches.subcommand_matches("block").unwrap())
+            .context("Failed to complete a task")
+        {
+            Err(e) => {
+                eprintln!("{:?}", e);
+            }
+            Ok(message) => {
+                println!("Tasks: {}, state changed to {}", message, "block")
+            }
         }
     } else if matches.is_present("info") {
         let info = Info::new();
@@ -164,7 +194,7 @@ fn main() -> Result<()> {
             Ok(()) => {}
         }
     } else if matches.is_present("start") {
-        let state_changer = StateChanger::new("start");
+        let state_changer = StateChanger::to_started();
         match state_changer
             .run(&matches.subcommand_matches("start").unwrap())
             .context("Failed to run start command")
@@ -172,7 +202,9 @@ fn main() -> Result<()> {
             Err(e) => {
                 eprintln!("{:?}", e);
             }
-            Ok(()) => {}
+            Ok(message) => {
+                println!("Tasks: {}, state changed to {}", message, "start")
+            }
         }
     } else if matches.is_present("annotate") {
         match Add::add_annoation(&matches.subcommand_matches("annotate").unwrap())

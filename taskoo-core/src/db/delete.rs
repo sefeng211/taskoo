@@ -8,6 +8,7 @@ pub fn delete(conn: &Transaction, task_ids: &Vec<i64>) -> Result<Vec<Task>, Task
     }
 
     let mut delete_tag_state = conn.prepare("DELETE FROM task_tag where task_id = :task_id")?;
+    let mut delete_priority = conn.prepare("DELETE FROM priority_task where task_id = :task_id")?;
     let mut delete_task_state = conn.prepare(
         "
             DELETE FROM task where id = :task_id;
@@ -26,6 +27,9 @@ pub fn delete(conn: &Transaction, task_ids: &Vec<i64>) -> Result<Vec<Task>, Task
     // that temporary table.
     for task_id in task_ids_str.iter() {
         delete_tag_state.execute_named(named_params! {
+            ":task_id": task_id,
+        })?;
+        delete_priority.execute_named(named_params! {
             ":task_id": task_id,
         })?;
         delete_task_state.execute_named(named_params! {

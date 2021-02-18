@@ -49,6 +49,26 @@ fn remove_tag(
     Ok(())
 }
 
+fn insert_or_replace_priority(
+    conn: &Transaction,
+    task_ids: &Vec<i64>,
+    priority_id: &i64,
+) -> Result<(), TaskooError> {
+    info!(
+        "InsertOrReplacePriority tag_ids: {:?} and priority_id {:?}",
+        task_ids, priority_id
+    );
+    let mut statement = conn.prepare(
+        "REPLACE INTO priority_task (task_id, priority_id) VALUES (:task_id, :priority_id)",
+    )?;
+
+    for task_id in task_ids.iter() {
+        statement.execute_named(named_params! {
+        ":task_id": task_id,
+        ":priority_id": priority_id})?;
+    }
+    Ok(())
+}
 fn update_schedule_at_for_repeat(conn: &Transaction, task_id: &i64) -> Result<(), TaskooError> {
     let get_task_repetition_query = format!(
         "SELECT due_repeat, scheduled_repeat from task where id = {}",
@@ -105,7 +125,7 @@ pub fn modify(
     tx: &mut Transaction,
     task_ids: &Vec<i64>,
     body: &Option<&str>,
-    priority: &Option<u8>,
+    priority: &Option<i64>,
     context_id: &Option<i64>,
     tag_ids: Vec<i64>,
     due_date: &Option<&str>,
@@ -118,7 +138,6 @@ pub fn modify(
     // Prepare the statement
     let conditions = generate_condition(
         body,
-        priority,
         context_id,
         due_date,
         scheduled_at,
@@ -128,7 +147,11 @@ pub fn modify(
     );
 
     // TODO: Return Error here
-    if conditions.is_empty() && tag_ids.is_empty() && tag_ids_to_remove.is_empty() {
+    if conditions.is_empty()
+        && tag_ids.is_empty()
+        && tag_ids_to_remove.is_empty()
+        && priority.is_none()
+    {
         info!("Conditions and tag_ids are both empty, nothing is going to be modified");
         return Ok(vec![]);
     }
@@ -150,10 +173,12 @@ pub fn modify(
 
     add_tag(&tx, &task_ids, tag_ids)?;
     remove_tag(&tx, &task_ids, tag_ids_to_remove)?;
+    if let Some(priority_id) = priority {
+        insert_or_replace_priority(&tx, &task_ids, &priority_id)?;
+    }
 
     // If the task is marked to completed, update the scheduled_at
     // based on repeat
-
     if state_id.is_some() && state_id.unwrap() == 2 {
         info!("Task is marked as completed, updating scheduled_at");
         for task_id in task_ids.iter() {

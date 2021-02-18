@@ -1,6 +1,8 @@
 use ini::Ini;
 use log::info;
 use std::io::Write;
+use std::cmp::Ordering;
+use std::convert::TryInto;
 use tabwriter::TabWriter;
 use taskoo_core::core::Operation;
 use taskoo_core::error::TaskooError;
@@ -9,6 +11,7 @@ use yansi::Color;
 use yansi::Paint;
 use terminal_size::{Width, Height, terminal_size};
 
+const TASK_PRIORITY_ORDER: &'static [&'static str] = &["l", "m", "h"];
 pub struct Display;
 
 enum DisplayColumn {
@@ -33,7 +36,7 @@ impl DisplayColumn {
                 .bold()
                 .underline()
                 .to_string(),
-            DisplayColumn::Priority => Paint::new("Prio")
+            DisplayColumn::Priority => Paint::new("P")
                 .fg(Color::White)
                 .bold()
                 .underline()
@@ -56,7 +59,7 @@ impl DisplayColumn {
         }
     }
 
-    fn get_data(&self, task: &Task, is_started: bool) -> String {
+    fn get_data(&self, task: &Task) -> String {
         match *self {
             DisplayColumn::Id => {
                 let mut task_id = task.id.to_string();
@@ -85,13 +88,19 @@ impl DisplayColumn {
                             .to_string(),
                     );
                 }
-                if is_started {
+
+                // Display different colors based on task's state
+                if task.is_started() {
                     return Paint::new(task_body).fg(Color::Magenta).bold().to_string();
+                } else if task.is_completed() {
+                    return Paint::new(task_body).fg(Color::Green).bold().to_string();
+                } else if task.is_blocked() {
+                    return Paint::new(task_body).fg(Color::Blue).bold().to_string();
                 } else {
                     return Paint::new(task_body).fg(Color::White).to_string();
                 };
             }
-            DisplayColumn::Priority => Paint::new(task.priority.clone())
+            DisplayColumn::Priority => Paint::new(task.priority.to_uppercase().clone())
                 .fg(Color::White)
                 .to_string(),
             DisplayColumn::Created => Paint::new(task.created_at.clone())
@@ -111,7 +120,7 @@ fn get_output_columns() -> Vec<DisplayColumn> {
     let size = terminal_size();
     return if let Some((Width(w), Height(h))) = size {
         info!("Your terminal is {} cols wide and {} lines tall", w, h);
-        if w <= 80 {
+        if w <= 110 {
             vec![DisplayColumn::Id, DisplayColumn::Body]
         } else {
             vec![
@@ -197,11 +206,10 @@ impl Display {
         columns_to_output: Vec<DisplayColumn>,
         task: &Task,
         _config: &Ini,
-        is_started: bool,
     ) -> String {
         let mut output = String::new();
         for column in columns_to_output.iter() {
-            let data = column.get_data(&task, is_started);
+            let data = column.get_data(&task);
             output.push_str(&data);
             output.push_str("\t");
         }
@@ -220,6 +228,7 @@ impl Display {
         execute(operation)?;
         let mut tabbed_output = String::new();
 
+        // Filter tasks that we don't want to display
         let mut result = if !display_completed {
             operation
                 .get_result()
@@ -230,7 +239,40 @@ impl Display {
             operation.get_result().iter().collect::<Vec<_>>()
         };
 
-        result.sort_by(|task2, task1| task1.created_at.cmp(&task2.created_at));
+        let priority_cmp = |task1_priority: &String, task2_priority: &String| {
+            // It's possible that the priority is empty, so we just
+            // return 0 for that case
+            let mut p1: i64 = -1;
+            let mut p2: i64 = -1;
+            if !task1_priority.is_empty() {
+                p1 = TASK_PRIORITY_ORDER
+                    .iter()
+                    .position(|&prio| prio == task1_priority)
+                    .unwrap_or(0)
+                    .try_into()
+                    .unwrap();
+            }
+            if !task2_priority.is_empty() {
+                p2 = TASK_PRIORITY_ORDER
+                    .iter()
+                    .position(|&prio| prio == task2_priority)
+                    .unwrap_or(0)
+                    .try_into()
+                    .unwrap();
+            }
+            return p1.cmp(&p2);
+        };
+
+        // Sort tasks based on priority -> created_at
+        result.sort_by(
+            |task2, task1| match priority_cmp(&task1.priority, &task2.priority) {
+                Ordering::Equal => {
+                    return task1.created_at.cmp(&task2.created_at);
+                }
+                Ordering::Less => Ordering::Less,
+                Ordering::Greater => Ordering::Greater,
+            },
+        );
 
         for task in &result {
             let mut formated_body = String::clone(&task.body);
@@ -256,7 +298,6 @@ impl Display {
                 get_output_columns(),
                 task,
                 &config,
-                task.state_name == "start", // TODO: This should be started
             ));
         }
         Ok((tabbed_output, result.len()))

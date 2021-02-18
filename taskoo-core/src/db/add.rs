@@ -3,64 +3,79 @@ use crate::error::TaskooError;
 use log::debug;
 use rusqlite::{named_params, Connection, Result, Transaction};
 
-fn add_tag(conn: &Transaction, tag_ids: Vec<i64>) -> Result<(), TaskooError> {
+fn add_tag(conn: &Transaction, task_id: &i64, tag_ids: Vec<i64>) -> Result<(), TaskooError> {
     debug!("Adding new tag {:?}", &tag_ids);
-    let mut statement = conn
-        .prepare(
-            "INSERT INTO task_tag
+    let mut statement = conn.prepare(
+        "INSERT INTO task_tag
         (task_id, tag_id)
         VALUES (:task_id, :tag_id)",
-        )
-        .expect("Failed to prepare the INSERT INTO task_tag query");
-    let last_insert_rowid = conn.last_insert_rowid();
+    )?;
     for id in tag_ids.iter() {
         statement.execute_named(named_params! {
-        ":task_id": last_insert_rowid,
+        ":task_id": task_id,
         ":tag_id": id})?;
     }
+    Ok(())
+}
+
+fn add_priority(conn: &Transaction, task_id: &i64, priority_id: &i64) -> Result<(), TaskooError> {
+    let mut statement = conn.prepare(
+        "INSERT INTO priority_task
+        (task_id, priority_id)
+        VALUES (:task_id, :priority_id)",
+    )?;
+
+    statement.execute_named(named_params! {
+        ":task_id": task_id,
+        ":priority_id": priority_id
+    })?;
+
     Ok(())
 }
 
 pub fn add(
     tx: &mut Transaction,
     body: &str,
-    priority: &Option<u8>,
+    priority: &Option<i64>,
     context_id: &i64,
     tag_ids: Vec<i64>,
     due_date: &Option<&str>,
     scheduled_at: &Option<&str>,
     due_repeat: &Option<&str>,
     scheduled_repeat: &Option<&str>,
+    annotation: &Option<&str>,
     state_id: &Option<i64>,
 ) -> Result<Vec<Task>, TaskooError> {
     let mut statement = tx.prepare(
         "
     INSERT INTO task
-    (body, priority, context_id, due_date, scheduled_at, due_repeat, scheduled_repeat, state_id, annotation) VALUES
-    (:body, :priority, :context_id, :due_date, :scheduled_at, :due_repeat, :scheduled_repeat, :state_id, :annotation)",
+    (body, context_id, due_date, scheduled_at, due_repeat, scheduled_repeat, state_id, annotation) VALUES
+    (:body, :context_id, :due_date, :scheduled_at, :due_repeat, :scheduled_repeat, :state_id, :annotation)",
     )?;
 
     statement.execute_named(named_params! {
         ":body": body,
-        ":priority": priority.unwrap_or(0),
         ":context_id": context_id,
         ":due_date": due_date.unwrap_or(""),
         ":scheduled_at": scheduled_at.unwrap_or(""),
         ":due_repeat": due_repeat.unwrap_or(""),
         ":scheduled_repeat": scheduled_repeat.unwrap_or(""),
         ":state_id": state_id.unwrap_or(1),
-        ":annotation": ""
+        ":annotation": annotation.unwrap_or("")
     })?;
 
     let insert_task_id = tx.last_insert_rowid();
 
-    add_tag(&tx, tag_ids)?;
+    add_tag(&tx, &insert_task_id, tag_ids)?;
+    if let Some(priority_id) = priority {
+        add_priority(&tx, &insert_task_id, &priority_id)?;
+    }
 
     // TODO: Let's have a generic query statement so that we can reuse it
     // between add.rs, get.rs and view.rs
     let get_last_insert_task_statement = format!(
         "
-    SELECT task.id as id, body, priority, created_at, due_date, scheduled_at, due_repeat, scheduled_repeat, context.name, state.name, task.annotation, GROUP_CONCAT(task_tag.tag_id) as concat_tag_ids, GROUP_CONCAT(task_tag.name) FROM task
+    SELECT task.id as id, body, priority_task.name, created_at, due_date, scheduled_at, due_repeat, scheduled_repeat, context.name, state.name, task.annotation, GROUP_CONCAT(task_tag.tag_id) as concat_tag_ids, GROUP_CONCAT(task_tag.name) FROM task
     INNER JOIN context
     on context_id = context.id
     LEFT JOIN
@@ -71,6 +86,12 @@ pub fn add(
     ON task.id = task_tag.task_id
     INNER JOIN state
     on state_id = state.id
+    LEFT JOIN
+        (
+        SELECT priority.name, priority_task.task_id FROM priority
+        INNER JOIN priority_task ON priority_task.priority_id = priority.id
+        ) priority_task
+    on task.id = priority_task.task_id
     Where task.id = :task_id
     Group By task.id
     ");

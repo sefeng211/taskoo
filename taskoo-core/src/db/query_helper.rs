@@ -2,7 +2,6 @@ pub const CREATE_TASK_TABLE_QUERY: &str = "
     create table if not exists task (
         id integer primary key,
         body text not null,
-        priority integer not null,
         context_id INTEGER not null,
         created_at Text DEFAULT CURRENT_DATE,
         due_date TEXT nullable,
@@ -51,6 +50,45 @@ pub const CREATE_STATE_TABLE_QUERY: &str = "
         name Text not null unique
     )";
 
+pub const CREATE_PRIORITY_TABLE_QUERY: &str = "
+    CREATE TABLE IF NOT EXISTS priority (
+        id integer primary key,
+        name Text not null unique
+    )
+";
+
+pub const CREATE_PRIORITY_TASK_TABLE_QUERY: &str = "
+    CREATE TABLE IF NOT EXISTS priority_task (
+        task_id integer not null,
+        priority_id integer not null,
+        PRIMARY KEY (task_id, priority_id),
+        FOREIGN KEY (task_id) REFERENCES task(id),
+        FOREIGN KEY (priority_id) REFERENCES priority(id)
+    )
+";
+
+pub const GET_QUERY: &str = "
+    SELECT task.id as id, body, priority_task.name, created_at, due_date, scheduled_at, due_repeat, scheduled_repeat, context.name, state.name, task.annotation, GROUP_CONCAT(task_tag.tag_id) as concat_tag_ids, GROUP_CONCAT(task_tag.name) FROM task
+    INNER JOIN context
+    on context_id = context.id
+    LEFT JOIN
+        (
+        SELECT task_tag.task_id, task_tag.tag_id, tag.name FROM task_tag
+        INNER JOIN tag ON task_tag.tag_id = tag.id
+        ) task_tag
+    ON task.id = task_tag.task_id
+    INNER JOIN state
+    on state_id = state.id
+    LEFT JOIN
+        (
+        SELECT priority.name, priority_task.task_id FROM priority
+        INNER JOIN priority_task ON priority_task.priority_id = priority.id
+        ) priority_task
+    on task.id = priority_task.task_id
+    Where {}
+    Group By task.id
+";
+
 pub fn generate_view_condition(
     context_id: &i64,
     _view_range_start: &Option<String>,
@@ -58,7 +96,6 @@ pub fn generate_view_condition(
     view_type: &Option<String>,
 ) -> Vec<String> {
     let mut conditions = generate_condition(
-        &None,
         &None,
         &Some(*context_id),
         &None,
@@ -102,14 +139,12 @@ pub fn generate_view_condition(
 
 pub fn generate_get_condition(
     body: &Option<&str>,
-    priority: &Option<u8>,
     context_id: &Option<i64>,
     due_date: &Option<&str>,
     scheduled_at: &Option<&str>,
 ) -> Vec<String> {
     return generate_condition(
         body,
-        priority,
         context_id,
         due_date,
         scheduled_at,
@@ -121,7 +156,6 @@ pub fn generate_get_condition(
 
 pub fn generate_condition(
     body: &Option<&str>,
-    priority: &Option<u8>,
     context_id: &Option<i64>,
     due_date: &Option<&str>,
     scheduled_at: &Option<&str>,
@@ -132,14 +166,6 @@ pub fn generate_condition(
     let mut conditions: Vec<String> = vec![];
     if body.is_some() {
         conditions.push(format!("body = '{}'", body.unwrap()).as_str().to_string());
-    }
-
-    if priority.is_some() {
-        conditions.push(
-            format!("priority = {}", priority.unwrap())
-                .as_str()
-                .to_string(),
-        );
     }
 
     if context_id.is_some() {

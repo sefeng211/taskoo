@@ -45,7 +45,7 @@ fn test_get_simple() -> Result<()> {
 
     assert_eq!(rows[0].id, 1);
     assert_eq!(rows[0].body, "Test Body");
-    assert_eq!(rows[0].priority, 0);
+    assert_eq!(rows[0].priority, "");
     assert_eq!(rows[0].context_name, "inbox");
     assert_eq!(created_at_datetime, current_datetime.date());
     assert_eq!(rows[0].due_date.is_empty(), true);
@@ -120,7 +120,6 @@ fn test_get_all_for_context() -> Result<()> {
 
 #[test]
 fn test_get_with_tag_ids() -> Result<()> {
-    println!("Start the test");
     let mut database_manager = DatabaseManager::new(&get_setting());
 
     database_manager

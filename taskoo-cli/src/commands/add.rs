@@ -34,6 +34,21 @@ impl Add {
         operation.scheduled_at = option.scheduled_at;
         operation.scheduled_repeat = option.scheudled_repeat;
         operation.state_name = option.state_name;
+        operation.priority = option.priority;
+
+        let annotation = if matches.is_present("annotation") {
+            if let Some(rv) = Editor::new().edit("").unwrap() {
+                Some(rv.clone())
+            } else {
+                return Err(ClientError::UnexpectedFailure(
+                    String::from("Unable to get the annotation text, abort!"),
+                    Backtrace::capture(),
+                ));
+            }
+        } else {
+            None
+        };
+        operation.annotation = annotation.as_deref();
 
         execute(&mut operation)?;
 

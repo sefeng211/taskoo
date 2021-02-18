@@ -35,9 +35,11 @@ impl List {
 
                         assert_eq!(operations_tuple.len(), 1);
                         let operation_tuple = &mut operations_tuple[0];
-                        let tabbed_string = String::from(
-                            &self.process_operation(&operation_tuple.0, &mut operation_tuple.1)?,
-                        );
+                        let tabbed_string = String::from(&self.process_operation(
+                            &operation_tuple.0,
+                            &mut operation_tuple.1,
+                            matches.is_present("all"),
+                        )?);
                         Display::print(&tabbed_string);
                         Ok(())
                     }
@@ -45,11 +47,11 @@ impl List {
                         // Apply the filter to all context
                         let mut operations_tuple = List::get_operations(option, None)?;
                         for operation_tuple in operations_tuple.iter_mut() {
-                            let final_tabbed_string =
-                                String::from(&self.process_operation(
-                                    &operation_tuple.0,
-                                    &mut operation_tuple.1,
-                                )?);
+                            let final_tabbed_string = String::from(&self.process_operation(
+                                &operation_tuple.0,
+                                &mut operation_tuple.1,
+                                matches.is_present("all"),
+                            )?);
                             // Skip the contexts that doesn't have tasks
                             if !final_tabbed_string.is_empty() {
                                 Display::print(&final_tabbed_string);
@@ -62,9 +64,11 @@ impl List {
             None => {
                 let mut operation_tuples = List::get_operations(CommandOption::new(), None)?;
                 for operation_tuple in operation_tuples.iter_mut() {
-                    let final_tabbed_string = String::from(
-                        &self.process_operation(&operation_tuple.0, &mut operation_tuple.1)?,
-                    );
+                    let final_tabbed_string = String::from(&self.process_operation(
+                        &operation_tuple.0,
+                        &mut operation_tuple.1,
+                        matches.is_present("all"),
+                    )?);
                     // Skip the contexts that doesn't have tasks
                     if !final_tabbed_string.is_empty() {
                         Display::print(&final_tabbed_string);
@@ -79,8 +83,9 @@ impl List {
         &self,
         context_name: &str,
         operation: &mut GetOp,
+        display_completed: bool,
     ) -> Result<String, TaskooError> {
-        return Display::display(&context_name, operation, &self.config, false);
+        return Display::display(&context_name, operation, &self.config, display_completed);
     }
 
     pub fn get_operations(

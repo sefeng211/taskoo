@@ -1,52 +1,99 @@
 use clap::ArgMatches;
 use log::{debug, info};
-use taskoo_core::error::TaskooError;
+use anyhow::{Result, Context};
+
 use taskoo_core::operation::{execute, ModifyOperation};
 
+use crate::option_parser::{parse_command_option, CommandOption};
+use crate::error::ClientError;
+
 pub struct StateChanger<'a> {
-    state: &'a str
+    custom_state: Option<&'a str>,
+    to_started: bool,
+    to_completed: bool,
+    to_blocked: bool,
+    to_ready: bool,
 }
 
 impl<'a> StateChanger<'a> {
-    pub fn new(state: &str) -> StateChanger {
-        StateChanger {state: state}
+    pub fn to_custom(state: &str) -> StateChanger {
+        StateChanger {
+            custom_state: Some(state),
+            to_started: false,
+            to_completed: false,
+            to_ready: false,
+            to_blocked: false,
+        }
     }
 
-    pub fn run(&self, matches: &ArgMatches) -> Result<(), TaskooError> {
+    pub fn to_completed() -> StateChanger<'a> {
+        StateChanger {
+            custom_state: None,
+            to_started: false,
+            to_completed: true,
+            to_ready: false,
+            to_blocked: false,
+        }
+    }
+
+    pub fn to_started() -> StateChanger<'a> {
+        StateChanger {
+            custom_state: None,
+            to_started: true,
+            to_completed: false,
+            to_ready: false,
+            to_blocked: false,
+        }
+    }
+
+    pub fn to_ready() -> StateChanger<'a> {
+        StateChanger {
+            custom_state: None,
+            to_started: false,
+            to_completed: false,
+            to_ready: true,
+            to_blocked: false,
+        }
+    }
+
+    pub fn to_blocked() -> StateChanger<'a> {
+        StateChanger {
+            custom_state: None,
+            to_started: false,
+            to_completed: false,
+            to_ready: false,
+            to_blocked: true,
+        }
+    }
+
+    pub fn run(&self, matches: &ArgMatches) -> Result<String> {
         info!("Running done command");
 
-        let done_config: Vec<_> = matches.values_of("task_ids").unwrap().collect();
-
-        let mut task_ids: Vec<i64> = vec![];
-
-        // TODO: This can be abstruct into a function and reused
-        if done_config.len() == 1 {
-            if done_config[0].contains("..") {
-                let ranged_selection = done_config[0].split("..").collect::<Vec<&str>>();
-                if ranged_selection.len() != 2 {
-                    eprintln!("Invalid range provided {}", done_config[0]);
-                }
-                let start = ranged_selection[0]
-                    .parse::<i64>()
-                    .expect("Can't find valid start from provided range");
-                let end = ranged_selection[1]
-                    .parse::<i64>()
-                    .expect("Can't find valid end from provided range");
-                task_ids = (start..=end).collect::<Vec<i64>>();
-            } else {
-                task_ids.push(done_config[0].parse().expect("Invalid task id provided"));
-            }
-        } else {
-            for item in done_config.iter() {
-                task_ids.push(item.parse().expect("Invalid task id provided"));
-            }
+        let mut option = CommandOption::new();
+        if matches.is_present("task_ids") {
+            let config: Vec<&str> = matches.values_of("task_ids").unwrap().collect();
+            option = parse_command_option(&config, false, true, true)
+                .context("Unable to parse the provided option for modify")?;
         }
 
-        debug!("Running Modify with {:?}", task_ids);
+        debug!("Running Modify with {:?}", option.task_ids);
 
-        let mut operation = ModifyOperation::new(task_ids);
-        operation.state_name = Some(self.state);
+        let task_ids_copy = option.task_ids.clone();
+        let mut operation = ModifyOperation::new(option.task_ids);
+        if self.to_started {
+            operation.set_state_to_started();
+        } else if self.to_completed {
+            operation.set_state_to_completed();
+        } else if self.to_ready {
+            operation.set_state_to_ready();
+        } else if self.to_blocked {
+            operation.set_state_to_blocked();
+        } else {
+            assert!(self.custom_state.is_some());
+            operation.state_name = Some(self.custom_state.unwrap());
+        }
+
         execute(&mut operation)?;
-        Ok(())
+        Ok(String::from(format!("{:?}", task_ids_copy)))
     }
 }

@@ -32,7 +32,16 @@ fn test_create_table_if_needed() -> Result<(), DbError> {
     }
     assert_eq!(
         names,
-        ["task", "tag", "task_tag", "dependency", "context", "state"]
+        [
+            "task",
+            "tag",
+            "task_tag",
+            "dependency",
+            "context",
+            "state",
+            "priority",
+            "priority_task"
+        ]
     );
 
     Ok(())
@@ -71,5 +80,23 @@ fn test_ensure_state_is_created() -> Result<(), DbError> {
         state_names.push(names.get(0).unwrap());
     }
     assert_eq!(state_names, ["ready", "completed", "blocked", "started"]);
+    Ok(())
+}
+
+#[test]
+fn test_ensure_priority_are_created() -> Result<(), DbError> {
+    let database_manager = DatabaseManager::new(&get_setting());
+
+    let mut context = database_manager
+        .conn
+        .prepare("SELECT name FROM priority")
+        .expect("");
+    let mut rows = context.query(NO_PARAMS).expect("");
+
+    let mut p_names: Vec<String> = Vec::new();
+    while let Some(names) = rows.next().expect("") {
+        p_names.push(names.get(0).unwrap());
+    }
+    assert_eq!(p_names, ["h", "m", "l"]);
     Ok(())
 }

@@ -5,7 +5,7 @@ use crate::error::*;
 
 pub struct Add<'a> {
     pub body: &'a str,
-    pub priority: Option<u8>,
+    pub priority: Option<String>,
     pub context_name: Option<String>,
     pub state_name: Option<String>,
     pub tag_names: Vec<String>,
@@ -13,6 +13,7 @@ pub struct Add<'a> {
     pub scheduled_at: Option<&'a str>,
     pub due_repeat: Option<&'a str>,
     pub scheduled_repeat: Option<&'a str>,
+    pub annotation: Option<&'a str>,
     database_manager: Option<DatabaseManager>,
     result: Option<Vec<Task>>,
 }
@@ -36,6 +37,7 @@ impl Add<'_> {
             scheduled_at: None,
             due_repeat: None,
             scheduled_repeat: None,
+            annotation: None,
             database_manager: None,
             result: None,
         }
@@ -81,6 +83,7 @@ impl Operation for Add<'_> {
             &self.scheduled_at,
             &self.due_repeat,
             &self.scheduled_repeat,
+            &self.annotation,
             &self.state_name,
         );
     }

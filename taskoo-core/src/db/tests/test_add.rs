@@ -48,7 +48,7 @@ fn test_add_simple() -> Result<()> {
 
     assert_eq!(tasks[0].id, 1);
     assert_eq!(tasks[0].body, "Test Body");
-    assert_eq!(tasks[0].priority, 0);
+    assert_eq!(tasks[0].priority, "");
     assert_eq!(tasks[0].context_name, "inbox");
     // TODO: Improve the assert_eq here to ensure the auto created `created_at` timestamp is
     // correct
@@ -69,7 +69,7 @@ fn test_add_complex() -> Result<()> {
     database_manager
         .add(
             "Test Body",
-            &Some(3),
+            &Some(String::from("H")),
             &Some(String::from("Work")),
             &vec![],
             &None,
@@ -102,8 +102,8 @@ fn test_add_complex() -> Result<()> {
 
     assert_eq!(tasks[0].id, 1);
     assert_eq!(tasks[0].body, "Test Body");
-    assert_eq!(tasks[0].priority, 3);
     assert_eq!(tasks[0].context_name, "Work");
+    assert_eq!(tasks[0].priority, "h");
     // TODO: Improve the assert_eq here to ensure the auto created `created_at` timestamp is
     // correct
     assert_eq!(created_at_datetime, current_datetime.date());
@@ -124,7 +124,7 @@ fn test_add_exist_tag() -> Result<()> {
     database_manager
         .add(
             "Test Body",
-            &Some(3),
+            &Some(String::from("H")),
             &Some(String::from("Work")),
             &vec!["Ready".to_owned(), "Blocked".to_owned()],
             &None,
@@ -161,7 +161,7 @@ fn test_add_scheduled_at_days() -> Result<()> {
     database_manager
         .add(
             "Test Body",
-            &Some(3),
+            &Some(String::from("H")),
             &Some(String::from("Work")),
             &vec!["Blocked".to_owned()],
             &None,
@@ -205,7 +205,7 @@ fn test_add_scheduled_at_hours() -> Result<()> {
     database_manager
         .add(
             "Test Body",
-            &Some(3),
+            &Some(String::from("H")),
             &Some(String::from("Work")),
             &vec!["Blocked".to_owned()],
             &None,
@@ -247,7 +247,7 @@ fn test_add_scheduled_at_weeks() -> Result<()> {
     database_manager
         .add(
             "Test Body",
-            &Some(3),
+            &Some(String::from("H")),
             &Some(String::from("Work")),
             &vec!["Blocked".to_owned()],
             &None,
@@ -288,7 +288,7 @@ fn test_add_scheduled_at_raw_timestamp() -> Result<()> {
     database_manager
         .add(
             "Test Body",
-            &Some(3),
+            &Some(String::from("H")),
             &Some(String::from("Work")),
             &vec!["Blocked".to_owned()],
             &None,
@@ -324,7 +324,7 @@ fn test_add_scheduled_at_tmr() -> Result<()> {
     database_manager
         .add(
             "Test Body",
-            &Some(3),
+            &Some(String::from("H")),
             &Some(String::from("Work")),
             &vec!["Blocked".to_owned()],
             &None,
@@ -364,7 +364,7 @@ fn test_add_scheduled_at_today() -> Result<()> {
     database_manager
         .add(
             "Test Body",
-            &Some(3),
+            &Some(String::from("H")),
             &Some(String::from("Work")),
             &vec!["Blocked".to_owned()],
             &None,
@@ -464,7 +464,7 @@ fn test_add_repeat_scheduled_task() -> Result<()> {
             &None,
             &None,
             &Some("completed"),
-            &vec![]
+            &vec![],
         )
         .unwrap();
 
@@ -521,7 +521,7 @@ fn test_add_repeat_due_task() -> Result<()> {
             &None,
             &None,
             &Some("completed"),
-            &vec![]
+            &vec![],
         )
         .unwrap();
 

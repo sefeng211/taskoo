@@ -6,6 +6,10 @@ subcommands:
   - add:
       about: Add a task
       args:
+        - annotation:
+            about: Whether to add an annotation to this task
+            required: false
+            short: a
         - arguments:
             about: |
               Include the body of the task (required)
@@ -22,6 +26,10 @@ subcommands:
       alias: ls
       about: Lists tasks
       args:
+        - all:
+            about: List all tasks despite their state
+            required: false
+            short: a
         - arguments:
             about: Aplly filters to search tasks
             index: 1
@@ -75,6 +83,20 @@ subcommands:
             multiple: true
   - done:
       about: Change the state of task/tasks to done
+      args:
+        - task_ids:
+            index: 1
+            required: true
+            multiple: true
+  - ready:
+      about: Change the state of task/tasks to ready
+      args:
+        - task_ids:
+            index: 1
+            required: true
+            multiple: true
+  - block:
+      about: Change the state of task/tasks to blocked
       args:
         - task_ids:
             index: 1

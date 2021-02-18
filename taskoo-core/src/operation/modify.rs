@@ -7,7 +7,7 @@ use crate::error::*;
 pub struct ModifyOperation<'a> {
     pub task_ids: Vec<i64>,
     pub body: Option<&'a str>,
-    pub priority: Option<u8>,
+    pub priority: Option<String>,
     pub context_name: Option<String>,
     pub tag_names: Vec<String>,
     pub due_date: Option<&'a str>,
@@ -37,6 +37,20 @@ impl<'a> ModifyOperation<'a> {
             state_name: None,
             tags_to_remove: vec![],
         }
+    }
+
+    pub fn set_state_to_started(&mut self) {
+        self.state_name = Some("started");
+    }
+
+    pub fn set_state_to_completed(&mut self) {
+        self.state_name = Some("completed");
+    }
+    pub fn set_state_to_ready(&mut self) {
+        self.state_name = Some("ready");
+    }
+    pub fn set_state_to_blocked(&mut self) {
+        self.state_name = Some("blocked");
     }
 }
 impl<'a> Operation for ModifyOperation<'a> {
@@ -74,7 +88,7 @@ impl<'a> Operation for ModifyOperation<'a> {
             &self.due_repeat,
             &self.scheduled_repeat,
             &self.state_name,
-            &self.tags_to_remove
+            &self.tags_to_remove,
         );
     }
     fn set_result(&mut self, result: Vec<Task>) {
