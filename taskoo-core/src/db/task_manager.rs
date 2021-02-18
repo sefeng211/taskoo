@@ -346,6 +346,7 @@ impl DatabaseManager {
             return Ok(row.get(0).unwrap());
         }
         return DatabaseManager::create_state(tx, state_name);
+    }
 
     fn convert_tag_name_to_id(tx: &Transaction, tag_name: &String) -> Result<i64, TaskooError> {
         let mut statement = tx

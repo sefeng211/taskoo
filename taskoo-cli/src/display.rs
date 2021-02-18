@@ -111,7 +111,7 @@ fn get_output_columns() -> Vec<DisplayColumn> {
     let size = terminal_size();
     return if let Some((Width(w), Height(h))) = size {
         info!("Your terminal is {} cols wide and {} lines tall", w, h);
-        if w <= 80 {
+        if w <= 110 {
             vec![DisplayColumn::Id, DisplayColumn::Body]
         } else {
             vec![
