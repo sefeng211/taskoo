@@ -97,10 +97,17 @@ impl DatabaseManager {
             None => None,
         };
 
+        let priority_id = match priority {
+            Some(priority_type) => Some(DatabaseManager::convert_priority_type_to_id(
+                &tx,
+                &priority_type,
+            )?),
+            None => None,
+        };
         let tasks = add(
             &mut tx,
             &body,
-            &priority,
+            &priority_id,
             &context_id,
             tag_ids,
             &parsed_due_date.as_deref(),
@@ -178,7 +185,7 @@ impl DatabaseManager {
         &mut self,
         task_ids: &Vec<i64>,
         body: &Option<&str>,
-        priority: &Option<u8>,
+        priority: &Option<String>,
         context_name: &Option<String>,
         tag_names: &Vec<String>,
         due_date: &Option<&str>,
@@ -212,6 +219,13 @@ impl DatabaseManager {
         let mut tag_ids: Vec<i64> = vec![];
         let mut tag_ids_to_remove: Vec<i64> = vec![];
 
+        let priority_id = match priority {
+            Some(priority_type) => Some(DatabaseManager::convert_priority_type_to_id(
+                &tx,
+                &priority_type,
+            )?),
+            None => None,
+        };
         for tag_name in tag_names.iter() {
             tag_ids.push(DatabaseManager::convert_tag_name_to_id(&tx, &tag_name)?);
         }
@@ -234,7 +248,7 @@ impl DatabaseManager {
             &mut tx,
             &task_ids,
             &body,
-            &priority,
+            &priority_id,
             &context_id,
             tag_ids,
             &parsed_due_date.as_deref(),
@@ -335,19 +349,31 @@ impl DatabaseManager {
     }
 
     fn convert_state_name_to_id(tx: &Transaction, state_name: &String) -> Result<i64, TaskooError> {
-        let mut statement = tx
-            .prepare("SELECT id FROM state WHERE name=(:state_name)")
-            .unwrap();
-        let mut result = statement
-            .query_named(named_params! {":state_name": state_name})
-            .unwrap();
+        let mut statement = tx.prepare("SELECT id FROM state WHERE name=(:state_name)")?;
+        let mut result = statement.query_named(named_params! {":state_name": state_name})?;
 
-        while let Some(row) = result.next().expect("") {
-            return Ok(row.get(0).unwrap());
+        while let Some(row) = result.next()? {
+            return Ok(row.get(0)?);
         }
         return DatabaseManager::create_state(tx, state_name);
     }
 
+    fn convert_priority_type_to_id(
+        tx: &Transaction,
+        priority_type: &String,
+    ) -> Result<i64, TaskooError> {
+        let lower_priority_type = priority_type.clone().to_lowercase();
+        let mut statement = tx.prepare("SELECT id FROM priority WHERE name=(:priority_type)")?;
+        let mut result = statement.query_named(named_params! {":priority_type": lower_priority_type})?;
+        while let Some(row) = result.next()? {
+            return Ok(row.get(0)?);
+        }
+        println!("2");
+        Err(TaskooError::InvalidOption(String::from(format!(
+            "Invalid priority {} is provided",
+            priority_type
+        ))))
+    }
     fn convert_tag_name_to_id(tx: &Transaction, tag_name: &String) -> Result<i64, TaskooError> {
         let mut statement = tx
             .prepare("SELECT id FROM tag where name=(:tag_name)")

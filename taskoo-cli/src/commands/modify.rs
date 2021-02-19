@@ -26,6 +26,7 @@ impl Modify {
         operation.scheduled_repeat = option.scheudled_repeat;
         operation.tags_to_remove = option.tags_to_remove;
         operation.state_name = option.state_name.as_deref();
+        operation.priority = option.priority;
 
         debug!("Executing ModifyOperation {:?}", operation);
         execute(&mut operation)?;

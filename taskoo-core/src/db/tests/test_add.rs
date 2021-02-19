@@ -103,6 +103,7 @@ fn test_add_complex() -> Result<()> {
     assert_eq!(tasks[0].id, 1);
     assert_eq!(tasks[0].body, "Test Body");
     assert_eq!(tasks[0].context_name, "Work");
+    assert_eq!(tasks[0].priority, "h");
     // TODO: Improve the assert_eq here to ensure the auto created `created_at` timestamp is
     // correct
     assert_eq!(created_at_datetime, current_datetime.date());

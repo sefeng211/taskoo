@@ -97,7 +97,6 @@ pub fn generate_view_condition(
 ) -> Vec<String> {
     let mut conditions = generate_condition(
         &None,
-        &None,
         &Some(*context_id),
         &None,
         &None,
@@ -140,14 +139,12 @@ pub fn generate_view_condition(
 
 pub fn generate_get_condition(
     body: &Option<&str>,
-    priority: &Option<u8>,
     context_id: &Option<i64>,
     due_date: &Option<&str>,
     scheduled_at: &Option<&str>,
 ) -> Vec<String> {
     return generate_condition(
         body,
-        priority,
         context_id,
         due_date,
         scheduled_at,
@@ -159,7 +156,6 @@ pub fn generate_get_condition(
 
 pub fn generate_condition(
     body: &Option<&str>,
-    priority: &Option<u8>,
     context_id: &Option<i64>,
     due_date: &Option<&str>,
     scheduled_at: &Option<&str>,
@@ -171,14 +167,6 @@ pub fn generate_condition(
     if body.is_some() {
         conditions.push(format!("body = '{}'", body.unwrap()).as_str().to_string());
     }
-
-    //if priority.is_some() {
-        //conditions.push(
-            //format!("priority = {}", priority.unwrap())
-                //.as_str()
-                //.to_string(),
-        //);
-    //}
 
     if context_id.is_some() {
         conditions.push(

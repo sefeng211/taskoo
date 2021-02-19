@@ -7,7 +7,7 @@ use crate::error::*;
 pub struct ModifyOperation<'a> {
     pub task_ids: Vec<i64>,
     pub body: Option<&'a str>,
-    pub priority: Option<u8>,
+    pub priority: Option<String>,
     pub context_name: Option<String>,
     pub tag_names: Vec<String>,
     pub due_date: Option<&'a str>,

@@ -12,6 +12,7 @@ pub struct CommandOption<'a> {
     pub context_name: Option<String>,
     pub state_name: Option<String>,
     pub body: Option<String>,
+    pub priority: Option<String>,
 }
 
 impl<'a> CommandOption<'a> {
@@ -26,6 +27,7 @@ impl<'a> CommandOption<'a> {
             context_name: None,
             state_name: None,
             body: None,
+            priority: None,
             tags_to_remove: vec![],
         };
     }
@@ -75,6 +77,13 @@ pub fn parse_command_option<'a>(
             start_parse_options = true;
             if command_option.context_name.is_none() {
                 command_option.context_name = Some(option[2 ..].to_string());
+            } else {
+                return Err(CommandError::InvalidContextName(option.to_string()));
+            };
+        } else if option.starts_with("p:") {
+            start_parse_options = true;
+            if command_option.priority.is_none() {
+                command_option.priority = Some(option[2 ..].to_string());
             } else {
                 return Err(CommandError::InvalidContextName(option.to_string()));
             };
@@ -177,6 +186,13 @@ mod tests {
         let option = vec!["c:inbox"];
         let parsed_option = parse_command_option(&option, false, false, false).unwrap();
         assert_eq!(parsed_option.context_name, Some("inbox".to_string()));
+    }
+
+    #[test]
+    fn test_parse_priority_ok() {
+        let option = vec!["p:h"];
+        let parsed_option = parse_command_option(&option, false, false, false).unwrap();
+        assert_eq!(parsed_option.priority, Some("h".to_string()));
     }
 
     #[test]

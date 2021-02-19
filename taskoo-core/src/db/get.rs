@@ -27,7 +27,6 @@ pub fn get(
         Some(id) => vec![format!("task.id = {}", id)],
         None => generate_get_condition(
             &None,
-            priority,
             context_id,
             due_date,
             scheduled_at,

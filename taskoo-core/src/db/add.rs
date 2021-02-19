@@ -3,28 +3,40 @@ use crate::error::TaskooError;
 use log::debug;
 use rusqlite::{named_params, Connection, Result, Transaction};
 
-fn add_tag(conn: &Transaction, tag_ids: Vec<i64>) -> Result<(), TaskooError> {
+fn add_tag(conn: &Transaction, task_id: &i64, tag_ids: Vec<i64>) -> Result<(), TaskooError> {
     debug!("Adding new tag {:?}", &tag_ids);
-    let mut statement = conn
-        .prepare(
-            "INSERT INTO task_tag
+    let mut statement = conn.prepare(
+        "INSERT INTO task_tag
         (task_id, tag_id)
         VALUES (:task_id, :tag_id)",
-        )
-        .expect("Failed to prepare the INSERT INTO task_tag query");
-    let last_insert_rowid = conn.last_insert_rowid();
+    )?;
     for id in tag_ids.iter() {
         statement.execute_named(named_params! {
-        ":task_id": last_insert_rowid,
+        ":task_id": task_id,
         ":tag_id": id})?;
     }
+    Ok(())
+}
+
+fn add_priority(conn: &Transaction, task_id: &i64, priority_id: &i64) -> Result<(), TaskooError> {
+    let mut statement = conn.prepare(
+        "INSERT INTO priority_task
+        (task_id, priority_id)
+        VALUES (:task_id, :priority_id)",
+    )?;
+
+    statement.execute_named(named_params! {
+        ":task_id": task_id,
+        ":priority_id": priority_id
+    })?;
+
     Ok(())
 }
 
 pub fn add(
     tx: &mut Transaction,
     body: &str,
-    priority: &Option<String>,
+    priority: &Option<i64>,
     context_id: &i64,
     tag_ids: Vec<i64>,
     due_date: &Option<&str>,
@@ -53,7 +65,10 @@ pub fn add(
 
     let insert_task_id = tx.last_insert_rowid();
 
-    add_tag(&tx, tag_ids)?;
+    add_tag(&tx, &insert_task_id, tag_ids)?;
+    if let Some(priority_id) = priority {
+        add_priority(&tx, &insert_task_id, &priority_id)?;
+    }
 
     // TODO: Let's have a generic query statement so that we can reuse it
     // between add.rs, get.rs and view.rs
