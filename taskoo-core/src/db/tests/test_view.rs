@@ -28,6 +28,7 @@ fn test_view_due() -> Result<()> {
             &None,
             &None,
             &None,
+            &None,
         )
         .expect("");
 
@@ -38,6 +39,7 @@ fn test_view_due() -> Result<()> {
             &None,
             &vec![],
             &Some("2020-11-13"),
+            &None,
             &None,
             &None,
             &None,
@@ -56,7 +58,7 @@ fn test_view_due() -> Result<()> {
 
     assert_eq!(rows.len(), 1);
 
-    assert_eq!(rows[0].due_date, "2020-11-13".to_string());
+    assert_eq!(rows[0].date_due, "2020-11-13".to_string());
 
     Ok(())
 }
@@ -76,6 +78,7 @@ fn test_view_overdue() -> Result<()> {
             &None,
             &None,
             &None,
+            &None,
         )
         .expect("");
 
@@ -86,6 +89,7 @@ fn test_view_overdue() -> Result<()> {
             &None,
             &vec![],
             &Some("2020-11-13"),
+            &None,
             &None,
             &None,
             &None,
@@ -104,7 +108,7 @@ fn test_view_overdue() -> Result<()> {
 
     assert_eq!(rows.len(), 1);
 
-    assert_eq!(rows[0].due_date, "2020-11-11".to_string());
+    assert_eq!(rows[0].date_due, "2020-11-11".to_string());
 
     Ok(())
 }
@@ -124,6 +128,7 @@ fn test_view_schedule() -> Result<()> {
             &None,
             &None,
             &None,
+            &None,
         )
         .expect("");
 
@@ -134,6 +139,7 @@ fn test_view_schedule() -> Result<()> {
             &None,
             &vec![],
             &Some("2020-11-13"),
+            &None,
             &None,
             &None,
             &None,
@@ -152,6 +158,7 @@ fn test_view_schedule() -> Result<()> {
             &None,
             &None,
             &None,
+            &None,
         )
         .expect("");
 
@@ -166,7 +173,7 @@ fn test_view_schedule() -> Result<()> {
 
     assert_eq!(rows.len(), 1);
 
-    assert_eq!(rows[0].scheduled_at, "2020-11-13".to_string());
+    assert_eq!(rows[0].date_scheduled, "2020-11-13".to_string());
 
     Ok(())
 }
@@ -187,6 +194,7 @@ fn test_view_schedule_today() -> Result<()> {
             &None,
             &None,
             &None,
+            &None,
         )
         .expect("");
 
@@ -201,6 +209,7 @@ fn test_view_schedule_today() -> Result<()> {
             &None,
             &None,
             &None,
+            &None,
         )
         .expect("");
 
@@ -211,6 +220,7 @@ fn test_view_schedule_today() -> Result<()> {
             &None,
             &vec![],
             &Some("2020-11-13"),
+            &None,
             &None,
             &None,
             &None,
@@ -230,7 +240,7 @@ fn test_view_schedule_today() -> Result<()> {
     assert_eq!(rows.len(), 1);
 
     let scheduled_at_parsed =
-        NaiveDate::parse_from_str(&rows[0].scheduled_at, "%Y-%m-%d").expect("");
+        NaiveDate::parse_from_str(&rows[0].date_scheduled, "%Y-%m-%d").expect("");
 
     assert_eq!(scheduled_at_parsed, expected.naive_local());
 
@@ -253,6 +263,7 @@ fn test_view_all_today() -> Result<()> {
             &None,
             &None,
             &None,
+            &None,
         )
         .expect("");
 
@@ -263,6 +274,7 @@ fn test_view_all_today() -> Result<()> {
             &None,
             &vec![],
             &Some("today"),
+            &None,
             &None,
             &None,
             &None,
@@ -282,7 +294,7 @@ fn test_view_all_today() -> Result<()> {
     assert_eq!(rows.len(), 2);
 
     let scheduled_at_parsed =
-        NaiveDate::parse_from_str(&rows[0].scheduled_at, "%Y-%m-%d").expect("");
+        NaiveDate::parse_from_str(&rows[0].date_scheduled, "%Y-%m-%d").expect("");
 
     assert_eq!(scheduled_at_parsed, expected.naive_local());
 

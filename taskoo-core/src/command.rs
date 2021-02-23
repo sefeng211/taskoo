@@ -194,6 +194,7 @@ mod tests {
             &None,
             &None,
             &None,
+            &None,
         )?;
         assert_eq!(command.get_all()?, vec!["tag1"]);
 
@@ -210,6 +211,7 @@ mod tests {
             &None,
             &None,
             &vec![String::from("tag1")],
+            &None,
             &None,
             &None,
             &None,
@@ -235,6 +237,7 @@ mod tests {
             &None,
             &None,
             &None,
+            &None,
         )?;
         assert_eq!(command.get_count("tag1")?, 1);
         Ok(())
@@ -249,6 +252,7 @@ mod tests {
             &None,
             &None,
             &vec![String::from("tag1")],
+            &None,
             &None,
             &None,
             &None,
@@ -289,6 +293,7 @@ mod tests {
             &None,
             &None,
             &None,
+            &None,
         )?;
 
         assert_eq!(command.get_all()?, vec!["tag1"]);
@@ -307,6 +312,7 @@ mod tests {
             &None,
             &None,
             &vec![String::from("tag1")],
+            &None,
             &None,
             &None,
             &None,

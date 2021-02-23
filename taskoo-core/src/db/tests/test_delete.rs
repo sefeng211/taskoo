@@ -27,6 +27,7 @@ fn test_delete_simple() -> Result<()> {
             &None,
             &None,
             &None,
+            &None,
         )
         .expect("");
 
@@ -61,6 +62,7 @@ fn test_delete_multiple() -> Result<()> {
             &None,
             &None,
             &None,
+            &None,
         )
         .expect("");
 
@@ -70,6 +72,7 @@ fn test_delete_multiple() -> Result<()> {
             &None,
             &None,
             &vec![],
+            &None,
             &None,
             &None,
             &None,

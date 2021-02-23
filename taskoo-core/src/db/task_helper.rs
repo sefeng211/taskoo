@@ -12,31 +12,34 @@ pub struct Task {
     pub id: i64,
     pub body: String,
     pub priority: String,
-    pub context_name: String,
-    pub tag_names: Vec<String>,
+    pub context: String,
+    pub tags: Vec<String>,
     pub tag_ids: Vec<i64>,
-    pub created_at: String,
-    pub due_date: String,
-    pub scheduled_at: String,
-    pub due_repeat: String,
-    pub scheduled_repeat: String,
+    pub date_created: String,
+    pub date_due: String,
+    pub date_scheduled: String,
+    pub repetition_due: String,
+    pub repetition_scheduled: String,
     pub state_name: String,
     pub annotation: String,
 }
 
 impl Task {
-    pub fn get_string_value(&self, attr: &str) -> Result<String, TaskooError> {
+    pub fn get_property_value(&self, attr: &str) -> Result<String, TaskooError> {
         match attr {
             "annotation" => Ok(self.annotation.clone()),
             _ => Err(TaskooError::InvalidOption(String::from(attr))),
         }
     }
+
     pub fn is_completed(&self) -> bool {
         return self.state_name == "completed";
     }
+
     pub fn is_started(&self) -> bool {
         return self.state_name == "started";
     }
+
     pub fn is_ready(&self) -> bool {
         return self.state_name == "ready";
     }
@@ -76,14 +79,14 @@ pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
             id: row.get(0).unwrap(),
             body: row.get(1).unwrap(),
             priority: row.get(2).unwrap_or("".to_string()),
-            tag_names: tag_names,
+            tags: tag_names,
             tag_ids: tag_ids,
-            created_at: row.get(3).unwrap(),
-            due_date: row.get(4).unwrap_or("".to_string()),
-            scheduled_at: row.get(5).unwrap(),
-            due_repeat: row.get(6).unwrap(),
-            scheduled_repeat: row.get(7).unwrap(),
-            context_name: row.get(8).unwrap(),
+            date_created: row.get(3).unwrap(),
+            date_due: row.get(4).unwrap_or("".to_string()),
+            date_scheduled: row.get(5).unwrap(),
+            repetition_due: row.get(6).unwrap(),
+            repetition_scheduled: row.get(7).unwrap(),
+            context: row.get(8).unwrap(),
             state_name: row.get(9).unwrap(),
             annotation: row.get(10).unwrap_or("".to_string()),
         };

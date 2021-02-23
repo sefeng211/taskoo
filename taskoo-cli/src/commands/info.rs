@@ -45,7 +45,7 @@ impl Info {
         }
 
         if let Some(attr) = matches.value_of("attribute") {
-            println!("{}", tasks[0].get_string_value(attr)?);
+            println!("{}", tasks[0].get_property_value(attr)?);
         } else {
             println!("{:?}", tasks[0]);
         }

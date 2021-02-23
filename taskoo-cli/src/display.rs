@@ -63,7 +63,7 @@ impl DisplayColumn {
         match *self {
             DisplayColumn::Id => {
                 let mut task_id = task.id.to_string();
-                if !task.due_repeat.is_empty() || !task.scheduled_repeat.is_empty() {
+                if !task.repetition_due.is_empty() || !task.repetition_scheduled.is_empty() {
                     task_id.push_str("(R)");
                 }
                 Paint::new(task_id).fg(Color::Red).to_string()
@@ -77,7 +77,7 @@ impl DisplayColumn {
                 }
 
                 // Append tags to the end of task body
-                for tag_name in task.tag_names.iter() {
+                for tag_name in task.tags.iter() {
                     let mut tag_output = String::from("+");
                     tag_output.push_str(tag_name);
                     task_body.push_str(" ");
@@ -103,13 +103,13 @@ impl DisplayColumn {
             DisplayColumn::Priority => Paint::new(task.priority.to_uppercase().clone())
                 .fg(Color::White)
                 .to_string(),
-            DisplayColumn::Created => Paint::new(task.created_at.clone())
+            DisplayColumn::Created => Paint::new(task.date_created.clone())
                 .fg(Color::Green)
                 .to_string(),
-            DisplayColumn::Scheduled => Paint::new(task.scheduled_at.clone())
+            DisplayColumn::Scheduled => Paint::new(task.date_scheduled.clone())
                 .fg(Color::Blue)
                 .to_string(),
-            DisplayColumn::Due => Paint::new(task.due_date.clone())
+            DisplayColumn::Due => Paint::new(task.date_due.clone())
                 .fg(Color::Magenta)
                 .to_string(),
         }
@@ -267,7 +267,7 @@ impl Display {
         result.sort_by(
             |task2, task1| match priority_cmp(&task1.priority, &task2.priority) {
                 Ordering::Equal => {
-                    return task1.created_at.cmp(&task2.created_at);
+                    return task1.date_created.cmp(&task2.date_created);
                 }
                 Ordering::Less => Ordering::Less,
                 Ordering::Greater => Ordering::Greater,
@@ -277,7 +277,7 @@ impl Display {
         for task in &result {
             let mut formated_body = String::clone(&task.body);
 
-            for tag_name in task.tag_names.iter() {
+            for tag_name in task.tags.iter() {
                 let mut tag_output = String::from("+");
                 tag_output.push_str(tag_name);
                 formated_body.push_str(" ");
@@ -290,7 +290,7 @@ impl Display {
             }
 
             let mut id = task.id.to_string();
-            if !task.due_repeat.is_empty() || !task.scheduled_repeat.is_empty() {
+            if !task.repetition_due.is_empty() || !task.repetition_scheduled.is_empty() {
                 id.push_str("(R)");
             }
 

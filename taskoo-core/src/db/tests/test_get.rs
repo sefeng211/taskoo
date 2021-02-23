@@ -28,6 +28,7 @@ fn test_get_simple() -> Result<()> {
             &Some("2weeks"), // Repeat every 2 weeks
             &None,
             &None,
+            &None,
         )
         .expect("");
 
@@ -37,7 +38,7 @@ fn test_get_simple() -> Result<()> {
 
     assert_eq!(rows.len(), 1);
     let created_at_datetime = Date::<Utc>::from_utc(
-        NaiveDate::parse_from_str(&rows[0].created_at, "%Y-%m-%d").expect(""),
+        NaiveDate::parse_from_str(&rows[0].date_created, "%Y-%m-%d").expect(""),
         Utc,
     );
 
@@ -46,10 +47,10 @@ fn test_get_simple() -> Result<()> {
     assert_eq!(rows[0].id, 1);
     assert_eq!(rows[0].body, "Test Body");
     assert_eq!(rows[0].priority, "");
-    assert_eq!(rows[0].context_name, "inbox");
+    assert_eq!(rows[0].context, "inbox");
     assert_eq!(created_at_datetime, current_datetime.date());
-    assert_eq!(rows[0].due_date.is_empty(), true);
-    assert_eq!(rows[0].scheduled_at.is_empty(), false);
+    assert_eq!(rows[0].date_due.is_empty(), true);
+    assert_eq!(rows[0].date_scheduled.is_empty(), false);
     //assert_eq!(rows[0].is_repeat, 1);
     //assert_eq!(rows[0].is_recurrence, 0);
 
@@ -71,6 +72,7 @@ fn test_get_all_for_context() -> Result<()> {
             &None,
             &None,
             &None,
+            &None,
         )
         .expect("");
 
@@ -85,6 +87,7 @@ fn test_get_all_for_context() -> Result<()> {
             &None,
             &None,
             &None,
+            &None,
         )
         .expect("");
 
@@ -94,6 +97,7 @@ fn test_get_all_for_context() -> Result<()> {
             &None,
             &Some("Life".to_string()),
             &vec![],
+            &None,
             &None,
             &None,
             &None,
@@ -133,19 +137,6 @@ fn test_get_with_tag_ids() -> Result<()> {
             &None,
             &None,
             &None,
-        )
-        .expect("");
-
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec!["Blocked".to_owned(), "Completed".to_owned()],
-            &None,
-            &None,
-            &None,
-            &None,
             &None,
         )
         .expect("");
@@ -156,6 +147,22 @@ fn test_get_with_tag_ids() -> Result<()> {
             &None,
             &None,
             &vec!["Blocked".to_owned(), "Completed".to_owned()],
+            &None,
+            &None,
+            &None,
+            &None,
+            &None,
+            &None,
+        )
+        .expect("");
+
+    database_manager
+        .add(
+            "Test Body",
+            &None,
+            &None,
+            &vec!["Blocked".to_owned(), "Completed".to_owned()],
+            &None,
             &None,
             &None,
             &None,
@@ -182,7 +189,7 @@ fn test_get_with_tag_ids() -> Result<()> {
         .unwrap();
 
     assert_eq!(rows.len(), 2);
-    assert_eq!(rows[0].tag_names, vec!["Blocked", "Completed"]);
-    assert_eq!(rows[1].tag_names, vec!["Blocked", "Completed"]);
+    assert_eq!(rows[0].tags, vec!["Blocked", "Completed"]);
+    assert_eq!(rows[1].tags, vec!["Blocked", "Completed"]);
     Ok(())
 }

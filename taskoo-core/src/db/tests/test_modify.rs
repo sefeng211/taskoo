@@ -27,6 +27,7 @@ fn test_modify_single() -> Result<()> {
             &None,
             &None,
             &None,
+            &None,
         )
         .unwrap();
 
@@ -68,9 +69,9 @@ fn test_modify_single() -> Result<()> {
     assert_eq!(tasks[0].id, 1);
     assert_eq!(tasks[0].body, "New Body");
     assert_eq!(tasks[0].priority, "h");
-    assert_eq!(tasks[0].context_name, "Work");
-    assert_eq!(tasks[0].due_date, "2020-11-10");
-    assert_eq!(tasks[0].scheduled_at, "2020-11-11");
+    assert_eq!(tasks[0].context, "Work");
+    assert_eq!(tasks[0].date_due, "2020-11-10");
+    assert_eq!(tasks[0].date_scheduled, "2020-11-11");
     //assert_eq!(tasks[0].is_repeat, 1);
     //assert_eq!(tasks[0].is_recurrence, 1);
 
@@ -87,6 +88,7 @@ fn test_modify_single_with_tag() -> Result<()> {
             &None,
             &None,
             &vec![],
+            &None,
             &None,
             &None,
             &None,
@@ -132,10 +134,10 @@ fn test_modify_single_with_tag() -> Result<()> {
 
     assert_eq!(tasks[0].id, 1);
     assert_eq!(tasks[0].body, "New Body");
-    assert_eq!(tasks[0].tag_names, ["Blocked".to_string()]);
-    assert_eq!(tasks[0].context_name, "Work");
-    assert_eq!(tasks[0].due_date, "2020-11-10");
-    assert_eq!(tasks[0].scheduled_at, "2020-11-11");
+    assert_eq!(tasks[0].tags, ["Blocked".to_string()]);
+    assert_eq!(tasks[0].context, "Work");
+    assert_eq!(tasks[0].date_due, "2020-11-10");
+    assert_eq!(tasks[0].date_scheduled, "2020-11-11");
     //assert_eq!(tasks[0].is_repeat, 1);
     //assert_eq!(tasks[0].is_recurrence, 1);
 
@@ -152,6 +154,7 @@ fn test_modify_tag_only() -> Result<()> {
             &None,
             &None,
             &vec![],
+            &None,
             &None,
             &None,
             &None,
@@ -196,7 +199,7 @@ fn test_modify_tag_only() -> Result<()> {
     assert_eq!(tasks.len(), 1);
 
     assert_eq!(tasks[0].id, 1);
-    assert_eq!(tasks[0].tag_names, ["Blocked".to_string()]);
+    assert_eq!(tasks[0].tags, ["Blocked".to_string()]);
 
     Ok(())
 }
