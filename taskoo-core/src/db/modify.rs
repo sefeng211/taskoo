@@ -1,6 +1,6 @@
 use super::query_helper::generate_condition;
 use crate::db::task_helper::Task;
-use crate::db::task_manager::DatabaseManager;
+use crate::db::task_manager::TaskManager;
 use crate::error::TaskooError;
 use log::debug;
 use log::info;
@@ -87,7 +87,7 @@ fn update_schedule_at_for_repeat(conn: &Transaction, task_id: &i64) -> Result<()
     if due_repetition.len() > 0 {
         debug!("Due Repetition for task {}: {}", task_id, due_repetition);
 
-        let new_due_date = DatabaseManager::parse_date_string(&due_repetition)?;
+        let new_due_date = TaskManager::parse_date_string(&due_repetition)?;
         debug!("Parsed schedule at {}", new_due_date);
 
         let mut statement =
@@ -106,7 +106,7 @@ fn update_schedule_at_for_repeat(conn: &Transaction, task_id: &i64) -> Result<()
             task_id, scheduled_repeat
         );
 
-        let new_schedule_at = DatabaseManager::parse_date_string(&scheduled_repeat)?;
+        let new_schedule_at = TaskManager::parse_date_string(&scheduled_repeat)?;
         debug!("Parsed schedule at {}", new_schedule_at);
 
         let mut statement = conn

@@ -17,19 +17,19 @@ use std::collections::HashMap;
 
 // TODO: Rename it to TaskManager or create another struct to contain it
 #[derive(Debug)]
-pub struct DatabaseManager {
+pub struct TaskManager {
     pub conn: Connection,
     setting: HashMap<String, String>,
 }
 
-impl DatabaseManager {
+impl TaskManager {
     // ensure the database is created
-    pub fn new(setting: &HashMap<String, String>) -> DatabaseManager {
+    pub fn new(setting: &HashMap<String, String>) -> TaskManager {
         if env_logger::try_init().is_err() {
             info!("Unable to init the logger, it's okay");
         }
         let conn = Connection::open(setting.get("db_path").unwrap()).unwrap();
-        let mut manager = DatabaseManager {
+        let mut manager = TaskManager {
             conn: conn,
             setting: setting.clone(),
         };
@@ -61,45 +61,45 @@ impl DatabaseManager {
 
         // Each task must have a context associated with it
         let context_id: i64 = match context_name {
-            Some(context) => DatabaseManager::convert_context_name_to_id(&tx, &context, true)?,
+            Some(context) => TaskManager::convert_context_name_to_id(&tx, &context, true)?,
             None => 1, // default to `Inbox` context
         };
 
         let state_id = match state_name {
-            Some(state) => Some(DatabaseManager::convert_state_name_to_id(&tx, &state)?),
+            Some(state) => Some(TaskManager::convert_state_name_to_id(&tx, &state)?),
             None => None,
         };
 
         let mut tag_ids: Vec<i64> = vec![];
         for tag_name in tag_names.iter() {
-            tag_ids.push(DatabaseManager::convert_tag_name_to_id(&tx, &tag_name)?);
+            tag_ids.push(TaskManager::convert_tag_name_to_id(&tx, &tag_name)?);
         }
 
         // Parse the scheduled_at string!
         let parse_scheduled_at = match scheduled_at {
-            Some(period) => Some(DatabaseManager::parse_date_string(period)?),
+            Some(period) => Some(TaskManager::parse_date_string(period)?),
             None => None,
         };
 
         let parsed_schedued_repeat = match scheduled_repeat {
-            Some(period) => Some(DatabaseManager::parse_date_string(period)?),
+            Some(period) => Some(TaskManager::parse_date_string(period)?),
             None => None,
         };
 
         let parsed_due_date = match due_date {
-            Some(period) => Some(DatabaseManager::parse_date_string(period)?),
+            Some(period) => Some(TaskManager::parse_date_string(period)?),
             None => None,
         };
 
         // Verify the repeat string and recurrence string are both
         // valid.
         let parsed_due_repeat = match due_repeat {
-            Some(period) => Some(DatabaseManager::parse_date_string(period)?),
+            Some(period) => Some(TaskManager::parse_date_string(period)?),
             None => None,
         };
 
         let priority_id = match priority {
-            Some(priority_type) => Some(DatabaseManager::convert_priority_type_to_id(
+            Some(priority_type) => Some(TaskManager::convert_priority_type_to_id(
                 &tx,
                 &priority_type,
             )?),
@@ -151,7 +151,7 @@ impl DatabaseManager {
         let tx = self.conn.transaction()?;
         match context_name {
             Some(name) => {
-                context_id = DatabaseManager::convert_context_name_to_id(&tx, &name, false)?;
+                context_id = TaskManager::convert_context_name_to_id(&tx, &name, false)?;
             }
             None => (),
         };
@@ -159,7 +159,7 @@ impl DatabaseManager {
         // Prepare the tag_ids
         let mut tag_ids: Vec<i64> = vec![];
         for tag_name in tag_names.iter() {
-            tag_ids.push(DatabaseManager::convert_tag_name_to_id(&tx, &tag_name)?);
+            tag_ids.push(TaskManager::convert_tag_name_to_id(&tx, &tag_name)?);
         }
 
         let tasks = get(
@@ -204,14 +204,14 @@ impl DatabaseManager {
             ));
         }
         let context_id = match context_name {
-            Some(name) => Some(DatabaseManager::convert_context_name_to_id(
+            Some(name) => Some(TaskManager::convert_context_name_to_id(
                 &tx, &name, true,
             )?),
             None => None,
         };
 
         let state_id = match state_name {
-            Some(name) => Some(DatabaseManager::convert_state_name_to_id(
+            Some(name) => Some(TaskManager::convert_state_name_to_id(
                 &tx,
                 &name.to_string(),
             )?),
@@ -222,27 +222,27 @@ impl DatabaseManager {
         let mut tag_ids_to_remove: Vec<i64> = vec![];
 
         let priority_id = match priority {
-            Some(priority_type) => Some(DatabaseManager::convert_priority_type_to_id(
+            Some(priority_type) => Some(TaskManager::convert_priority_type_to_id(
                 &tx,
                 &priority_type,
             )?),
             None => None,
         };
         for tag_name in tag_names.iter() {
-            tag_ids.push(DatabaseManager::convert_tag_name_to_id(&tx, &tag_name)?);
+            tag_ids.push(TaskManager::convert_tag_name_to_id(&tx, &tag_name)?);
         }
 
         for tag_name in tags_to_remove.iter() {
-            tag_ids_to_remove.push(DatabaseManager::convert_tag_name_to_id(&tx, &tag_name)?);
+            tag_ids_to_remove.push(TaskManager::convert_tag_name_to_id(&tx, &tag_name)?);
         }
 
         let parse_scheduled_at = match scheduled_at {
-            Some(period) => Some(DatabaseManager::parse_date_string(period)?),
+            Some(period) => Some(TaskManager::parse_date_string(period)?),
             None => None,
         };
 
         let parsed_due_date = match due_date {
-            Some(period) => Some(DatabaseManager::parse_date_string(period)?),
+            Some(period) => Some(TaskManager::parse_date_string(period)?),
             None => None,
         };
 
@@ -272,12 +272,12 @@ impl DatabaseManager {
         view_range_end: &String,
     ) -> Result<Vec<Task>, TaskooError> {
         let mut tx = self.conn.transaction()?;
-        let parsed_view_range_end = DatabaseManager::parse_date_string(&view_range_end)?;
+        let parsed_view_range_end = TaskManager::parse_date_string(&view_range_end)?;
 
         let tasks;
         if view_type == &Some("due".to_string()) {
             let context_id =
-                DatabaseManager::convert_context_name_to_id(&tx, &context_name, false)?;
+                TaskManager::convert_context_name_to_id(&tx, &context_name, false)?;
             tasks = view(
                 &mut tx,
                 &context_id,
@@ -287,7 +287,7 @@ impl DatabaseManager {
             )?;
         } else if view_type == &Some("overdue".to_string()) {
             let context_id =
-                DatabaseManager::convert_context_name_to_id(&tx, &context_name, false)?;
+                TaskManager::convert_context_name_to_id(&tx, &context_name, false)?;
             tasks = view(
                 &mut tx,
                 &context_id,
@@ -298,7 +298,7 @@ impl DatabaseManager {
         } else if view_type == &Some(String::from("schedule")) {
             info!("view_type = schedule");
             let context_id =
-                DatabaseManager::convert_context_name_to_id(&tx, &context_name, false)?;
+                TaskManager::convert_context_name_to_id(&tx, &context_name, false)?;
             tasks = view(
                 &mut tx,
                 &context_id,
@@ -308,7 +308,7 @@ impl DatabaseManager {
             )?;
         } else if view_type == &Some(String::from("all")) {
             let context_id =
-                DatabaseManager::convert_context_name_to_id(&tx, &context_name, false)?;
+                TaskManager::convert_context_name_to_id(&tx, &context_name, false)?;
             tasks = view(
                 &mut tx,
                 &context_id,
@@ -345,7 +345,7 @@ impl DatabaseManager {
         }
 
         if create_if_not_exists {
-            return DatabaseManager::create_context(tx, &context_name);
+            return TaskManager::create_context(tx, &context_name);
         }
         Err(TaskooError::InvalidContext(context_name.clone()))
     }
@@ -357,7 +357,7 @@ impl DatabaseManager {
         while let Some(row) = result.next()? {
             return Ok(row.get(0)?);
         }
-        return DatabaseManager::create_state(tx, state_name);
+        return TaskManager::create_state(tx, state_name);
     }
 
     fn convert_priority_type_to_id(
@@ -389,7 +389,7 @@ impl DatabaseManager {
             return Ok(row.get(0)?);
         }
 
-        return DatabaseManager::create_tag(&tx, &tag_name);
+        return TaskManager::create_tag(&tx, &tag_name);
     }
 
     pub fn parse_date_string(scheduled_at: &str) -> Result<String, TaskooError> {
@@ -484,19 +484,19 @@ impl DatabaseManager {
         let tx = self.conn.transaction()?;
         {
             for state in TASK_STATES.iter() {
-                DatabaseManager::create_state(&tx, &state.to_string())?;
+                TaskManager::create_state(&tx, &state.to_string())?;
             }
         }
 
         {
             for c in context.iter() {
-                DatabaseManager::create_context(&tx, &c.to_string())?;
+                TaskManager::create_context(&tx, &c.to_string())?;
             }
         }
 
         {
             for c in PRIORITIES.iter() {
-                DatabaseManager::create_priority(&tx, &c.to_string())?;
+                TaskManager::create_priority(&tx, &c.to_string())?;
             }
         }
 

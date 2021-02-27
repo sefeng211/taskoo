@@ -3,7 +3,7 @@ use rusqlite::Result;
 use std::collections::HashMap;
 
 // Note this useful idiom: importing names from outer (for mod tests) scope.
-use crate::db::task_manager::DatabaseManager;
+use crate::db::task_manager::TaskManager;
 
 fn get_setting() -> HashMap<String, String> {
     let mut setting = HashMap::new();
@@ -15,7 +15,7 @@ fn get_setting() -> HashMap<String, String> {
 
 #[test]
 fn test_view_due() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     database_manager
         .add(
@@ -65,7 +65,7 @@ fn test_view_due() -> Result<()> {
 
 #[test]
 fn test_view_overdue() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     database_manager
         .add(
@@ -115,7 +115,7 @@ fn test_view_overdue() -> Result<()> {
 
 #[test]
 fn test_view_schedule() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     database_manager
         .add(
@@ -180,7 +180,7 @@ fn test_view_schedule() -> Result<()> {
 
 #[test]
 fn test_view_schedule_today() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     let expected = Local::today() + Duration::days(0);
     database_manager
@@ -249,7 +249,7 @@ fn test_view_schedule_today() -> Result<()> {
 
 #[test]
 fn test_view_all_today() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     let expected = Local::today() + Duration::days(0);
     database_manager

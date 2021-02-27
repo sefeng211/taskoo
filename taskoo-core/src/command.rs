@@ -1,5 +1,5 @@
 use crate::core::ConfigManager;
-use crate::db::task_manager::DatabaseManager;
+use crate::db::task_manager::TaskManager;
 use crate::error::TaskooError;
 
 use rusqlite::{Result, NO_PARAMS, named_params};
@@ -9,14 +9,14 @@ pub trait SimpleCommand {
     fn new() -> Result<Self, TaskooError>
     where
         Self: Sized;
-    fn new_with_manager(db_manager: DatabaseManager) -> Self;
+    fn new_with_manager(db_manager: TaskManager) -> Self;
     fn get_all(&self) -> Result<Vec<String>, TaskooError>;
     fn get_count(&self, name: &str) -> Result<i64, TaskooError>;
     fn delete(&mut self, names: Vec<String>) -> Result<(), TaskooError>;
 }
 
 pub struct ContextCommand {
-    db_manager: DatabaseManager,
+    db_manager: TaskManager,
 }
 
 impl ContextCommand {
@@ -52,11 +52,11 @@ impl SimpleCommand for ContextCommand {
         Self: Sized,
     {
         Ok(ContextCommand {
-            db_manager: DatabaseManager::new(&ConfigManager::init_and_get_database_path()?),
+            db_manager: TaskManager::new(&ConfigManager::init_and_get_database_path()?),
         })
     }
 
-    fn new_with_manager(db_manager: DatabaseManager) -> Self {
+    fn new_with_manager(db_manager: TaskManager) -> Self {
         ContextCommand {
             db_manager: db_manager,
         }
@@ -91,7 +91,7 @@ impl SimpleCommand for ContextCommand {
 }
 
 pub struct TagCommand {
-    db_manager: DatabaseManager,
+    db_manager: TaskManager,
 }
 
 impl TagCommand {
@@ -111,11 +111,11 @@ impl TagCommand {
 impl SimpleCommand for TagCommand {
     fn new() -> Result<TagCommand, TaskooError> {
         Ok(TagCommand {
-            db_manager: DatabaseManager::new(&ConfigManager::init_and_get_database_path()?),
+            db_manager: TaskManager::new(&ConfigManager::init_and_get_database_path()?),
         })
     }
 
-    fn new_with_manager(db_manager: DatabaseManager) -> TagCommand {
+    fn new_with_manager(db_manager: TaskManager) -> TagCommand {
         TagCommand {
             db_manager: db_manager,
         }
@@ -172,7 +172,7 @@ mod tests {
 
     #[test]
     fn test_get_context() -> Result<(), TaskooError> {
-        let manager = DatabaseManager::new(&get_setting());
+        let manager = TaskManager::new(&get_setting());
 
         let context_names = ContextCommand::new_with_manager(manager);
         assert_eq!(context_names.get_all()?, vec!["inbox"]);
@@ -181,7 +181,7 @@ mod tests {
 
     #[test]
     fn test_get_tags() -> Result<(), TaskooError> {
-        let manager = DatabaseManager::new(&get_setting());
+        let manager = TaskManager::new(&get_setting());
         let mut command = TagCommand::new_with_manager(manager);
         assert!(command.get_all()?.is_empty());
         command.db_manager.add(
@@ -203,7 +203,7 @@ mod tests {
 
     #[test]
     fn test_get_context_task_count() -> Result<(), TaskooError> {
-        let manager = DatabaseManager::new(&get_setting());
+        let manager = TaskManager::new(&get_setting());
         let mut command = ContextCommand::new_with_manager(manager);
         assert_eq!(command.get_count("inbox")?, 0);
         command.db_manager.add(
@@ -224,7 +224,7 @@ mod tests {
 
     #[test]
     fn test_get_tag_task_count() -> Result<(), TaskooError> {
-        let manager = DatabaseManager::new(&get_setting());
+        let manager = TaskManager::new(&get_setting());
         let mut command = TagCommand::new_with_manager(manager);
         assert!(command.get_all()?.is_empty());
         command.db_manager.add(
@@ -245,7 +245,7 @@ mod tests {
 
     #[test]
     fn test_delete_context_with_task_associated() -> Result<(), TaskooError> {
-        let manager = DatabaseManager::new(&get_setting());
+        let manager = TaskManager::new(&get_setting());
         let mut command = ContextCommand::new_with_manager(manager);
         command.db_manager.add(
             "Test",
@@ -269,7 +269,7 @@ mod tests {
 
     #[test]
     fn test_delete_context() -> Result<(), TaskooError> {
-        let manager = DatabaseManager::new(&get_setting());
+        let manager = TaskManager::new(&get_setting());
         let mut command = ContextCommand::new_with_manager(manager);
 
         assert_eq!(command.get_all()?, vec!["inbox"]);
@@ -281,7 +281,7 @@ mod tests {
 
     #[test]
     fn test_delete_tag_with_tag_associated() -> Result<(), TaskooError> {
-        let manager = DatabaseManager::new(&get_setting());
+        let manager = TaskManager::new(&get_setting());
         let mut command = TagCommand::new_with_manager(manager);
         command.db_manager.add(
             "Test",
@@ -305,7 +305,7 @@ mod tests {
 
     #[test]
     fn test_delete_tag() -> Result<(), TaskooError> {
-        let manager = DatabaseManager::new(&get_setting());
+        let manager = TaskManager::new(&get_setting());
         let mut command = TagCommand::new_with_manager(manager);
         command.db_manager.add(
             "Test",

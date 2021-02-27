@@ -1,6 +1,6 @@
 use crate::core::{ConfigManager, Operation};
 use crate::db::task_helper::Task;
-use crate::db::task_manager::DatabaseManager;
+use crate::db::task_manager::TaskManager;
 use crate::error::*;
 
 pub struct Get<'a> {
@@ -10,7 +10,7 @@ pub struct Get<'a> {
     pub due_date: Option<&'a str>,
     pub scheduled_at: Option<&'a str>,
     pub task_id: Option<i64>,
-    database_manager: Option<DatabaseManager>,
+    database_manager: Option<TaskManager>,
     result: Vec<Task>,
 }
 
@@ -31,7 +31,7 @@ impl<'a> Get<'a> {
 
 impl<'a> Operation for Get<'a> {
     fn init(&mut self) -> Result<(), InitialError> {
-        self.database_manager = Some(DatabaseManager::new(
+        self.database_manager = Some(TaskManager::new(
             &ConfigManager::init_and_get_database_path()?,
         ));
         Ok(())
@@ -47,7 +47,7 @@ impl<'a> Operation for Get<'a> {
             None => None,
         };
 
-        return DatabaseManager::get(
+        return TaskManager::get(
             self.database_manager.as_mut().unwrap(),
             &self.priority,
             &self.context_name,

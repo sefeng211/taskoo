@@ -1,6 +1,6 @@
 use crate::core::{ConfigManager, Operation};
 use crate::db::task_helper::Task;
-use crate::db::task_manager::DatabaseManager;
+use crate::db::task_manager::TaskManager;
 use crate::error::*;
 
 #[derive(Debug)]
@@ -16,7 +16,7 @@ pub struct ModifyOperation<'a> {
     pub scheduled_repeat: Option<&'a str>,
     pub state_name: Option<&'a str>,
     pub tags_to_remove: Vec<String>,
-    database_manager: Option<DatabaseManager>,
+    database_manager: Option<TaskManager>,
     result: Vec<Task>,
 }
 
@@ -56,7 +56,7 @@ impl<'a> ModifyOperation<'a> {
 impl<'a> Operation for ModifyOperation<'a> {
     fn init(&mut self) -> Result<(), InitialError> {
         if self.database_manager.is_none() {
-            self.database_manager = Some(DatabaseManager::new(
+            self.database_manager = Some(TaskManager::new(
                 &ConfigManager::init_and_get_database_path()?,
             ));
         }
@@ -76,7 +76,7 @@ impl<'a> Operation for ModifyOperation<'a> {
             None => None,
         };
 
-        return DatabaseManager::modify(
+        return TaskManager::modify(
             self.database_manager.as_mut().unwrap(),
             &self.task_ids,
             &self.body,

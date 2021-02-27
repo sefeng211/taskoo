@@ -1,6 +1,6 @@
 use crate::core::{ConfigManager, Operation};
 use crate::db::task_helper::Task;
-use crate::db::task_manager::DatabaseManager;
+use crate::db::task_manager::TaskManager;
 use crate::error::*;
 
 /* Some of the view functionalities are overlap with list, however,
@@ -10,7 +10,7 @@ pub struct View {
     pub view_range_start: Option<String>,
     pub view_range_end: String,
     pub context_name: String,
-    database_manager: Option<DatabaseManager>,
+    database_manager: Option<TaskManager>,
     result: Vec<Task>,
 }
 
@@ -29,7 +29,7 @@ impl View {
 impl Operation for View {
     fn init(&mut self) -> Result<(), InitialError> {
         if self.database_manager.is_none() {
-            self.database_manager = Some(DatabaseManager::new(
+            self.database_manager = Some(TaskManager::new(
                 &ConfigManager::init_and_get_database_path()?,
             ));
         }
@@ -37,7 +37,7 @@ impl Operation for View {
     }
 
     fn do_work(&mut self) -> Result<Vec<Task>, TaskooError> {
-        return DatabaseManager::view(
+        return TaskManager::view(
             self.database_manager.as_mut().unwrap(),
             &self.context_name,
             &self.view_type,

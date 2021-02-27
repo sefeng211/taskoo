@@ -1,4 +1,4 @@
-use crate::db::task_manager::DatabaseManager;
+use crate::db::task_manager::TaskManager;
 use rusqlite::{Error as DbError, Result, NO_PARAMS};
 use std::collections::HashMap;
 
@@ -15,7 +15,7 @@ fn get_setting() -> HashMap<String, String> {
 
 #[test]
 fn test_create_table_if_needed() -> Result<(), DbError> {
-    let database_manager = DatabaseManager::new(&get_setting());
+    let database_manager = TaskManager::new(&get_setting());
 
     let mut tables = database_manager
         .conn
@@ -49,7 +49,7 @@ fn test_create_table_if_needed() -> Result<(), DbError> {
 
 #[test]
 fn test_ensure_context_is_created() -> Result<(), DbError> {
-    let database_manager = DatabaseManager::new(&get_setting());
+    let database_manager = TaskManager::new(&get_setting());
 
     let mut context = database_manager
         .conn
@@ -67,7 +67,7 @@ fn test_ensure_context_is_created() -> Result<(), DbError> {
 
 #[test]
 fn test_ensure_state_is_created() -> Result<(), DbError> {
-    let database_manager = DatabaseManager::new(&get_setting());
+    let database_manager = TaskManager::new(&get_setting());
 
     let mut context = database_manager
         .conn
@@ -85,7 +85,7 @@ fn test_ensure_state_is_created() -> Result<(), DbError> {
 
 #[test]
 fn test_ensure_priority_are_created() -> Result<(), DbError> {
-    let database_manager = DatabaseManager::new(&get_setting());
+    let database_manager = TaskManager::new(&get_setting());
 
     let mut context = database_manager
         .conn

@@ -1,6 +1,6 @@
 use crate::core::{ConfigManager, Operation};
 use crate::db::task_helper::Task;
-use crate::db::task_manager::DatabaseManager;
+use crate::db::task_manager::TaskManager;
 use crate::error::*;
 
 pub struct Add<'a> {
@@ -14,14 +14,14 @@ pub struct Add<'a> {
     pub due_repeat: Option<&'a str>,
     pub scheduled_repeat: Option<&'a str>,
     pub annotation: Option<&'a str>,
-    database_manager: Option<DatabaseManager>,
+    database_manager: Option<TaskManager>,
     result: Option<Vec<Task>>,
 }
 
 pub struct AddAnnotation {
     pub task_id: i64,
     pub annotation: String,
-    database_manager: Option<DatabaseManager>,
+    database_manager: Option<TaskManager>,
     result: Option<Vec<Task>>,
 }
 
@@ -57,7 +57,7 @@ impl AddAnnotation {
 
 impl Operation for Add<'_> {
     fn init(&mut self) -> Result<(), InitialError> {
-        self.database_manager = Some(DatabaseManager::new(
+        self.database_manager = Some(TaskManager::new(
             &ConfigManager::init_and_get_database_path()?,
         ));
         Ok(())
@@ -73,7 +73,7 @@ impl Operation for Add<'_> {
             None => None,
         };
 
-        return DatabaseManager::add(
+        return TaskManager::add(
             self.database_manager.as_mut().unwrap(),
             &self.body,
             &self.priority,
@@ -99,14 +99,14 @@ impl Operation for Add<'_> {
 
 impl Operation for AddAnnotation {
     fn init(&mut self) -> Result<(), InitialError> {
-        self.database_manager = Some(DatabaseManager::new(
+        self.database_manager = Some(TaskManager::new(
             &ConfigManager::init_and_get_database_path()?,
         ));
         Ok(())
     }
 
     fn do_work(&mut self) -> Result<Vec<Task>, TaskooError> {
-        return DatabaseManager::add_annotation(
+        return TaskManager::add_annotation(
             self.database_manager.as_mut().unwrap(),
             self.task_id,
             self.annotation.clone(),

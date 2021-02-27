@@ -2,7 +2,7 @@ use rusqlite::Result;
 use std::collections::HashMap;
 
 // Note this useful idiom: importing names from outer (for mod tests) scope.
-use crate::db::task_manager::DatabaseManager;
+use crate::db::task_manager::TaskManager;
 
 fn get_setting() -> HashMap<String, String> {
     let mut setting = HashMap::new();
@@ -14,7 +14,7 @@ fn get_setting() -> HashMap<String, String> {
 
 #[test]
 fn test_modify_single() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     database_manager
         .add(
@@ -80,7 +80,7 @@ fn test_modify_single() -> Result<()> {
 
 #[test]
 fn test_modify_single_with_tag() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     database_manager
         .add(
@@ -146,7 +146,7 @@ fn test_modify_single_with_tag() -> Result<()> {
 
 #[test]
 fn test_modify_tag_only() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     database_manager
         .add(

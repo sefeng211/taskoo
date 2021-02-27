@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 // Note this useful idiom: importing names from outer (for mod tests) scope.
 use crate::db::task_helper::convert_rows_into_task;
-use crate::db::task_manager::DatabaseManager;
+use crate::db::task_manager::TaskManager;
 use chrono::{Date, DateTime, Duration, Local, NaiveDate, Utc};
 
 use more_asserts::*;
@@ -17,7 +17,7 @@ fn get_setting() -> HashMap<String, String> {
 
 #[test]
 fn test_add_simple() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     database_manager
         .add(
@@ -65,7 +65,7 @@ fn test_add_simple() -> Result<()> {
 
 #[test]
 fn test_add_complex() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     database_manager
         .add(
@@ -121,7 +121,7 @@ fn test_add_complex() -> Result<()> {
 // Performing the add query should also add the tag
 #[test]
 fn test_add_exist_tag() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     database_manager
         .add(
@@ -158,7 +158,7 @@ fn test_add_exist_tag() -> Result<()> {
 // Performing the add query should also add the tag
 #[test]
 fn test_add_scheduled_at_days() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     let start = Local::today() + Duration::days(2);
     database_manager
@@ -203,7 +203,7 @@ fn test_add_scheduled_at_days() -> Result<()> {
 // Performing the add query should also add the tag
 #[test]
 fn test_add_scheduled_at_hours() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     let start = Local::today() + Duration::hours(11);
     database_manager
@@ -246,7 +246,7 @@ fn test_add_scheduled_at_hours() -> Result<()> {
 
 #[test]
 fn test_add_scheduled_at_weeks() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     let start = Local::today() + Duration::weeks(1);
     database_manager
@@ -289,7 +289,7 @@ fn test_add_scheduled_at_weeks() -> Result<()> {
 
 #[test]
 fn test_add_scheduled_at_raw_timestamp() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     database_manager
         .add(
@@ -325,7 +325,7 @@ fn test_add_scheduled_at_raw_timestamp() -> Result<()> {
 
 #[test]
 fn test_add_scheduled_at_tmr() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     let expected = Local::today() + Duration::days(1);
     database_manager
@@ -366,7 +366,7 @@ fn test_add_scheduled_at_tmr() -> Result<()> {
 
 #[test]
 fn test_add_scheduled_at_today() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     let expected = Local::today() + Duration::days(0);
     database_manager
@@ -406,7 +406,7 @@ fn test_add_scheduled_at_today() -> Result<()> {
 }
 #[test]
 fn test_add_completed_task() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     database_manager
         .add(
@@ -434,7 +434,7 @@ fn test_add_completed_task() -> Result<()> {
 
 #[test]
 fn test_add_repeat_scheduled_task() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     database_manager
         .add(
@@ -493,7 +493,7 @@ fn test_add_repeat_scheduled_task() -> Result<()> {
 
 #[test]
 fn test_add_repeat_due_task() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     database_manager
         .add(
@@ -550,7 +550,7 @@ fn test_add_repeat_due_task() -> Result<()> {
 
 #[test]
 fn test_add_annotation() -> Result<()> {
-    let mut database_manager = DatabaseManager::new(&get_setting());
+    let mut database_manager = TaskManager::new(&get_setting());
 
     database_manager
         .add(
