@@ -1,12 +1,10 @@
 use clap::ArgMatches;
-use taskoo_core::error::CoreError;
 use taskoo_core::operation::{Add as AddOp, AddAnnotation, Get as GetOp, execute};
 
 use crate::option_parser::{CommandOption, parse_command_option};
 use crate::error::ClientError;
 use taskoo_core::core::Operation;
 use dialoguer::Editor;
-use terminal_size::{Width, Height, terminal_size};
 use std::backtrace::Backtrace;
 
 //use crate::option_parser::parse_command_option;

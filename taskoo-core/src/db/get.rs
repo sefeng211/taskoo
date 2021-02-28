@@ -1,6 +1,5 @@
 use super::query_helper::generate_get_condition;
 use crate::db::task_helper::{convert_rows_into_task, Task};
-use crate::db::query_helper::GET_QUERY;
 use crate::error::CoreError;
 use log::debug;
 use rusqlite::{Result, Transaction, NO_PARAMS};

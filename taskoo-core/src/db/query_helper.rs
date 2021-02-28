@@ -67,28 +67,6 @@ pub const CREATE_PRIORITY_TASK_TABLE_QUERY: &str = "
     )
 ";
 
-pub const GET_QUERY: &str = "
-    SELECT task.id as id, body, priority_task.name, created_at, due_date, scheduled_at, due_repeat, scheduled_repeat, context.name, state.name, task.annotation, GROUP_CONCAT(task_tag.tag_id) as concat_tag_ids, GROUP_CONCAT(task_tag.name) FROM task
-    INNER JOIN context
-    on context_id = context.id
-    LEFT JOIN
-        (
-        SELECT task_tag.task_id, task_tag.tag_id, tag.name FROM task_tag
-        INNER JOIN tag ON task_tag.tag_id = tag.id
-        ) task_tag
-    ON task.id = task_tag.task_id
-    INNER JOIN state
-    on state_id = state.id
-    LEFT JOIN
-        (
-        SELECT priority.name, priority_task.task_id FROM priority
-        INNER JOIN priority_task ON priority_task.priority_id = priority.id
-        ) priority_task
-    on task.id = priority_task.task_id
-    Where {}
-    Group By task.id
-";
-
 pub fn generate_view_condition(
     context_id: &i64,
     _view_range_start: &Option<String>,

@@ -1,12 +1,10 @@
 use clap::ArgMatches;
 use ini::Ini;
 
-use taskoo_core::operation::Task;
 use taskoo_core::command::ContextCommand;
 use taskoo_core::command::SimpleCommand;
 use taskoo_core::error::CoreError;
-use taskoo_core::operation::{Get as GetOp, execute};
-use taskoo_core::core::Operation;
+use taskoo_core::operation::{Get as GetOp};
 
 use crate::display::Display;
 use crate::option_parser::{CommandOption, parse_command_option};

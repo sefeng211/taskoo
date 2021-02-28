@@ -3,7 +3,6 @@ use crate::db::task_manager::TaskManager;
 use crate::error::CoreError;
 
 use rusqlite::{Result, NO_PARAMS, named_params};
-use std::collections::HashMap;
 
 pub trait SimpleCommand {
     fn new() -> Result<Self, CoreError>

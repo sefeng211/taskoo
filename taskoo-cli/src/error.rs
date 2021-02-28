@@ -18,7 +18,7 @@ pub enum ClientError {
     #[error(transparent)]
     CommandError(#[from] CommandError),
     #[error("Terminal error, abort!")]
-    TerminalError(),
+    TerminalError { source: std::io::Error },
     #[error("ArgumentError: {0}")]
     ArgumentError(String),
 }

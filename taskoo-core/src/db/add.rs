@@ -1,7 +1,7 @@
 use crate::db::task_helper::{Task, convert_rows_into_task};
 use crate::error::CoreError;
 use log::debug;
-use rusqlite::{named_params, Connection, Result, Transaction};
+use rusqlite::{named_params, Result, Transaction};
 
 fn add_tag(conn: &Transaction, task_id: &i64, tag_ids: Vec<i64>) -> Result<(), CoreError> {
     debug!("Adding new tag {:?}", &tag_ids);

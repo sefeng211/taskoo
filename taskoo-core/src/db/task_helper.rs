@@ -20,7 +20,7 @@ pub struct Task {
     pub date_scheduled: String,
     pub repetition_due: String,
     pub repetition_scheduled: String,
-    pub state_name: String,
+    pub state: String,
     pub annotation: String,
 }
 
@@ -33,18 +33,18 @@ impl Task {
     }
 
     pub fn is_completed(&self) -> bool {
-        return self.state_name == "completed";
+        return self.state == "completed";
     }
 
     pub fn is_started(&self) -> bool {
-        return self.state_name == "started";
+        return self.state == "started";
     }
 
     pub fn is_ready(&self) -> bool {
-        return self.state_name == "ready";
+        return self.state == "ready";
     }
     pub fn is_blocked(&self) -> bool {
-        return self.state_name == "blocked";
+        return self.state == "blocked";
     }
 }
 
@@ -87,7 +87,7 @@ pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
             repetition_due: row.get(6).unwrap(),
             repetition_scheduled: row.get(7).unwrap(),
             context: row.get(8).unwrap(),
-            state_name: row.get(9).unwrap(),
+            state: row.get(9).unwrap(),
             annotation: row.get(10).unwrap_or("".to_string()),
         };
 

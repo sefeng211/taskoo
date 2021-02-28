@@ -1,18 +1,13 @@
-use crate::display::Display;
 use crate::error::ClientError;
-use taskoo_core::error::CoreError;
 
 use anyhow::{Result};
 use std::backtrace::Backtrace;
 use clap::ArgMatches;
-use ini::Ini;
-use log::{debug, info};
+use log::{info};
 
 use taskoo_core::command::{TagCommand, ContextCommand, SimpleCommand};
-use taskoo_core::operation::{View as ViewOperation};
 
-use dialoguer::{theme::ColorfulTheme, Confirm, Input, MultiSelect, Select};
-use dialoguer::console::Term;
+use dialoguer::{theme::ColorfulTheme, Select};
 
 pub struct Remove;
 
@@ -37,8 +32,6 @@ impl Remove {
                 String::from("The provided type is neither 'context' nor 'tag', so we can't process it, but how come?"), Backtrace::capture()));
             }
         }
-        Err(ClientError::UnexpectedFailure(
-                String::from("The provided type is neither 'context' nor 'tag', so we can't process it, but how come?"), Backtrace::capture()))
     }
     fn process_remove_context(command: impl SimpleCommand) -> Result<String, ClientError> {
         return Remove::process_remove(command, "context");
@@ -73,7 +66,7 @@ impl Remove {
             .default(0)
             .items(&possible_options)
             .interact()
-            .map_err(|error| ClientError::TerminalError())?;
+            .map_err(|error| ClientError::TerminalError{source: error})?;
 
         command.delete(vec![possible_options[selection].clone()])?;
         Ok("HH".to_string())

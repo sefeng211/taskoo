@@ -68,10 +68,9 @@ impl Review {
 
         for task in need_review_tasks.iter() {
             // No need to review completed tasks
-            if task.state_name == "completed" {
-                continue;
+            if !task.is_completed() {
+                Review::review_task(&task)?;
             }
-            Review::review_task(&task)?;
         }
         Ok(())
     }
@@ -90,7 +89,7 @@ impl Review {
         let tt = Confirm::with_theme(&ColorfulTheme::default())
             .with_prompt("q: Skip this task, y: start to review, n: delete the task")
             .interact_opt()
-            .map_err(|error| ClientError::TerminalError())?;
+            .map_err(|error| ClientError::TerminalError { source: error })?;
 
         if let None = tt {
             return Ok(());
@@ -98,7 +97,7 @@ impl Review {
             if Confirm::with_theme(&ColorfulTheme::default())
                 .with_prompt(format!("Do you want to {} the task?", Paint::red("delete")))
                 .interact()
-                .map_err(|error| ClientError::TerminalError())?
+                .map_err(|error| ClientError::TerminalError { source: error })?
             {
                 let mut operation = DeleteOperation {
                     database_manager: None,
@@ -121,7 +120,7 @@ impl Review {
             .default(0)
             .items(&context_names)
             .interact_opt()
-            .map_err(|error| ClientError::TerminalError())?;
+            .map_err(|error| ClientError::TerminalError { source: error })?;
 
         let new_context = if let Some(selection) = selection {
             Some(context_names[selection].clone())
@@ -140,7 +139,7 @@ impl Review {
             .items(&tags)
             .defaults(&defaults)
             .interact()
-            .map_err(|error| ClientError::TerminalError())?;
+            .map_err(|error| ClientError::TerminalError { source: error })?;
 
         let mut new_tags: Vec<String> = vec![];
         for index in tag_selection {
@@ -151,7 +150,7 @@ impl Review {
                 .with_prompt("New Tags? (Use , to separate multiple tags)")
                 .allow_empty(true)
                 .interact()
-                .map_err(|error| ClientError::TerminalError())?;
+                .map_err(|error| ClientError::TerminalError { source: error })?;
 
             new_tags = user_provided_tags
                 .split(",")
@@ -163,13 +162,13 @@ impl Review {
             .with_prompt("New Due Date?")
             .allow_empty(true)
             .interact()
-            .map_err(|error| ClientError::TerminalError())?;
+            .map_err(|error| ClientError::TerminalError { source: error })?;
 
         let user_new_schedule_at: String = Input::with_theme(&ColorfulTheme::default())
             .with_prompt("New Schedule At?")
             .allow_empty(true)
             .interact()
-            .map_err(|error| ClientError::TerminalError())?;
+            .map_err(|error| ClientError::TerminalError { source: error })?;
 
         let mut new_due_date = None;
         let mut new_scheduled_at = None;
@@ -185,7 +184,7 @@ impl Review {
         if Confirm::with_theme(&ColorfulTheme::default())
             .with_prompt("Do you want to modify the task as above?")
             .interact()
-            .map_err(|error| ClientError::TerminalError())?
+            .map_err(|error| ClientError::TerminalError { source: error })?
         {
             info!("Modify task {}", task.id);
             let mut modify_operation = ModifyOperation::new(vec![task.id]);

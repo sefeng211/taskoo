@@ -233,7 +233,7 @@ impl Display {
             operation
                 .get_result()
                 .iter()
-                .filter(|&task| task.state_name != "completed")
+                .filter(|&task| !task.is_completed())
                 .collect::<Vec<_>>()
         } else {
             operation.get_result().iter().collect::<Vec<_>>()
