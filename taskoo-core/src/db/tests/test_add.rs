@@ -58,7 +58,7 @@ fn test_add_simple() -> Result<()> {
     assert_eq!(tasks[0].date_scheduled.is_empty(), true);
     //assert_eq!(tasks[0].is_repeat, 0);
     //assert_eq!(tasks[0].is_recurrence, 0);
-    assert_eq!(tasks[0].state_name, "ready");
+    assert_eq!(tasks[0].state, "ready");
 
     Ok(())
 }
@@ -461,7 +461,7 @@ fn test_add_repeat_scheduled_task() -> Result<()> {
     let scheduled_at_parsed =
         NaiveDate::parse_from_str(&tasks[0].date_scheduled, "%Y-%m-%d").expect("");
     assert_ge!(scheduled_at_parsed, expected.naive_local());
-    assert_ge!(tasks[0].state_name, "ready".to_string());
+    assert_ge!(tasks[0].state, "ready".to_string());
 
     database_manager
         .modify(
@@ -487,7 +487,7 @@ fn test_add_repeat_scheduled_task() -> Result<()> {
     let scheduled_at_parsed =
         NaiveDate::parse_from_str(&tasks[0].date_scheduled, "%Y-%m-%d").expect("");
     assert_ge!(scheduled_at_parsed, expected.naive_local());
-    assert_ge!(tasks[0].state_name, "completed".to_string());
+    assert_ge!(tasks[0].state, "completed".to_string());
     Ok(())
 }
 
@@ -519,7 +519,7 @@ fn test_add_repeat_due_task() -> Result<()> {
     assert_eq!(tasks.len(), 1);
     let due_date_parsed = NaiveDate::parse_from_str(&tasks[0].date_due, "%Y-%m-%d").expect("");
     assert_ge!(due_date_parsed, expected.date().naive_local());
-    assert_ge!(tasks[0].state_name, "ready".to_string());
+    assert_ge!(tasks[0].state, "ready".to_string());
 
     database_manager
         .modify(
@@ -544,7 +544,7 @@ fn test_add_repeat_due_task() -> Result<()> {
     let expected = Local::now() + Duration::weeks(3);
     let due_date_parsed = NaiveDate::parse_from_str(&tasks[0].date_due, "%Y-%m-%d").expect("");
     assert_ge!(due_date_parsed, expected.date().naive_local());
-    assert_ge!(tasks[0].state_name, "completed".to_string());
+    assert_ge!(tasks[0].state, "completed".to_string());
     Ok(())
 }
 

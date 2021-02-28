@@ -109,8 +109,8 @@ subcommands:
         - task_id:
             index: 1
             required: true
-  - remove:
-      about: Remove context or tag
+  - clean:
+      about: clean context or tag
       alias: rm
       args:
         - type:
