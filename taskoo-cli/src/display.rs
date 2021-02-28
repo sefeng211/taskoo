@@ -5,7 +5,7 @@ use std::cmp::Ordering;
 use std::convert::TryInto;
 use tabwriter::TabWriter;
 use taskoo_core::core::Operation;
-use taskoo_core::error::TaskooError;
+use taskoo_core::error::CoreError;
 use taskoo_core::operation::{execute, Task};
 use yansi::Color;
 use yansi::Paint;
@@ -158,7 +158,7 @@ impl Display {
         operation: &mut impl Operation,
         config: &Ini,
         display_completed: bool,
-    ) -> Result<String, TaskooError> {
+    ) -> Result<String, CoreError> {
         let processed_operation =
             Display::process_operation(operation, &config, display_completed)?;
 
@@ -223,7 +223,7 @@ impl Display {
         operation: &mut impl Operation,
         config: &Ini,
         display_completed: bool,
-    ) -> Result<(String, usize), TaskooError> {
+    ) -> Result<(String, usize), CoreError> {
         // TODO Why &mut operation doesn't work?
         execute(operation)?;
         let mut tabbed_output = String::new();

@@ -4,7 +4,7 @@ use ini::Ini;
 use taskoo_core::operation::Task;
 use taskoo_core::command::ContextCommand;
 use taskoo_core::command::SimpleCommand;
-use taskoo_core::error::TaskooError;
+use taskoo_core::error::CoreError;
 use taskoo_core::operation::{Get as GetOp, execute};
 use taskoo_core::core::Operation;
 
@@ -20,7 +20,7 @@ impl List {
         List { config: config }
     }
 
-    pub fn list(&self, matches: &ArgMatches) -> Result<(), TaskooError> {
+    pub fn list(&self, matches: &ArgMatches) -> Result<(), CoreError> {
         // TODO Read context from the configuration file
         match matches.values_of("arguments") {
             Some(arguments) => {
@@ -84,14 +84,14 @@ impl List {
         context_name: &str,
         operation: &mut GetOp,
         display_completed: bool,
-    ) -> Result<String, TaskooError> {
+    ) -> Result<String, CoreError> {
         return Display::display(&context_name, operation, &self.config, display_completed);
     }
 
     pub fn get_operations(
         command_option: CommandOption,
         some_context_names: Option<Vec<String>>,
-    ) -> Result<Vec<(String, GetOp)>, TaskooError> {
+    ) -> Result<Vec<(String, GetOp)>, CoreError> {
         let context_names = match some_context_names {
             Some(context_names) => context_names,
             None => {

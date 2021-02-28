@@ -9,7 +9,7 @@ use crate::db::query_helper::{
 };
 use crate::db::task_helper::{Task, DEFAULT_CONTEXT, TASK_STATES, PRIORITIES};
 use crate::db::view::view;
-use crate::error::TaskooError;
+use crate::error::{CoreError, ArgumentError};
 use chrono::{Date, DateTime, Duration, Local, NaiveDate, Utc};
 use log::info;
 use rusqlite::{named_params, Connection, Result, Transaction, NO_PARAMS};
@@ -56,7 +56,7 @@ impl TaskManager {
         scheduled_repeat: &Option<&str>,
         annotation: &Option<&str>,
         state_name: &Option<String>,
-    ) -> Result<Vec<Task>, TaskooError> {
+    ) -> Result<Vec<Task>, CoreError> {
         let mut tx = self.conn.transaction()?;
 
         // Each task must have a context associated with it
@@ -126,7 +126,7 @@ impl TaskManager {
         &mut self,
         task_id: i64,
         annotation: String,
-    ) -> Result<Vec<Task>, TaskooError> {
+    ) -> Result<Vec<Task>, CoreError> {
         let mut tx = self.conn.transaction()?;
         let tasks = add_annotation(&mut tx, task_id, annotation)?;
         tx.commit()?;
@@ -141,7 +141,7 @@ impl TaskManager {
         due_date: &Option<&str>,
         scheduled_at: &Option<&str>,
         task_id: &Option<i64>,
-    ) -> Result<Vec<Task>, TaskooError> {
+    ) -> Result<Vec<Task>, CoreError> {
         info!(
             "Doing Get Operation with context_name {:?}, tag {:?}",
             context_name, tag_names
@@ -175,7 +175,7 @@ impl TaskManager {
         Ok(tasks)
     }
 
-    pub fn delete(&mut self, task_ids: &Vec<i64>) -> Result<Vec<Task>, TaskooError> {
+    pub fn delete(&mut self, task_ids: &Vec<i64>) -> Result<Vec<Task>, CoreError> {
         info!("deleting tasks {:?}", task_ids);
         let tx = self.conn.transaction()?;
         let tasks = delete(&tx, &task_ids)?;
@@ -196,17 +196,15 @@ impl TaskManager {
         scheduled_repeat: &Option<&str>,
         state_name: &Option<&str>,
         tags_to_remove: &Vec<String>,
-    ) -> Result<Vec<Task>, TaskooError> {
+    ) -> Result<Vec<Task>, CoreError> {
         let mut tx = self.conn.transaction()?;
         if task_ids.is_empty() {
-            return Err(TaskooError::InvalidOption(
+            Err(ArgumentError::InvalidOption(
                 "Task Ids can't be empty".to_string(),
-            ));
+            ))?
         }
         let context_id = match context_name {
-            Some(name) => Some(TaskManager::convert_context_name_to_id(
-                &tx, &name, true,
-            )?),
+            Some(name) => Some(TaskManager::convert_context_name_to_id(&tx, &name, true)?),
             None => None,
         };
 
@@ -270,14 +268,13 @@ impl TaskManager {
         view_type: &Option<String>,
         view_range_start: &Option<String>,
         view_range_end: &String,
-    ) -> Result<Vec<Task>, TaskooError> {
+    ) -> Result<Vec<Task>, CoreError> {
         let mut tx = self.conn.transaction()?;
         let parsed_view_range_end = TaskManager::parse_date_string(&view_range_end)?;
 
         let tasks;
         if view_type == &Some("due".to_string()) {
-            let context_id =
-                TaskManager::convert_context_name_to_id(&tx, &context_name, false)?;
+            let context_id = TaskManager::convert_context_name_to_id(&tx, &context_name, false)?;
             tasks = view(
                 &mut tx,
                 &context_id,
@@ -286,8 +283,7 @@ impl TaskManager {
                 &view_type,
             )?;
         } else if view_type == &Some("overdue".to_string()) {
-            let context_id =
-                TaskManager::convert_context_name_to_id(&tx, &context_name, false)?;
+            let context_id = TaskManager::convert_context_name_to_id(&tx, &context_name, false)?;
             tasks = view(
                 &mut tx,
                 &context_id,
@@ -297,8 +293,7 @@ impl TaskManager {
             )?;
         } else if view_type == &Some(String::from("schedule")) {
             info!("view_type = schedule");
-            let context_id =
-                TaskManager::convert_context_name_to_id(&tx, &context_name, false)?;
+            let context_id = TaskManager::convert_context_name_to_id(&tx, &context_name, false)?;
             tasks = view(
                 &mut tx,
                 &context_id,
@@ -307,8 +302,7 @@ impl TaskManager {
                 &view_type,
             )?;
         } else if view_type == &Some(String::from("all")) {
-            let context_id =
-                TaskManager::convert_context_name_to_id(&tx, &context_name, false)?;
+            let context_id = TaskManager::convert_context_name_to_id(&tx, &context_name, false)?;
             tasks = view(
                 &mut tx,
                 &context_id,
@@ -318,9 +312,9 @@ impl TaskManager {
             )?;
         } else {
             tx.commit()?;
-            return Err(TaskooError::InvalidViewType(
+            return Err(ArgumentError::InvalidViewType(
                 view_type.as_ref().unwrap().to_string(),
-            ));
+            ))?;
         }
 
         tx.commit()?;
@@ -331,7 +325,7 @@ impl TaskManager {
         tx: &Transaction,
         context_name: &String,
         create_if_not_exists: bool,
-    ) -> Result<i64, TaskooError> {
+    ) -> Result<i64, CoreError> {
         let mut statement = tx
             .prepare("SELECT id FROM context WHERE name=(:context_name)")
             .expect("");
@@ -347,10 +341,10 @@ impl TaskManager {
         if create_if_not_exists {
             return TaskManager::create_context(tx, &context_name);
         }
-        Err(TaskooError::InvalidContext(context_name.clone()))
+        Err(ArgumentError::InvalidContext(context_name.clone()))?
     }
 
-    fn convert_state_name_to_id(tx: &Transaction, state_name: &String) -> Result<i64, TaskooError> {
+    fn convert_state_name_to_id(tx: &Transaction, state_name: &String) -> Result<i64, CoreError> {
         let mut statement = tx.prepare("SELECT id FROM state WHERE name=(:state_name)")?;
         let mut result = statement.query_named(named_params! {":state_name": state_name})?;
 
@@ -363,20 +357,21 @@ impl TaskManager {
     fn convert_priority_type_to_id(
         tx: &Transaction,
         priority_type: &String,
-    ) -> Result<i64, TaskooError> {
+    ) -> Result<i64, CoreError> {
         let lower_priority_type = priority_type.clone().to_lowercase();
         let mut statement = tx.prepare("SELECT id FROM priority WHERE name=(:priority_type)")?;
-        let mut result = statement.query_named(named_params! {":priority_type": lower_priority_type})?;
+        let mut result =
+            statement.query_named(named_params! {":priority_type": lower_priority_type})?;
         while let Some(row) = result.next()? {
             return Ok(row.get(0)?);
         }
         println!("2");
-        Err(TaskooError::InvalidOption(String::from(format!(
+        Err(ArgumentError::InvalidOption(String::from(format!(
             "Invalid priority {} is provided",
             priority_type
-        ))))
+        ))))?
     }
-    fn convert_tag_name_to_id(tx: &Transaction, tag_name: &String) -> Result<i64, TaskooError> {
+    fn convert_tag_name_to_id(tx: &Transaction, tag_name: &String) -> Result<i64, CoreError> {
         let mut statement = tx
             .prepare("SELECT id FROM tag where name=(:tag_name)")
             .expect("");
@@ -392,7 +387,7 @@ impl TaskManager {
         return TaskManager::create_tag(&tx, &tag_name);
     }
 
-    pub fn parse_date_string(scheduled_at: &str) -> Result<String, TaskooError> {
+    pub fn parse_date_string(scheduled_at: &str) -> Result<String, CoreError> {
         let current_date: Date<Local> = Local::today();
         if scheduled_at == "tmr" || scheduled_at == "tomorrow" {
             return Ok((current_date + Duration::days(1))
@@ -405,13 +400,13 @@ impl TaskManager {
             let key: i64;
             match scheduled_at_split.iter().next() {
                 Some(value) => {
-                    let value_in_int = value.parse::<i64>().map_err(|_error| {
-                        TaskooError::PeriodParsingError(scheduled_at.to_string())
-                    })?;
+                    let value_in_int = value
+                        .parse::<i64>()
+                        .map_err(|_error| CoreError::DateParseError(scheduled_at.to_string()))?;
                     key = value_in_int;
                 }
                 None => {
-                    return Err(TaskooError::PeriodParsingError(scheduled_at.to_string()));
+                    return Err(CoreError::DateParseError(scheduled_at.to_string()));
                 }
             }
             // return now + x hours
@@ -423,13 +418,13 @@ impl TaskManager {
             let key: i64;
             match scheduled_at_split.iter().next() {
                 Some(value) => {
-                    let value_in_int = value.parse::<i64>().map_err(|_error| {
-                        TaskooError::PeriodParsingError(scheduled_at.to_string())
-                    })?;
+                    let value_in_int = value
+                        .parse::<i64>()
+                        .map_err(|_error| CoreError::DateParseError(scheduled_at.to_string()))?;
                     key = value_in_int;
                 }
                 None => {
-                    return Err(TaskooError::PeriodParsingError(scheduled_at.to_string()));
+                    return Err(CoreError::DateParseError(scheduled_at.to_string()));
                 }
             }
             // return now + x days
@@ -440,13 +435,13 @@ impl TaskManager {
             let scheduled_at_split: Vec<&str> = scheduled_at.split("weeks").collect();
             let key = match scheduled_at_split.iter().next() {
                 Some(value) => {
-                    let value_in_int = value.parse::<i64>().map_err(|_error| {
-                        TaskooError::PeriodParsingError(scheduled_at.to_string())
-                    })?;
+                    let value_in_int = value
+                        .parse::<i64>()
+                        .map_err(|_error| CoreError::DateParseError(scheduled_at.to_string()))?;
                     value_in_int
                 }
                 None => {
-                    return Err(TaskooError::PeriodParsingError(scheduled_at.to_string()));
+                    return Err(CoreError::DateParseError(scheduled_at.to_string()));
                 }
             };
             // return now + x days
@@ -459,7 +454,7 @@ impl TaskManager {
         // to utc
         let parsed_timestamp = Date::<Utc>::from_utc(
             NaiveDate::parse_from_str(&scheduled_at, "%Y-%m-%d").map_err(|source| {
-                TaskooError::PeriodChronoParseError {
+                CoreError::ChronoParseError {
                     period: scheduled_at.to_string(),
                     source: source,
                 }
@@ -469,7 +464,7 @@ impl TaskManager {
         Ok(parsed_timestamp.format("%Y-%m-%d").to_string())
     }
 
-    fn create_table_if_needed(&mut self, context: [&'static str; 1]) -> Result<(), TaskooError> {
+    fn create_table_if_needed(&mut self, context: [&'static str; 1]) -> Result<(), CoreError> {
         self.conn.execute(CREATE_TASK_TABLE_QUERY, NO_PARAMS)?;
         self.conn.execute(CREATE_TAG_TABLE_QUERY, NO_PARAMS)?;
         self.conn.execute(CREATE_TASK_TAG_TABLE_QUERY, NO_PARAMS)?;
@@ -505,7 +500,7 @@ impl TaskManager {
     }
 
     // Create a new context and return the id
-    fn create_context(tx: &Transaction, context_name: &String) -> Result<i64, TaskooError> {
+    fn create_context(tx: &Transaction, context_name: &String) -> Result<i64, CoreError> {
         let mut insert_into_context =
             tx.prepare("INSERT OR IGNORE INTO context (name) VALUES (:name)")?;
         insert_into_context.execute_named(named_params! {":name": context_name.trim()})?;
@@ -513,14 +508,14 @@ impl TaskManager {
         Ok(tx.last_insert_rowid())
     }
 
-    fn create_tag(tx: &Transaction, tag_name: &String) -> Result<i64, TaskooError> {
+    fn create_tag(tx: &Transaction, tag_name: &String) -> Result<i64, CoreError> {
         let mut insert_into_tag = tx.prepare("INSERT OR IGNORE INTO tag (name) VALUES (:name)")?;
         insert_into_tag.execute_named(named_params! {":name": tag_name.trim()})?;
         info!("Added a new tag: {}", tag_name);
         Ok(tx.last_insert_rowid())
     }
 
-    fn create_state(tx: &Transaction, state_name: &String) -> Result<i64, TaskooError> {
+    fn create_state(tx: &Transaction, state_name: &String) -> Result<i64, CoreError> {
         let mut insert_into_state =
             tx.prepare("INSERT OR IGNORE INTO state (name) VALUES (:name)")?;
         insert_into_state
@@ -528,7 +523,7 @@ impl TaskManager {
         Ok(tx.last_insert_rowid())
     }
 
-    fn create_priority(tx: &Transaction, priority_name: &String) -> Result<i64, TaskooError> {
+    fn create_priority(tx: &Transaction, priority_name: &String) -> Result<i64, CoreError> {
         let mut insert_into_state =
             tx.prepare("INSERT OR IGNORE INTO priority (name) VALUES (:name)")?;
         insert_into_state

@@ -1,18 +1,18 @@
 use crate::core::ConfigManager;
 use crate::db::task_manager::TaskManager;
-use crate::error::TaskooError;
+use crate::error::CoreError;
 
 use rusqlite::{Result, NO_PARAMS, named_params};
 use std::collections::HashMap;
 
 pub trait SimpleCommand {
-    fn new() -> Result<Self, TaskooError>
+    fn new() -> Result<Self, CoreError>
     where
         Self: Sized;
     fn new_with_manager(db_manager: TaskManager) -> Self;
-    fn get_all(&self) -> Result<Vec<String>, TaskooError>;
-    fn get_count(&self, name: &str) -> Result<i64, TaskooError>;
-    fn delete(&mut self, names: Vec<String>) -> Result<(), TaskooError>;
+    fn get_all(&self) -> Result<Vec<String>, CoreError>;
+    fn get_count(&self, name: &str) -> Result<i64, CoreError>;
+    fn delete(&mut self, names: Vec<String>) -> Result<(), CoreError>;
 }
 
 pub struct ContextCommand {
@@ -20,7 +20,7 @@ pub struct ContextCommand {
 }
 
 impl ContextCommand {
-    fn context(&self) -> Result<Vec<String>, TaskooError> {
+    fn context(&self) -> Result<Vec<String>, CoreError> {
         let mut statement = self.db_manager.conn.prepare("SELECT name FROM context")?;
 
         let mut result = statement.query(NO_PARAMS)?;
@@ -31,7 +31,7 @@ impl ContextCommand {
         }
         Ok(context_names)
     }
-    fn delete_context_base(&mut self, names: Vec<String>) -> Result<(), TaskooError> {
+    fn delete_context_base(&mut self, names: Vec<String>) -> Result<(), CoreError> {
         let tx = self.db_manager.conn.transaction()?;
 
         for context_name in names.iter() {
@@ -47,7 +47,7 @@ impl ContextCommand {
 }
 
 impl SimpleCommand for ContextCommand {
-    fn new() -> Result<Self, TaskooError>
+    fn new() -> Result<Self, CoreError>
     where
         Self: Sized,
     {
@@ -62,12 +62,12 @@ impl SimpleCommand for ContextCommand {
         }
     }
 
-    fn get_all(&self) -> Result<Vec<String>, TaskooError> {
+    fn get_all(&self) -> Result<Vec<String>, CoreError> {
         return self.context();
     }
 
     // Get the number of tasks that belong to this context
-    fn get_count(&self, name: &str) -> Result<i64, TaskooError> {
+    fn get_count(&self, name: &str) -> Result<i64, CoreError> {
         let mut statement = self.db_manager.conn.prepare(
             "
         SELECT COUNT(*) FROM task INNER JOIN
@@ -85,7 +85,7 @@ impl SimpleCommand for ContextCommand {
         }
         Ok(0)
     }
-    fn delete(&mut self, names: Vec<String>) -> Result<(), TaskooError> {
+    fn delete(&mut self, names: Vec<String>) -> Result<(), CoreError> {
         return self.delete_context_base(names);
     }
 }
@@ -95,7 +95,7 @@ pub struct TagCommand {
 }
 
 impl TagCommand {
-    pub fn tags(&self) -> Result<Vec<String>, TaskooError> {
+    pub fn tags(&self) -> Result<Vec<String>, CoreError> {
         let mut statement = self.db_manager.conn.prepare("SELECT name FROM tag")?;
 
         let mut result = statement.query(NO_PARAMS)?;
@@ -109,7 +109,7 @@ impl TagCommand {
 }
 
 impl SimpleCommand for TagCommand {
-    fn new() -> Result<TagCommand, TaskooError> {
+    fn new() -> Result<TagCommand, CoreError> {
         Ok(TagCommand {
             db_manager: TaskManager::new(&ConfigManager::init_and_get_database_path()?),
         })
@@ -121,7 +121,7 @@ impl SimpleCommand for TagCommand {
         }
     }
     // Get the number of tasks that have this tag
-    fn get_count(&self, name: &str) -> Result<i64, TaskooError> {
+    fn get_count(&self, name: &str) -> Result<i64, CoreError> {
         let mut statement = self.db_manager.conn.prepare(
             "
         SELECT COUNT(*) FROM task_tag INNER JOIN
@@ -140,11 +140,11 @@ impl SimpleCommand for TagCommand {
         Ok(0)
     }
 
-    fn get_all(&self) -> Result<Vec<String>, TaskooError> {
+    fn get_all(&self) -> Result<Vec<String>, CoreError> {
         return self.tags();
     }
 
-    fn delete(&mut self, names: Vec<String>) -> Result<(), TaskooError> {
+    fn delete(&mut self, names: Vec<String>) -> Result<(), CoreError> {
         let tx = self.db_manager.conn.transaction()?;
 
         {
@@ -171,7 +171,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_context() -> Result<(), TaskooError> {
+    fn test_get_context() -> Result<(), CoreError> {
         let manager = TaskManager::new(&get_setting());
 
         let context_names = ContextCommand::new_with_manager(manager);
@@ -180,7 +180,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_tags() -> Result<(), TaskooError> {
+    fn test_get_tags() -> Result<(), CoreError> {
         let manager = TaskManager::new(&get_setting());
         let mut command = TagCommand::new_with_manager(manager);
         assert!(command.get_all()?.is_empty());
@@ -202,7 +202,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_context_task_count() -> Result<(), TaskooError> {
+    fn test_get_context_task_count() -> Result<(), CoreError> {
         let manager = TaskManager::new(&get_setting());
         let mut command = ContextCommand::new_with_manager(manager);
         assert_eq!(command.get_count("inbox")?, 0);
@@ -223,7 +223,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_tag_task_count() -> Result<(), TaskooError> {
+    fn test_get_tag_task_count() -> Result<(), CoreError> {
         let manager = TaskManager::new(&get_setting());
         let mut command = TagCommand::new_with_manager(manager);
         assert!(command.get_all()?.is_empty());
@@ -244,7 +244,7 @@ mod tests {
     }
 
     #[test]
-    fn test_delete_context_with_task_associated() -> Result<(), TaskooError> {
+    fn test_delete_context_with_task_associated() -> Result<(), CoreError> {
         let manager = TaskManager::new(&get_setting());
         let mut command = ContextCommand::new_with_manager(manager);
         command.db_manager.add(
@@ -268,7 +268,7 @@ mod tests {
     }
 
     #[test]
-    fn test_delete_context() -> Result<(), TaskooError> {
+    fn test_delete_context() -> Result<(), CoreError> {
         let manager = TaskManager::new(&get_setting());
         let mut command = ContextCommand::new_with_manager(manager);
 
@@ -280,7 +280,7 @@ mod tests {
     }
 
     #[test]
-    fn test_delete_tag_with_tag_associated() -> Result<(), TaskooError> {
+    fn test_delete_tag_with_tag_associated() -> Result<(), CoreError> {
         let manager = TaskManager::new(&get_setting());
         let mut command = TagCommand::new_with_manager(manager);
         command.db_manager.add(
@@ -304,7 +304,7 @@ mod tests {
     }
 
     #[test]
-    fn test_delete_tag() -> Result<(), TaskooError> {
+    fn test_delete_tag() -> Result<(), CoreError> {
         let manager = TaskManager::new(&get_setting());
         let mut command = TagCommand::new_with_manager(manager);
         command.db_manager.add(

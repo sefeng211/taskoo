@@ -1,7 +1,7 @@
 use super::query_helper::generate_view_condition;
 use log::info;
 use crate::db::task_helper::{convert_rows_into_task, Task};
-use crate::error::TaskooError;
+use crate::error::CoreError;
 use log::debug;
 use rusqlite::{Transaction, Result, NO_PARAMS};
 
@@ -11,7 +11,7 @@ pub fn view(
     view_range_start: &Option<String>,
     view_range_end: &String,
     view_type: &Option<String>,
-) -> Result<Vec<Task>, TaskooError> {
+) -> Result<Vec<Task>, CoreError> {
     info!("[view] view_range_start={:?}", view_range_start);
     let conditions =
         generate_view_condition(context_id, view_range_start, view_range_end, view_type);

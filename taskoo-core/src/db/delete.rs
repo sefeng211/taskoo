@@ -1,8 +1,8 @@
 use crate::db::task_helper::Task;
-use crate::error::TaskooError;
+use crate::error::CoreError;
 use rusqlite::{named_params, Result, Transaction};
 
-pub fn delete(conn: &Transaction, task_ids: &Vec<i64>) -> Result<Vec<Task>, TaskooError> {
+pub fn delete(conn: &Transaction, task_ids: &Vec<i64>) -> Result<Vec<Task>, CoreError> {
     if task_ids.is_empty() {
         return Ok(vec![]);
     }

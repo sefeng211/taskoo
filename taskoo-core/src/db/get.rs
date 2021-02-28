@@ -1,7 +1,7 @@
 use super::query_helper::generate_get_condition;
 use crate::db::task_helper::{convert_rows_into_task, Task};
 use crate::db::query_helper::GET_QUERY;
-use crate::error::TaskooError;
+use crate::error::CoreError;
 use log::debug;
 use rusqlite::{Result, Transaction, NO_PARAMS};
 
@@ -22,7 +22,7 @@ pub fn get(
     due_date: &Option<&str>,
     scheduled_at: &Option<&str>,
     task_id: &Option<i64>,
-) -> Result<Vec<Task>, TaskooError> {
+) -> Result<Vec<Task>, CoreError> {
     let conditions = match task_id {
         Some(id) => vec![format!("task.id = {}", id)],
         None => generate_get_condition(

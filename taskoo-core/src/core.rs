@@ -1,5 +1,5 @@
 use crate::db::task_helper::Task;
-use crate::error::{InitialError, TaskooError};
+use crate::error::{InitialError, CoreError};
 use shellexpand;
 use dirs::config_dir;
 use ini::Ini;
@@ -88,7 +88,7 @@ impl ConfigManager {
 
 pub trait Operation {
     fn init(&mut self) -> Result<(), InitialError>;
-    fn do_work(&mut self) -> Result<Vec<Task>, TaskooError>;
+    fn do_work(&mut self) -> Result<Vec<Task>, CoreError>;
     fn set_result(&mut self, result: Vec<Task>);
     fn get_result(&mut self) -> &Vec<Task>;
 }

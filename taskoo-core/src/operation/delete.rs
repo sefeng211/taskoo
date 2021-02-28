@@ -16,7 +16,7 @@ impl Operation for DeleteOperation {
         ));
         Ok(())
     }
-    fn do_work(&mut self) -> Result<Vec<Task>, TaskooError> {
+    fn do_work(&mut self) -> Result<Vec<Task>, CoreError> {
         return TaskManager::delete(self.database_manager.as_mut().unwrap(), &self.task_ids);
     }
     fn set_result(&mut self, _result: Vec<Task>) {}

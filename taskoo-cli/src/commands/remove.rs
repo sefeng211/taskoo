@@ -1,6 +1,6 @@
 use crate::display::Display;
 use crate::error::ClientError;
-use taskoo_core::error::TaskooError;
+use taskoo_core::error::CoreError;
 
 use anyhow::{Result};
 use std::backtrace::Backtrace;

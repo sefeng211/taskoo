@@ -1,13 +1,13 @@
 use super::query_helper::generate_condition;
 use crate::db::task_helper::Task;
 use crate::db::task_manager::TaskManager;
-use crate::error::TaskooError;
+use crate::error::CoreError;
 use log::debug;
 use log::info;
 use rusqlite::{named_params, Result, Transaction, NO_PARAMS};
 
 // XXX Why task_ids is reference?
-fn add_tag(conn: &Transaction, task_ids: &Vec<i64>, tag_ids: Vec<i64>) -> Result<(), TaskooError> {
+fn add_tag(conn: &Transaction, task_ids: &Vec<i64>, tag_ids: Vec<i64>) -> Result<(), CoreError> {
     let mut statement = conn
         .prepare(
             "INSERT OR IGNORE INTO task_tag
@@ -29,7 +29,7 @@ fn remove_tag(
     conn: &Transaction,
     task_ids: &Vec<i64>,
     tag_ids: Vec<i64>,
-) -> Result<(), TaskooError> {
+) -> Result<(), CoreError> {
     info!(
         "Removing tag_ids: {:?} from task_ids {:?}",
         tag_ids, task_ids
@@ -53,7 +53,7 @@ fn insert_or_replace_priority(
     conn: &Transaction,
     task_ids: &Vec<i64>,
     priority_id: &i64,
-) -> Result<(), TaskooError> {
+) -> Result<(), CoreError> {
     info!(
         "InsertOrReplacePriority tag_ids: {:?} and priority_id {:?}",
         task_ids, priority_id
@@ -69,7 +69,7 @@ fn insert_or_replace_priority(
     }
     Ok(())
 }
-fn update_schedule_at_for_repeat(conn: &Transaction, task_id: &i64) -> Result<(), TaskooError> {
+fn update_schedule_at_for_repeat(conn: &Transaction, task_id: &i64) -> Result<(), CoreError> {
     let get_task_repetition_query = format!(
         "SELECT due_repeat, scheduled_repeat from task where id = {}",
         task_id
@@ -134,7 +134,7 @@ pub fn modify(
     recurrence: &Option<&str>,
     state_id: &Option<i64>,
     tag_ids_to_remove: Vec<i64>,
-) -> Result<Vec<Task>, TaskooError> {
+) -> Result<Vec<Task>, CoreError> {
     // Prepare the statement
     let conditions = generate_condition(
         body,

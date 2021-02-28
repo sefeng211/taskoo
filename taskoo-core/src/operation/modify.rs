@@ -62,7 +62,7 @@ impl<'a> Operation for ModifyOperation<'a> {
         }
         Ok(())
     }
-    fn do_work(&mut self) -> Result<Vec<Task>, TaskooError> {
+    fn do_work(&mut self) -> Result<Vec<Task>, CoreError> {
         for tag in self.tag_names.iter_mut() {
             *tag = tag.to_lowercase();
         }

@@ -1,9 +1,9 @@
 use crate::db::task_helper::{Task, convert_rows_into_task};
-use crate::error::TaskooError;
+use crate::error::CoreError;
 use log::debug;
 use rusqlite::{named_params, Connection, Result, Transaction};
 
-fn add_tag(conn: &Transaction, task_id: &i64, tag_ids: Vec<i64>) -> Result<(), TaskooError> {
+fn add_tag(conn: &Transaction, task_id: &i64, tag_ids: Vec<i64>) -> Result<(), CoreError> {
     debug!("Adding new tag {:?}", &tag_ids);
     let mut statement = conn.prepare(
         "INSERT INTO task_tag
@@ -18,7 +18,7 @@ fn add_tag(conn: &Transaction, task_id: &i64, tag_ids: Vec<i64>) -> Result<(), T
     Ok(())
 }
 
-fn add_priority(conn: &Transaction, task_id: &i64, priority_id: &i64) -> Result<(), TaskooError> {
+fn add_priority(conn: &Transaction, task_id: &i64, priority_id: &i64) -> Result<(), CoreError> {
     let mut statement = conn.prepare(
         "INSERT INTO priority_task
         (task_id, priority_id)
@@ -45,7 +45,7 @@ pub fn add(
     scheduled_repeat: &Option<&str>,
     annotation: &Option<&str>,
     state_id: &Option<i64>,
-) -> Result<Vec<Task>, TaskooError> {
+) -> Result<Vec<Task>, CoreError> {
     let mut statement = tx.prepare(
         "
     INSERT INTO task
@@ -109,7 +109,7 @@ pub fn add_annotation(
     tx: &mut Transaction,
     task_id: i64,
     annotation: String,
-) -> Result<Vec<Task>, TaskooError> {
+) -> Result<Vec<Task>, CoreError> {
     let mut statement = tx.prepare(
         "
         Update task set annotation = :annotation where id = :task_id

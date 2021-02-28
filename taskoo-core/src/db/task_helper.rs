@@ -1,5 +1,5 @@
 use rusqlite::Rows;
-use crate::error::TaskooError;
+use crate::error::ArgumentError;
 
 pub const TASK_STATES: [&'static str; 4] = ["ready", "completed", "blocked", "started"];
 
@@ -25,10 +25,10 @@ pub struct Task {
 }
 
 impl Task {
-    pub fn get_property_value(&self, attr: &str) -> Result<String, TaskooError> {
+    pub fn get_property_value(&self, attr: &str) -> Result<String, ArgumentError> {
         match attr {
             "annotation" => Ok(self.annotation.clone()),
-            _ => Err(TaskooError::InvalidOption(String::from(attr))),
+            _ => Err(ArgumentError::InvalidOption(String::from(attr))),
         }
     }
 

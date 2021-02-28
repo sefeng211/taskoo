@@ -1,5 +1,5 @@
 use clap::ArgMatches;
-use taskoo_core::error::TaskooError;
+use taskoo_core::error::CoreError;
 use taskoo_core::operation::{Add as AddOp, AddAnnotation, Get as GetOp, execute};
 
 use crate::option_parser::{CommandOption, parse_command_option};

@@ -36,7 +36,7 @@ impl Operation for View {
         Ok(())
     }
 
-    fn do_work(&mut self) -> Result<Vec<Task>, TaskooError> {
+    fn do_work(&mut self) -> Result<Vec<Task>, CoreError> {
         return TaskManager::view(
             self.database_manager.as_mut().unwrap(),
             &self.context_name,

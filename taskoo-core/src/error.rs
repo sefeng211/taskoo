@@ -18,13 +18,7 @@ pub enum InitialError {
 }
 
 #[derive(Error, Debug)]
-pub enum TaskooError {
-    #[error(transparent)]
-    SqliteError(#[from] SqlError),
-    #[error("Failed to parse given period {0}")]
-    PeriodParsingError(String),
-    #[error("Unable to parse the provided {period} to a real time")]
-    PeriodChronoParseError { period: String, source: ParseError },
+pub enum ArgumentError {
     #[error("Invalid context is provided {0}")]
     InvalidContext(String),
     #[error("Invalid Option {0}")]
@@ -35,8 +29,27 @@ pub enum TaskooError {
     InvalidState(String),
     #[error("Invalid view type: {0}")]
     InvalidViewType(String),
+}
+
+#[derive(Error, Debug)]
+pub enum CoreError {
+    #[error(transparent)]
+    SqliteError(#[from] SqlError),
+    #[error("Failed to parse given period {0}")]
+    DateParseError(String),
+    #[error("Unable to parse the provided {period} to a real time")]
+    ChronoParseError { period: String, source: ParseError },
     #[error("RRule parsing error: Can't parse {0}")]
     RRuleParseError(String),
     #[error(transparent)]
     InitialErrorIni(#[from] InitialError),
+    #[error("ArgumentError: {0}")]
+    ArgumentError(String),
 }
+
+impl From<ArgumentError> for CoreError {
+    fn from(err: ArgumentError) -> Self {
+        CoreError::ArgumentError(format!("{}", err))
+    }
+}
+
