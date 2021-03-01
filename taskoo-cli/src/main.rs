@@ -1,8 +1,6 @@
 #![feature(backtrace)]
 
 use anyhow::{Context, Result};
-//use clap::{App, Arg};
-use clap::{App, load_yaml};
 
 use dirs::config_dir;
 use ini::Ini;
