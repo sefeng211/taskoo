@@ -33,6 +33,25 @@ fn add_priority(conn: &Transaction, task_id: &i64, priority_id: &i64) -> Result<
     Ok(())
 }
 
+fn add_dependency(
+    conn: &Transaction,
+    task_id: &i64,
+    parent_task_id: &i64,
+) -> Result<(), CoreError> {
+    let mut statement = conn.prepare(
+        "INSERT INTO dependency
+        (task_id, parent_task_id)
+        VALUES (:task_id, :parent_task_id)",
+    )?;
+
+    statement.execute_named(named_params! {
+        ":task_id": task_id,
+        ":parent_task_id": parent_task_id
+    })?;
+
+    Ok(())
+}
+
 pub fn add(
     tx: &mut Transaction,
     body: &str,
@@ -45,6 +64,7 @@ pub fn add(
     scheduled_repeat: &Option<&str>,
     annotation: &Option<&str>,
     state_id: &Option<i64>,
+    parent_task_ids: &Option<Vec<i64>>,
 ) -> Result<Vec<Task>, CoreError> {
     let mut statement = tx.prepare(
         "
@@ -64,18 +84,25 @@ pub fn add(
         ":annotation": annotation.unwrap_or("")
     })?;
 
-    let insert_task_id = tx.last_insert_rowid();
+    let inserted_task_id = tx.last_insert_rowid();
 
-    add_tag(&tx, &insert_task_id, tag_ids)?;
+    add_tag(&tx, &inserted_task_id, tag_ids)?;
+
     if let Some(priority_id) = priority {
-        add_priority(&tx, &insert_task_id, &priority_id)?;
+        add_priority(&tx, &inserted_task_id, &priority_id)?;
+    }
+
+    if let Some(parent_task_ids) = parent_task_ids {
+        for parent_task_id in parent_task_ids.into_iter() {
+            add_dependency(&tx, &inserted_task_id, &parent_task_id)?;
+        }
     }
 
     // TODO: Let's have a generic query statement so that we can reuse it
     // between add.rs, get.rs and view.rs
     let get_last_insert_task_statement = format!(
         "
-    SELECT task.id as id, body, priority_task.name, created_at, due_date, scheduled_at, due_repeat, scheduled_repeat, context.name, state.name, task.annotation, GROUP_CONCAT(task_tag.tag_id) as concat_tag_ids, GROUP_CONCAT(task_tag.name) FROM task
+    SELECT task.id as id, body, priority_task.name, created_at, due_date, scheduled_at, due_repeat, scheduled_repeat, context.name, state.name, task.annotation, GROUP_CONCAT(task_tag.tag_id) as concat_tag_ids, GROUP_CONCAT(task_tag.name), GROUP_CONCAT(dependency.parent_task_id) as parent_task_ids FROM task
     INNER JOIN context
     on context_id = context.id
     LEFT JOIN
@@ -92,14 +119,17 @@ pub fn add(
         INNER JOIN priority_task ON priority_task.priority_id = priority.id
         ) priority_task
     on task.id = priority_task.task_id
+    LEFT JOIN dependency 
+    ON task.id = dependency.task_id
     Where task.id = :task_id
     Group By task.id
     ");
 
     let mut statement = tx.prepare(&get_last_insert_task_statement)?;
     let mut rows = statement.query_named(named_params! {
-        ":task_id": insert_task_id
+        ":task_id": inserted_task_id
     })?;
+
     let tasks = convert_rows_into_task(&mut rows);
 
     Ok(tasks)

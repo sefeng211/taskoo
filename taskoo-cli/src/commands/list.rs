@@ -94,7 +94,7 @@ impl List {
             Some(context_names) => context_names,
             None => {
                 // If no context names are passed, use all context
-                let command = ContextCommand::new()?;
+                let mut command = ContextCommand::new()?;
                 let context_names = command.get_all()?;
                 context_names
             }

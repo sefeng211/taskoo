@@ -45,6 +45,8 @@ pub enum CoreError {
     InitialErrorIni(#[from] InitialError),
     #[error("ArgumentError: {0}")]
     ArgumentError(String),
+    #[error("UnexpetedError: {0}")]
+    UnexpetedError(String),
 }
 
 impl From<ArgumentError> for CoreError {

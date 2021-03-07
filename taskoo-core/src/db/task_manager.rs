@@ -11,11 +11,10 @@ use crate::db::task_helper::{Task, DEFAULT_CONTEXT, TASK_STATES, PRIORITIES};
 use crate::db::view::view;
 use crate::error::{CoreError, ArgumentError};
 use chrono::{Date, DateTime, Duration, Local, NaiveDate, Utc};
-use log::info;
+use log::{info, debug};
 use rusqlite::{named_params, Connection, Result, Transaction, NO_PARAMS};
 use std::collections::HashMap;
 
-// TODO: Rename it to TaskManager or create another struct to contain it
 #[derive(Debug)]
 pub struct TaskManager {
     pub conn: Connection,
@@ -48,19 +47,21 @@ impl TaskManager {
         &mut self,
         body: &str,
         priority: &Option<String>,
-        context_name: &Option<String>,
-        tag_names: &Vec<String>,
-        due_date: &Option<&str>,
-        scheduled_at: &Option<&str>,
-        due_repeat: &Option<&str>,
-        scheduled_repeat: &Option<&str>,
+        context: &Option<String>,
+        tags: &Vec<String>,
+        date_due: &Option<&str>,
+        date_scheduled: &Option<&str>,
+        repetition_due: &Option<&str>,
+        repetition_scheduled: &Option<&str>,
         annotation: &Option<&str>,
         state_name: &Option<String>,
+        parent_task_ids: &Option<Vec<i64>>,
     ) -> Result<Vec<Task>, CoreError> {
+        debug!("Add start! self={:p}", self);
         let mut tx = self.conn.transaction()?;
 
         // Each task must have a context associated with it
-        let context_id: i64 = match context_name {
+        let context_id: i64 = match context {
             Some(context) => TaskManager::convert_context_name_to_id(&tx, &context, true)?,
             None => 1, // default to `Inbox` context
         };
@@ -71,29 +72,29 @@ impl TaskManager {
         };
 
         let mut tag_ids: Vec<i64> = vec![];
-        for tag_name in tag_names.iter() {
+        for tag_name in tags.iter() {
             tag_ids.push(TaskManager::convert_tag_name_to_id(&tx, &tag_name)?);
         }
 
         // Parse the scheduled_at string!
-        let parse_scheduled_at = match scheduled_at {
+        let parse_scheduled_at = match date_scheduled {
             Some(period) => Some(TaskManager::parse_date_string(period)?),
             None => None,
         };
 
-        let parsed_schedued_repeat = match scheduled_repeat {
+        let parsed_schedued_repeat = match repetition_scheduled {
             Some(period) => Some(TaskManager::parse_date_string(period)?),
             None => None,
         };
 
-        let parsed_due_date = match due_date {
+        let parsed_due_date = match date_due {
             Some(period) => Some(TaskManager::parse_date_string(period)?),
             None => None,
         };
 
         // Verify the repeat string and recurrence string are both
         // valid.
-        let parsed_due_repeat = match due_repeat {
+        let parsed_due_repeat = match repetition_due {
             Some(period) => Some(TaskManager::parse_date_string(period)?),
             None => None,
         };
@@ -117,8 +118,10 @@ impl TaskManager {
             &parsed_schedued_repeat.as_deref(),
             &annotation,
             &state_id,
+            &parent_task_ids,
         )?;
         tx.commit()?;
+        debug!("Add done! self={:p}", self);
         Ok(tasks)
     }
 
@@ -341,7 +344,7 @@ impl TaskManager {
         if create_if_not_exists {
             return TaskManager::create_context(tx, &context_name);
         }
-        Err(ArgumentError::InvalidContext(context_name.clone()))?
+        return Err(ArgumentError::InvalidContext(context_name.clone()))?;
     }
 
     fn convert_state_name_to_id(tx: &Transaction, state_name: &String) -> Result<i64, CoreError> {

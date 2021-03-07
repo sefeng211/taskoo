@@ -1,7 +1,7 @@
 #![feature(backtrace)]
 
 use anyhow::{Context, Result};
-
+use clap::{App, load_yaml};
 use dirs::config_dir;
 use ini::Ini;
 use log::info;

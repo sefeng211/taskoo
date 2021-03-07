@@ -32,10 +32,10 @@ pub const CREATE_TASK_TAG_TABLE_QUERY: &str = "
 pub const CREATE_DEPENDENCY_TABLE_QUERY: &str = "
     create table if not exists dependency (
         task_id integer not null,
-        depended_task_id integer not null,
-        PRIMARY KEY (task_id, depended_task_id),
+        parent_task_id integer not null,
+        PRIMARY KEY (task_id, parent_task_id),
         FOREIGN KEY (task_id) REFERENCES task(id),
-        FOREIGN KEY (depended_task_id) REFERENCES task(id)
+        FOREIGN KEY (parent_task_id) REFERENCES task(id)
     )";
 
 pub const CREATE_CONTEXT_TABLE_QUERY: &str = "

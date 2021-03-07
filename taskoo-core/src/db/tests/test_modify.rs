@@ -3,6 +3,8 @@ use std::collections::HashMap;
 
 // Note this useful idiom: importing names from outer (for mod tests) scope.
 use crate::db::task_manager::TaskManager;
+use crate::error::CoreError;
+use crate::operation::{Add, execute};
 
 fn get_setting() -> HashMap<String, String> {
     let mut setting = HashMap::new();
@@ -13,23 +15,11 @@ fn get_setting() -> HashMap<String, String> {
 }
 
 #[test]
-fn test_modify_single() -> Result<()> {
+fn test_modify_single() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec![],
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .unwrap();
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    execute(&mut operation)?;
 
     let tasks = database_manager
         .get(&None, &None, &vec![], &None, &None, &None)
@@ -49,7 +39,7 @@ fn test_modify_single() -> Result<()> {
             &None,
             &None,
             &None,
-            &vec![]
+            &vec![],
         )
         .unwrap();
 
@@ -79,23 +69,10 @@ fn test_modify_single() -> Result<()> {
 }
 
 #[test]
-fn test_modify_single_with_tag() -> Result<()> {
+fn test_modify_single_with_tag() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
-
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec![],
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .unwrap();
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    execute(&mut operation)?;
 
     let tasks = database_manager
         .get(&None, &None, &vec![], &None, &None, &None)
@@ -115,7 +92,7 @@ fn test_modify_single_with_tag() -> Result<()> {
             &None,
             &None,
             &None,
-            &vec![]
+            &vec![],
         )
         .unwrap();
 
@@ -145,24 +122,11 @@ fn test_modify_single_with_tag() -> Result<()> {
 }
 
 #[test]
-fn test_modify_tag_only() -> Result<()> {
+fn test_modify_tag_only() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec![],
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .unwrap();
-
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    execute(&mut operation)?;
     let tasks = database_manager
         .get(&None, &None, &vec![], &None, &None, &None)
         .unwrap();
@@ -181,7 +145,7 @@ fn test_modify_tag_only() -> Result<()> {
             &None,
             &None,
             &None,
-            &vec![]
+            &vec![],
         )
         .unwrap();
 
@@ -203,4 +167,3 @@ fn test_modify_tag_only() -> Result<()> {
 
     Ok(())
 }
-

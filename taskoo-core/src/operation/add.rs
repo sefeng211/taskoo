@@ -2,19 +2,22 @@ use crate::core::{ConfigManager, Operation};
 use crate::db::task_helper::Task;
 use crate::db::task_manager::TaskManager;
 use crate::error::*;
+use log::debug;
 
 pub struct Add<'a> {
     pub body: &'a str,
     pub priority: Option<String>,
-    pub context_name: Option<String>,
-    pub state_name: Option<String>,
-    pub tag_names: Vec<String>,
-    pub due_date: Option<&'a str>,
-    pub scheduled_at: Option<&'a str>,
-    pub due_repeat: Option<&'a str>,
-    pub scheduled_repeat: Option<&'a str>,
+    pub context: Option<String>,
+    pub state: Option<String>,
+    pub tags: Vec<String>,
+    pub date_due: Option<&'a str>,
+    pub date_scheduled: Option<&'a str>,
+    pub repetition_due: Option<&'a str>,
+    pub repetition_scheduled: Option<&'a str>,
     pub annotation: Option<&'a str>,
-    database_manager: Option<TaskManager>,
+    pub parent_task_ids: Option<Vec<i64>>,
+    task_manager: Option<TaskManager>,
+    task_manager_for_test: Option<&'a mut TaskManager>,
     result: Option<Vec<Task>>,
 }
 
@@ -30,15 +33,36 @@ impl Add<'_> {
         Add {
             body: body,
             priority: None,
-            context_name: None,
-            state_name: None,
-            tag_names: vec![],
-            due_date: None,
-            scheduled_at: None,
-            due_repeat: None,
-            scheduled_repeat: None,
+            context: None,
+            state: None,
+            tags: vec![],
+            date_due: None,
+            date_scheduled: None,
+            repetition_due: None,
+            repetition_scheduled: None,
             annotation: None,
-            database_manager: None,
+            parent_task_ids: None,
+            task_manager: None,
+            task_manager_for_test: None,
+            result: None,
+        }
+    }
+
+    pub fn new_with_task_manager<'a>(body: &'a str, task_manager: &'a mut TaskManager) -> Add<'a> {
+        Add {
+            body: body,
+            priority: None,
+            context: None,
+            state: None,
+            tags: vec![],
+            date_due: None,
+            date_scheduled: None,
+            repetition_due: None,
+            repetition_scheduled: None,
+            annotation: None,
+            parent_task_ids: None,
+            task_manager: None,
+            task_manager_for_test: Some(task_manager),
             result: None,
         }
     }
@@ -57,35 +81,63 @@ impl AddAnnotation {
 
 impl Operation for Add<'_> {
     fn init(&mut self) -> Result<(), InitialError> {
-        self.database_manager = Some(TaskManager::new(
-            &ConfigManager::init_and_get_database_path()?,
-        ));
+        if self.task_manager_for_test.is_none() {
+            self.task_manager = Some(TaskManager::new(
+                &ConfigManager::init_and_get_database_path()?,
+            ));
+        }
         Ok(())
     }
 
     fn do_work(&mut self) -> Result<Vec<Task>, CoreError> {
-        for tag in self.tag_names.iter_mut() {
+        for tag in self.tags.iter_mut() {
             *tag = tag.to_lowercase();
         }
 
-        self.context_name = match &self.context_name {
+        self.context = match &self.context {
             Some(name) => Some(name.to_lowercase()),
             None => None,
         };
 
-        return TaskManager::add(
-            self.database_manager.as_mut().unwrap(),
-            &self.body,
-            &self.priority,
-            &self.context_name,
-            &self.tag_names,
-            &self.due_date,
-            &self.scheduled_at,
-            &self.due_repeat,
-            &self.scheduled_repeat,
-            &self.annotation,
-            &self.state_name,
-        );
+        assert!(!(self.task_manager.is_some() && self.task_manager_for_test.is_some()));
+
+        match self.task_manager.as_mut() {
+            Some(manager) => {
+                debug!("Using task_manager");
+                return TaskManager::add(
+                    manager,
+                    &self.body,
+                    &self.priority,
+                    &self.context,
+                    &self.tags,
+                    &self.date_due,
+                    &self.date_scheduled,
+                    &self.repetition_due,
+                    &self.repetition_scheduled,
+                    &self.annotation,
+                    &self.state,
+                    &self.parent_task_ids,
+                );
+            }
+            None => {
+                assert!(self.task_manager_for_test.is_some());
+                debug!("Using task_manager_for_test");
+                return TaskManager::add(
+                    self.task_manager_for_test.as_mut().unwrap(),
+                    &self.body,
+                    &self.priority,
+                    &self.context,
+                    &self.tags,
+                    &self.date_due,
+                    &self.date_scheduled,
+                    &self.repetition_due,
+                    &self.repetition_scheduled,
+                    &self.annotation,
+                    &self.state,
+                    &self.parent_task_ids,
+                );
+            }
+        }
     }
 
     fn set_result(&mut self, result: Vec<Task>) {

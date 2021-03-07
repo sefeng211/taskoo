@@ -4,6 +4,8 @@ use std::collections::HashMap;
 
 // Note this useful idiom: importing names from outer (for mod tests) scope.
 use crate::db::task_manager::TaskManager;
+use crate::operation::{Add, execute};
+use crate::error::CoreError;
 
 fn get_setting() -> HashMap<String, String> {
     let mut setting = HashMap::new();
@@ -14,38 +16,17 @@ fn get_setting() -> HashMap<String, String> {
 }
 
 #[test]
-fn test_view_due() -> Result<()> {
+fn test_view_due() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec![],
-            &Some("2020-11-14"),
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
 
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec![],
-            &Some("2020-11-13"),
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+    operation.date_due = Some("2020-11-14");
+    execute(&mut operation)?;
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+
+    operation.date_due = Some("2020-11-13");
+    execute(&mut operation)?;
 
     let rows = database_manager
         .view(
@@ -64,38 +45,17 @@ fn test_view_due() -> Result<()> {
 }
 
 #[test]
-fn test_view_overdue() -> Result<()> {
+fn test_view_overdue() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec![],
-            &Some("2020-11-11"),
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
 
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec![],
-            &Some("2020-11-13"),
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+    operation.date_due = Some("2020-11-11");
+    execute(&mut operation)?;
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+
+    operation.date_due = Some("2020-11-13");
+    execute(&mut operation)?;
 
     let rows = database_manager
         .view(
@@ -114,53 +74,21 @@ fn test_view_overdue() -> Result<()> {
 }
 
 #[test]
-fn test_view_schedule() -> Result<()> {
+fn test_view_schedule() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec![],
-            &Some("2020-11-11"),
-            &Some("2020-11-13"),
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.date_due = Some("2020-11-11");
+    operation.date_scheduled = Some("2020-11-13");
+    execute(&mut operation)?;
 
-    database_manager
-        .add(
-            "Test Body 1",
-            &None,
-            &None,
-            &vec![],
-            &Some("2020-11-13"),
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.date_due = Some("2020-11-13");
+    execute(&mut operation)?;
 
-    database_manager
-        .add(
-            "Test Body 2",
-            &None,
-            &None,
-            &vec![],
-            &Some("2020-11-13"),
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+    let mut operation = Add::new_with_task_manager("Test Body 2", &mut database_manager);
+    operation.date_due = Some("2020-11-13");
+    execute(&mut operation)?;
 
     let rows = database_manager
         .view(
@@ -179,54 +107,22 @@ fn test_view_schedule() -> Result<()> {
 }
 
 #[test]
-fn test_view_schedule_today() -> Result<()> {
+fn test_view_schedule_today() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
     let expected = Local::today() + Duration::days(0);
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec![],
-            &Some("2020-11-11"),
-            &Some("today"),
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
 
-    database_manager
-        .add(
-            "Test Body 1",
-            &None,
-            &None,
-            &vec![],
-            &Some("2020-11-13"),
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.date_due = Some("2020-11-11");
+    operation.date_scheduled = Some("today");
+    execute(&mut operation)?;
+    let mut operation = Add::new_with_task_manager("Test Body 1", &mut database_manager);
+    operation.date_due = Some("2020-11-13");
+    execute(&mut operation)?;
 
-    database_manager
-        .add(
-            "Test Body 2",
-            &None,
-            &None,
-            &vec![],
-            &Some("2020-11-13"),
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+    let mut operation = Add::new_with_task_manager("Test Body 2", &mut database_manager);
+    operation.date_due = Some("2020-11-13");
+    execute(&mut operation)?;
 
     let rows = database_manager
         .view(
@@ -248,39 +144,19 @@ fn test_view_schedule_today() -> Result<()> {
 }
 
 #[test]
-fn test_view_all_today() -> Result<()> {
+fn test_view_all_today() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
     let expected = Local::today() + Duration::days(0);
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec![],
-            &Some("2020-11-11"),
-            &Some("today"),
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
 
-    database_manager
-        .add(
-            "Test Body 1",
-            &None,
-            &None,
-            &vec![],
-            &Some("today"),
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.date_due = Some("2020-11-11");
+    operation.date_scheduled = Some("today");
+    execute(&mut operation)?;
+
+    let mut operation = Add::new_with_task_manager("Test Body 1", &mut database_manager);
+    operation.date_due = Some("today");
+    execute(&mut operation)?;
 
     let rows = database_manager
         .view(

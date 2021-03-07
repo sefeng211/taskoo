@@ -112,7 +112,7 @@ impl Review {
         }
 
         println!("");
-        let context_command = ContextCommand::new()?;
+        let mut context_command = ContextCommand::new()?;
         let context_names = context_command.get_all()?;
 
         let selection = Select::with_theme(&ColorfulTheme::default())
@@ -128,7 +128,7 @@ impl Review {
             Review::ask_attribute("New Context?: ")
         };
 
-        let tag_command = TagCommand::new()?;
+        let mut tag_command = TagCommand::new()?;
         let tags = tag_command.get_all()?;
         let mut defaults = vec![];
         for _ in tags.iter() {

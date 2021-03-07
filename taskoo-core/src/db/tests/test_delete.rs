@@ -3,6 +3,8 @@ use std::collections::HashMap;
 
 // Note this useful idiom: importing names from outer (for mod tests) scope.
 use crate::db::task_manager::TaskManager;
+use crate::operation::{Add, execute};
+use crate::error::CoreError;
 
 fn get_setting() -> HashMap<String, String> {
     let mut setting = HashMap::new();
@@ -13,23 +15,11 @@ fn get_setting() -> HashMap<String, String> {
 }
 
 #[test]
-fn test_delete_simple() -> Result<()> {
+fn test_delete_simple() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec![],
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    execute(&mut operation)?;
 
     let rows = database_manager
         .get(&None, &None, &vec![], &None, &None, &Some(1))
@@ -48,38 +38,13 @@ fn test_delete_simple() -> Result<()> {
 }
 
 #[test]
-fn test_delete_multiple() -> Result<()> {
+fn test_delete_multiple() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec![],
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
-
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec![],
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    execute(&mut operation)?;
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    execute(&mut operation)?;
 
     let rows = database_manager
         .get(&None, &None, &vec![], &None, &None, &None)

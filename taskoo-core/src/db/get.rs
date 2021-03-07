@@ -38,7 +38,7 @@ pub fn get(
 
     let final_argument = format!(
         "
-    SELECT task.id as id, body, priority_task.name, created_at, due_date, scheduled_at, due_repeat, scheduled_repeat, context.name, state.name, task.annotation, GROUP_CONCAT(task_tag.tag_id) as concat_tag_ids, GROUP_CONCAT(task_tag.name) FROM task
+    SELECT task.id as id, body, priority_task.name, created_at, due_date, scheduled_at, due_repeat, scheduled_repeat, context.name, state.name, task.annotation, GROUP_CONCAT(task_tag.tag_id) as concat_tag_ids, GROUP_CONCAT(task_tag.name), GROUP_CONCAT(dependency.parent_task_id) as parent_task_ids FROM task
     INNER JOIN context
     on context_id = context.id
     LEFT JOIN
@@ -55,6 +55,8 @@ pub fn get(
         INNER JOIN priority_task ON priority_task.priority_id = priority.id
         ) priority_task
     on task.id = priority_task.task_id
+    LEFT JOIN dependency 
+    ON task.id = dependency.task_id
     Where {}
     Group By task.id
     ",

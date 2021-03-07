@@ -22,6 +22,7 @@ pub struct Task {
     pub repetition_scheduled: String,
     pub state: String,
     pub annotation: String,
+    pub parent_task_ids: Vec<String>,
 }
 
 impl Task {
@@ -53,6 +54,18 @@ pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
 
     while let Some(row) = rows.next().unwrap() {
         // TODO convert context_id to context_name
+
+        let mut tag_ids: Vec<i64> = vec![];
+        match row.get(11) {
+            Ok(ids) => {
+                let temp: String = ids;
+                for n in temp.split(",") {
+                    tag_ids.push(n.parse::<i64>().unwrap());
+                }
+            }
+            Err(_) => {}
+        }
+
         let mut tag_names: Vec<String> = vec![];
         match row.get(12) {
             Ok(names) => {
@@ -64,12 +77,12 @@ pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
             Err(_) => {}
         }
 
-        let mut tag_ids: Vec<i64> = vec![];
-        match row.get(11) {
-            Ok(ids) => {
-                let temp: String = ids;
+        let mut parent_task_ids: Vec<String> = vec![];
+        match row.get(13) {
+            Ok(names) => {
+                let temp: String = names;
                 for n in temp.split(",") {
-                    tag_ids.push(n.parse::<i64>().unwrap());
+                    parent_task_ids.push(n.to_string());
                 }
             }
             Err(_) => {}
@@ -89,6 +102,7 @@ pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
             context: row.get(8).unwrap(),
             state: row.get(9).unwrap(),
             annotation: row.get(10).unwrap_or("".to_string()),
+            parent_task_ids: parent_task_ids,
         };
 
         tasks.push(task);

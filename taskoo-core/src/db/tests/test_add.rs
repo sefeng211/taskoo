@@ -1,10 +1,13 @@
+use crate::core::Operation;
+use chrono::{Date, DateTime, Duration, Local, NaiveDate, Utc};
 use rusqlite::{Result, NO_PARAMS};
 use std::collections::HashMap;
 
 // Note this useful idiom: importing names from outer (for mod tests) scope.
 use crate::db::task_helper::convert_rows_into_task;
 use crate::db::task_manager::TaskManager;
-use chrono::{Date, DateTime, Duration, Local, NaiveDate, Utc};
+use crate::operation::{Add, execute};
+use crate::error::CoreError;
 
 use more_asserts::*;
 
@@ -16,23 +19,11 @@ fn get_setting() -> HashMap<String, String> {
 }
 
 #[test]
-fn test_add_simple() -> Result<()> {
+fn test_add_simple() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec![],
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .unwrap();
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    execute(&mut operation)?;
 
     let mut tasks = database_manager
         .get(&None, &None, &vec![], &None, &None, &None)
@@ -64,28 +55,18 @@ fn test_add_simple() -> Result<()> {
 }
 
 #[test]
-fn test_add_complex() -> Result<()> {
+fn test_add_complex() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
-    database_manager
-        .add(
-            "Test Body",
-            &Some(String::from("H")),
-            &Some(String::from("Work")),
-            &vec![],
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .unwrap();
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.priority = Some(String::from("H"));
+    operation.context = Some(String::from("Work"));
+    execute(&mut operation)?;
 
     let mut tasks = database_manager
         .get(
             &None,
-            &Some("Work".to_string()),
+            &Some("work".to_string()),
             &vec![],
             &None,
             &None,
@@ -104,7 +85,7 @@ fn test_add_complex() -> Result<()> {
 
     assert_eq!(tasks[0].id, 1);
     assert_eq!(tasks[0].body, "Test Body");
-    assert_eq!(tasks[0].context, "Work");
+    assert_eq!(tasks[0].context, "work");
     assert_eq!(tasks[0].priority, "h");
     // TODO: Improve the assert_eq here to ensure the auto created `created_at` timestamp is
     // correct
@@ -120,23 +101,14 @@ fn test_add_complex() -> Result<()> {
 
 // Performing the add query should also add the tag
 #[test]
-fn test_add_exist_tag() -> Result<()> {
+fn test_add_exist_tag() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
-    database_manager
-        .add(
-            "Test Body",
-            &Some(String::from("H")),
-            &Some(String::from("Work")),
-            &vec!["Ready".to_owned(), "Blocked".to_owned()],
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.priority = Some(String::from("H"));
+    operation.context = Some(String::from("Work"));
+    operation.tags = vec!["Ready".to_owned(), "Blocked".to_owned()];
+    execute(&mut operation)?;
 
     let mut tasks = database_manager
         .conn
@@ -157,31 +129,23 @@ fn test_add_exist_tag() -> Result<()> {
 
 // Performing the add query should also add the tag
 #[test]
-fn test_add_scheduled_at_days() -> Result<()> {
+fn test_add_scheduled_at_days() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
     let start = Local::today() + Duration::days(2);
-    database_manager
-        .add(
-            "Test Body",
-            &Some(String::from("H")),
-            &Some(String::from("Work")),
-            &vec!["Blocked".to_owned()],
-            &None,
-            &Some("2days"),
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
 
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.priority = Some(String::from("H"));
+    operation.context = Some(String::from("Work"));
+    operation.tags = vec!["Blocked".to_owned()];
+    operation.date_scheduled = Some("2days");
+    execute(&mut operation)?;
     let end = Local::today() + Duration::days(2);
 
     let mut tasks = database_manager
         .get(
             &None,
-            &Some("Work".to_string()),
+            &Some("work".to_string()),
             &vec![],
             &None,
             &None,
@@ -202,30 +166,23 @@ fn test_add_scheduled_at_days() -> Result<()> {
 
 // Performing the add query should also add the tag
 #[test]
-fn test_add_scheduled_at_hours() -> Result<()> {
+fn test_add_scheduled_at_hours() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
     let start = Local::today() + Duration::hours(11);
-    database_manager
-        .add(
-            "Test Body",
-            &Some(String::from("H")),
-            &Some(String::from("Work")),
-            &vec!["Blocked".to_owned()],
-            &None,
-            &Some("11hours"),
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.priority = Some(String::from("H"));
+    operation.context = Some(String::from("Work"));
+    operation.tags = vec!["Blocked".to_owned()];
+    operation.date_scheduled = Some("11hours");
+    execute(&mut operation)?;
 
     let end = Local::today() + Duration::hours(11);
     let mut tasks = database_manager
         .get(
             &None,
-            &Some("Work".to_string()),
+            &Some("work".to_string()),
             &vec![],
             &None,
             &None,
@@ -245,30 +202,22 @@ fn test_add_scheduled_at_hours() -> Result<()> {
 }
 
 #[test]
-fn test_add_scheduled_at_weeks() -> Result<()> {
+fn test_add_scheduled_at_weeks() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
     let start = Local::today() + Duration::weeks(1);
-    database_manager
-        .add(
-            "Test Body",
-            &Some(String::from("H")),
-            &Some(String::from("Work")),
-            &vec!["Blocked".to_owned()],
-            &None,
-            &Some("1weeks"),
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.priority = Some(String::from("H"));
+    operation.context = Some(String::from("Work"));
+    operation.tags = vec!["Blocked".to_owned()];
+    operation.date_scheduled = Some("1weeks");
+    execute(&mut operation)?;
 
     let end = Local::today() + Duration::weeks(1);
     let mut tasks = database_manager
         .get(
             &None,
-            &Some("Work".to_string()),
+            &Some("work".to_string()),
             &vec![],
             &None,
             &None,
@@ -288,28 +237,20 @@ fn test_add_scheduled_at_weeks() -> Result<()> {
 }
 
 #[test]
-fn test_add_scheduled_at_raw_timestamp() -> Result<()> {
+fn test_add_scheduled_at_raw_timestamp() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
-    database_manager
-        .add(
-            "Test Body",
-            &Some(String::from("H")),
-            &Some(String::from("Work")),
-            &vec!["Blocked".to_owned()],
-            &None,
-            &Some("2020-11-11"),
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.priority = Some(String::from("H"));
+    operation.context = Some(String::from("Work"));
+    operation.tags = vec!["Blocked".to_owned()];
+    operation.date_scheduled = Some("2020-11-11");
+    execute(&mut operation)?;
 
     let mut tasks = database_manager
         .get(
             &None,
-            &Some("Work".to_string()),
+            &Some("work".to_string()),
             &vec![],
             &None,
             &None,
@@ -324,29 +265,22 @@ fn test_add_scheduled_at_raw_timestamp() -> Result<()> {
 }
 
 #[test]
-fn test_add_scheduled_at_tmr() -> Result<()> {
+fn test_add_scheduled_at_tmr() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
     let expected = Local::today() + Duration::days(1);
-    database_manager
-        .add(
-            "Test Body",
-            &Some(String::from("H")),
-            &Some(String::from("Work")),
-            &vec!["Blocked".to_owned()],
-            &None,
-            &Some("tmr"),
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.priority = Some(String::from("H"));
+    operation.context = Some(String::from("Work"));
+    operation.tags = vec!["Blocked".to_owned()];
+    operation.date_scheduled = Some("tmr");
+    execute(&mut operation)?;
 
     let mut tasks = database_manager
         .get(
             &None,
-            &Some("Work".to_string()),
+            &Some("work".to_string()),
             &vec![],
             &None,
             &None,
@@ -365,29 +299,22 @@ fn test_add_scheduled_at_tmr() -> Result<()> {
 }
 
 #[test]
-fn test_add_scheduled_at_today() -> Result<()> {
+fn test_add_scheduled_at_today() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
     let expected = Local::today() + Duration::days(0);
-    database_manager
-        .add(
-            "Test Body",
-            &Some(String::from("H")),
-            &Some(String::from("Work")),
-            &vec!["Blocked".to_owned()],
-            &None,
-            &Some("today"),
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.priority = Some(String::from("H"));
+    operation.context = Some(String::from("Work"));
+    operation.tags = vec!["Blocked".to_owned()];
+    operation.date_scheduled = Some("today");
+    execute(&mut operation)?;
 
     let mut tasks = database_manager
         .get(
             &None,
-            &Some("Work".to_string()),
+            &Some("work".to_string()),
             &vec![],
             &None,
             &None,
@@ -405,23 +332,12 @@ fn test_add_scheduled_at_today() -> Result<()> {
     Ok(())
 }
 #[test]
-fn test_add_completed_task() -> Result<()> {
+fn test_add_completed_task() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec![],
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-            &Some(String::from("completed")),
-        )
-        .expect("");
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.state = Some(String::from("completed"));
+    execute(&mut operation)?;
 
     let rows = database_manager
         .get(&None, &None, &vec![], &None, &None, &None)
@@ -433,23 +349,14 @@ fn test_add_completed_task() -> Result<()> {
 }
 
 #[test]
-fn test_add_repeat_scheduled_task() -> Result<()> {
+fn test_add_repeat_scheduled_task() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec!["Completed".to_owned()],
-            &None,
-            &Some("2weeks"),
-            &None,
-            &Some("3weeks"),
-            &None,
-            &None,
-        )
-        .expect("");
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.tags = vec!["Completed".to_owned()];
+    operation.date_scheduled = Some("2weeks");
+    operation.repetition_scheduled = Some("3weeks");
+    execute(&mut operation)?;
 
     let tasks = database_manager
         .get(&None, &None, &vec![], &None, &None, &None)
@@ -492,33 +399,27 @@ fn test_add_repeat_scheduled_task() -> Result<()> {
 }
 
 #[test]
-fn test_add_repeat_due_task() -> Result<()> {
+fn test_add_repeat_due_task() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec!["Completed".to_owned()],
-            &Some("2weeks"),
-            &None,
-            &Some("3weeks"),
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.tags = vec!["Completed".to_owned()];
+    operation.date_due = Some("2weeks");
+    operation.repetition_due = Some("3weeks");
+    execute(&mut operation)?;
 
     let tasks = database_manager
         .get(&None, &None, &vec![], &None, &None, &None)
         .unwrap();
 
-    let expected = Local::now() + Duration::weeks(2);
+    let expected = Local::today() + Duration::weeks(2);
 
     assert_eq!(tasks.len(), 1);
     let due_date_parsed = NaiveDate::parse_from_str(&tasks[0].date_due, "%Y-%m-%d").expect("");
-    assert_ge!(due_date_parsed, expected.date().naive_local());
+    assert_ge!(
+        due_date_parsed.to_string(),
+        expected.format("%Y-%m-%d").to_string()
+    );
     assert_ge!(tasks[0].state, "ready".to_string());
 
     database_manager
@@ -549,23 +450,11 @@ fn test_add_repeat_due_task() -> Result<()> {
 }
 
 #[test]
-fn test_add_annotation() -> Result<()> {
+fn test_add_annotation() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec![],
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .unwrap();
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    execute(&mut operation)?;
 
     let mut tasks = database_manager
         .get(&None, &None, &vec![], &None, &None, &None)
@@ -585,4 +474,38 @@ fn test_add_annotation() -> Result<()> {
     assert_eq!(tasks[0].annotation, String::from("This is my annotation"));
 
     Ok(())
+}
+
+#[test]
+fn test_add_dependency() -> Result<(), CoreError> {
+    let mut database_manager = TaskManager::new(&get_setting());
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    execute(&mut operation)?;
+
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    execute(&mut operation)?;
+
+    let mut operation = Add::new_with_task_manager("Test Body 2", &mut database_manager);
+    operation.parent_task_ids = Some(vec![1, 2]);
+    execute(&mut operation)?;
+
+    assert_eq!(operation.get_result().len(), 1);
+    assert_eq!(operation.get_result()[0].parent_task_ids, vec!["1", "2"]);
+    Ok(())
+}
+
+#[test]
+fn test_add_dependency_parent_not_exist() -> Result<(), CoreError> {
+    let mut database_manager = TaskManager::new(&get_setting());
+
+    let mut operation = Add::new_with_task_manager("Test Body 2", &mut database_manager);
+    operation.parent_task_ids = Some(vec![1, 2]);
+
+    if let Err(CoreError::SqliteError(_)) = execute(&mut operation) {
+        return Ok(());
+    }
+
+    Err(CoreError::UnexpetedError(
+        String::from("Parent task doesn't exist, should crash"),
+    ))
 }

@@ -4,6 +4,8 @@ use std::collections::HashMap;
 
 // Note this useful idiom: importing names from outer (for mod tests) scope.
 use crate::db::task_manager::TaskManager;
+use crate::operation::{Add, execute};
+use crate::error::CoreError;
 
 fn get_setting() -> HashMap<String, String> {
     let mut setting = HashMap::new();
@@ -14,24 +16,15 @@ fn get_setting() -> HashMap<String, String> {
 }
 
 #[test]
-fn test_get_simple() -> Result<()> {
+fn test_get_simple() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec![],
-            &None,
-            &Some("2weeks"),
-            &Some("2weeks"), // Repeat every 2 weeks
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
 
+    operation.date_scheduled = Some("2weeks");
+    operation.repetition_due = Some("2weeks");
+
+    execute(&mut operation)?;
     let rows = database_manager
         .get(&None, &None, &vec![], &None, &None, &Some(1))
         .unwrap();
@@ -58,58 +51,23 @@ fn test_get_simple() -> Result<()> {
 }
 
 #[test]
-fn test_get_all_for_context() -> Result<()> {
+fn test_get_all_for_context() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.context = Some(String::from("Work"));
+    execute(&mut operation)?;
 
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &Some("Work".to_string()),
-            &vec![],
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
-
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &Some("Work".to_string()),
-            &vec![],
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
-
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &Some("Life".to_string()),
-            &vec![],
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.context = Some(String::from("Work"));
+    execute(&mut operation)?;
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.context = Some(String::from("Life"));
+    execute(&mut operation)?;
 
     let rows = database_manager
         .get(
             &None,
-            &Some("Work".to_string()),
+            &Some("work".to_string()),
             &vec![],
             &None,
             &None,
@@ -123,53 +81,19 @@ fn test_get_all_for_context() -> Result<()> {
 }
 
 #[test]
-fn test_get_with_tag_ids() -> Result<()> {
+fn test_get_with_tag_ids() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec![],
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    execute(&mut operation)?;
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.tags = vec!["Blocked".to_owned(), "Completed".to_owned()];
+    execute(&mut operation)?;
 
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec!["Blocked".to_owned(), "Completed".to_owned()],
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
-
-    database_manager
-        .add(
-            "Test Body",
-            &None,
-            &None,
-            &vec!["Blocked".to_owned(), "Completed".to_owned()],
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-            &None,
-        )
-        .expect("");
+        
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.tags = vec!["Blocked".to_owned(), "Completed".to_owned()];
+    execute(&mut operation)?;
 
     let rows = database_manager
         .get(&None, &None, &vec![], &None, &None, &None)
@@ -181,7 +105,7 @@ fn test_get_with_tag_ids() -> Result<()> {
         .get(
             &None,
             &None,
-            &vec!["Completed".to_string()],
+            &vec!["completed".to_string()],
             &None,
             &None,
             &None,
@@ -189,7 +113,7 @@ fn test_get_with_tag_ids() -> Result<()> {
         .unwrap();
 
     assert_eq!(rows.len(), 2);
-    assert_eq!(rows[0].tags, vec!["Blocked", "Completed"]);
-    assert_eq!(rows[1].tags, vec!["Blocked", "Completed"]);
+    assert_eq!(rows[0].tags, vec!["blocked", "completed"]);
+    assert_eq!(rows[1].tags, vec!["blocked", "completed"]);
     Ok(())
 }

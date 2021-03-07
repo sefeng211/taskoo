@@ -25,13 +25,13 @@ impl Add {
         })?;
 
         let mut operation = AddOp::new(&body);
-        operation.context_name = option.context_name;
-        operation.tag_names = option.tag_names;
-        operation.due_date = option.due_date;
-        operation.due_repeat = option.due_repeat;
-        operation.scheduled_at = option.scheduled_at;
-        operation.scheduled_repeat = option.scheudled_repeat;
-        operation.state_name = option.state_name;
+        operation.context = option.context_name;
+        operation.tags = option.tag_names;
+        operation.date_due = option.due_date;
+        operation.repetition_due = option.due_repeat;
+        operation.date_scheduled = option.scheduled_at;
+        operation.repetition_scheduled = option.scheudled_repeat;
+        operation.state = option.state_name;
         operation.priority = option.priority;
 
         let annotation = if matches.is_present("annotation") {
