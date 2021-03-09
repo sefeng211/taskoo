@@ -13,6 +13,7 @@ pub struct CommandOption<'a> {
     pub state_name: Option<String>,
     pub body: Option<String>,
     pub priority: Option<String>,
+    pub parent_task_ids: Option<Vec<i64>>,
 }
 
 impl<'a> CommandOption<'a> {
@@ -29,6 +30,7 @@ impl<'a> CommandOption<'a> {
             body: None,
             priority: None,
             tags_to_remove: vec![],
+            parent_task_ids: None,
         };
     }
 }
@@ -80,10 +82,24 @@ pub fn parse_command_option<'a>(
             } else {
                 return Err(CommandError::InvalidContextName(option.to_string()));
             };
-        } else if option.starts_with("p:") {
+        } else if option.starts_with("pri:") {
             start_parse_options = true;
             if command_option.priority.is_none() {
-                command_option.priority = Some(option[2 ..].to_string());
+                command_option.priority = Some(option[4 ..].to_string());
+            } else {
+                return Err(CommandError::InvalidContextName(option.to_string()));
+            };
+        } else if option.starts_with("dep:") {
+            start_parse_options = true;
+            if command_option.parent_task_ids.is_none() {
+                let comma_separated_ids = option[4 ..].to_string();
+
+                let numbers: Result<Vec<i64>, _> = comma_separated_ids
+                    .split(",")
+                    .map(|s| s.parse::<i64>())
+                    .collect();
+
+                command_option.parent_task_ids = Some(numbers?);
             } else {
                 return Err(CommandError::InvalidContextName(option.to_string()));
             };
@@ -190,7 +206,7 @@ mod tests {
 
     #[test]
     fn test_parse_priority_ok() {
-        let option = vec!["p:h"];
+        let option = vec!["pri:h"];
         let parsed_option = parse_command_option(&option, false, false, false).unwrap();
         assert_eq!(parsed_option.priority, Some("h".to_string()));
     }
@@ -218,7 +234,7 @@ mod tests {
 
     #[test]
     fn test_parse_tags_to_remove() {
-        let option = vec!["+-Tag1", "+-Tag2"];
+        let option = vec!["~+Tag1", "~+Tag2"];
         let parsed_option = parse_command_option(&option, true, true, false).unwrap();
         assert_eq!(parsed_option.tags_to_remove, vec!["Tag1", "Tag2"]);
     }
@@ -243,5 +259,12 @@ mod tests {
         let option = vec!["1..3"];
         let parsed_option = parse_command_option(&option, false, false, true).unwrap();
         assert_eq!(parsed_option.task_ids, vec![1, 2, 3]);
+    }
+
+    #[test]
+    fn test_parse_parent_task_ids() {
+        let option = vec!["dep:1,2,3"];
+        let parsed_option = parse_command_option(&option, false, false, true).unwrap();
+        assert_eq!(parsed_option.parent_task_ids, Some(vec![1, 2, 3]));
     }
 }

@@ -23,36 +23,66 @@ enum DisplayColumn {
     Due,
 }
 
+enum DisplayColors {
+    IdHeader,
+    BodyHeader,
+    PriorityHeader,
+    CreatedHeader,
+    ScheduledHeader,
+    DueHeader,
+    StartedTask,
+    BlockedTask,
+    WaitedTask,
+}
+
+impl DisplayColors {
+    fn get_color_code(&self) -> u8 {
+        match *self {
+            DisplayColors::IdHeader => 1,
+            DisplayColors::BodyHeader => 2,
+            DisplayColors::PriorityHeader => 3,
+            DisplayColors::CreatedHeader => 4,
+            DisplayColors::ScheduledHeader => 5,
+            DisplayColors::DueHeader => 6,
+            DisplayColors::StartedTask => 7,
+            DisplayColors::BlockedTask => 102,
+            DisplayColors::WaitedTask => 9,
+        }
+    }
+}
+
 impl DisplayColumn {
     fn get_header(&self) -> String {
         match *self {
             DisplayColumn::Id => Paint::new("Id")
                 .bold()
-                .fg(Color::Red)
+                .fg(Color::Fixed(DisplayColors::IdHeader.get_color_code()))
                 .underline()
                 .to_string(),
             DisplayColumn::Body => Paint::new("Body")
-                .fg(Color::White)
+                .fg(Color::Fixed(DisplayColors::BodyHeader.get_color_code()))
                 .bold()
                 .underline()
                 .to_string(),
             DisplayColumn::Priority => Paint::new("P")
-                .fg(Color::White)
+                .fg(Color::Fixed(DisplayColors::PriorityHeader.get_color_code()))
                 .bold()
                 .underline()
                 .to_string(),
             DisplayColumn::Created => Paint::new("Created   ")
-                .fg(Color::Green)
+                .fg(Color::Fixed(DisplayColors::CreatedHeader.get_color_code()))
                 .bold()
                 .underline()
                 .to_string(),
             DisplayColumn::Scheduled => Paint::new("Scheduled ")
-                .fg(Color::Blue)
+                .fg(Color::Fixed(
+                    DisplayColors::ScheduledHeader.get_color_code(),
+                ))
                 .bold()
                 .underline()
                 .to_string(),
             DisplayColumn::Due => Paint::new("Due       ")
-                .fg(Color::Magenta)
+                .fg(Color::Fixed(DisplayColors::DueHeader.get_color_code()))
                 .bold()
                 .underline()
                 .to_string(),
@@ -95,7 +125,10 @@ impl DisplayColumn {
                 } else if task.is_completed() {
                     return Paint::new(task_body).fg(Color::Green).bold().to_string();
                 } else if task.is_blocked() {
-                    return Paint::new(task_body).fg(Color::Blue).bold().to_string();
+                    return Paint::new(task_body)
+                        .fg(Color::Fixed(DisplayColors::BlockedTask.get_color_code()))
+                        .bold()
+                        .to_string();
                 } else {
                     return Paint::new(task_body).fg(Color::White).to_string();
                 };

@@ -491,6 +491,7 @@ fn test_add_dependency() -> Result<(), CoreError> {
 
     assert_eq!(operation.get_result().len(), 1);
     assert_eq!(operation.get_result()[0].parent_task_ids, vec!["1", "2"]);
+    assert_eq!(operation.get_result()[0].is_blocked(), true);
     Ok(())
 }
 
@@ -501,7 +502,7 @@ fn test_add_dependency_parent_not_exist() -> Result<(), CoreError> {
     let mut operation = Add::new_with_task_manager("Test Body 2", &mut database_manager);
     operation.parent_task_ids = Some(vec![1, 2]);
 
-    if let Err(CoreError::SqliteError(_)) = execute(&mut operation) {
+    if let Err(CoreError::ArgumentError(_)) = execute(&mut operation) {
         return Ok(());
     }
 

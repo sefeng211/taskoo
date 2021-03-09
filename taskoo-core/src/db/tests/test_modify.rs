@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use crate::db::task_manager::TaskManager;
 use crate::error::CoreError;
 use crate::operation::{Add, execute};
+use crate::core::Operation;
 
 fn get_setting() -> HashMap<String, String> {
     let mut setting = HashMap::new();
@@ -165,5 +166,59 @@ fn test_modify_tag_only() -> Result<(), CoreError> {
     assert_eq!(tasks[0].id, 1);
     assert_eq!(tasks[0].tags, ["Blocked".to_string()]);
 
+    Ok(())
+}
+
+#[test]
+fn test_modify_task_to_complete_should_update_dependency() -> Result<(), CoreError> {
+    let mut database_manager = TaskManager::new(&get_setting());
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    execute(&mut operation)?;
+
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    execute(&mut operation)?;
+
+    let mut operation = Add::new_with_task_manager("Test Body 2", &mut database_manager);
+    operation.parent_task_ids = Some(vec![1, 2]);
+    execute(&mut operation)?;
+
+    assert_eq!(operation.get_result().len(), 1);
+    assert_eq!(operation.get_result()[0].parent_task_ids, vec!["1", "2"]);
+    assert_eq!(operation.get_result()[0].is_blocked(), true);
+
+    database_manager.modify(
+        &vec![1],
+        &None,
+        &None,
+        &None,
+        &vec![],
+        &None,
+        &None,
+        &None,
+        &None,
+        &Some("completed"),
+        &vec![],
+    )?;
+
+    let tasks = database_manager.get(&None, &None, &vec![], &None, &None, &Some(3))?;
+
+    assert_eq!(tasks[0].is_blocked(), true);
+
+    database_manager.modify(
+        &vec![2],
+        &None,
+        &None,
+        &None,
+        &vec![],
+        &None,
+        &None,
+        &None,
+        &None,
+        &Some("completed"),
+        &vec![],
+    )?;
+    let tasks = database_manager.get(&None, &None, &vec![], &None, &None, &Some(3))?;
+    assert_eq!(tasks[0].is_blocked(), false);
+    assert_eq!(tasks[0].is_ready(), true);
     Ok(())
 }

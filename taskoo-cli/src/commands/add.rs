@@ -33,6 +33,7 @@ impl Add {
         operation.repetition_scheduled = option.scheudled_repeat;
         operation.state = option.state_name;
         operation.priority = option.priority;
+        operation.parent_task_ids = option.parent_task_ids;
 
         let annotation = if matches.is_present("annotation") {
             if let Some(rv) = Editor::new().edit("").unwrap() {

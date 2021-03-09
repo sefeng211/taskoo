@@ -25,11 +25,7 @@ fn add_tag(conn: &Transaction, task_ids: &Vec<i64>, tag_ids: Vec<i64>) -> Result
     Ok(())
 }
 
-fn remove_tag(
-    conn: &Transaction,
-    task_ids: &Vec<i64>,
-    tag_ids: Vec<i64>,
-) -> Result<(), CoreError> {
+fn remove_tag(conn: &Transaction, task_ids: &Vec<i64>, tag_ids: Vec<i64>) -> Result<(), CoreError> {
     info!(
         "Removing tag_ids: {:?} from task_ids {:?}",
         tag_ids, task_ids
@@ -69,6 +65,61 @@ fn insert_or_replace_priority(
     }
     Ok(())
 }
+
+// Check all tasks that are depended on this task_id, and update their state to 
+// completed if all of their depended tasks are completed 
+fn update_dependency(conn: &Transaction, task_id: &i64) -> Result<(), CoreError> {
+    let mut get_child_tasks_statement =
+        conn.prepare("SELECT task_id FROM dependency WHERE parent_task_id = :parent_task_id")?;
+    let mut child_tasks_rows = get_child_tasks_statement.query_named(named_params! {
+        ":parent_task_id": task_id
+    })?;
+
+    while let Some(child_task_row) = child_tasks_rows.next()? {
+        let child_id: i64 = child_task_row.get(0)?;
+        let mut get_parent_for_this_child =
+            conn.prepare("SELECT parent_task_id FROM dependency WHERE task_id = :child_id")?;
+        let mut parent_rows =
+            get_parent_for_this_child.query_named(named_params! {":child_id": child_id})?;
+
+        let mut are_all_parents_completed = true;
+        while let Some(parent_row) = parent_rows.next()? {
+            let parent_id: i64 = parent_row.get(0)?;
+            let mut get_parent_state =
+                conn.prepare("SELECT state_id FROM task where id = :parent_id")?;
+            let mut parent_state_rows = get_parent_state.query_named(named_params! {
+                ":parent_id": parent_id
+            })?;
+
+            let parent_state_row = parent_state_rows.next()?;
+
+            let parent_state_id: i64 = parent_state_row.unwrap().get(0)?;
+
+            let mut convert_state_to_id =
+                conn.prepare("SELECT name FROM state where id = :state_id")?;
+            let mut state_to_id_rows = convert_state_to_id.query_named(named_params! {
+                ":state_id": parent_state_id
+            })?;
+
+            let state_to_id_row = state_to_id_rows.next()?;
+            let state: String = state_to_id_row.unwrap().get(0)?;
+            if state != "completed" {
+                are_all_parents_completed = false;
+            }
+        }
+
+        // Change the state to ready
+        if are_all_parents_completed {
+            let mut update_to_ready_statement =
+                conn.prepare("Update task SET state_id = 1 WHERE id = :child_id")?;
+            update_to_ready_statement.execute_named(named_params! {
+                ":child_id": child_id
+            })?;
+        }
+    }
+    Ok(())
+}
+
 fn update_schedule_at_for_repeat(conn: &Transaction, task_id: &i64) -> Result<(), CoreError> {
     let get_task_repetition_query = format!(
         "SELECT due_repeat, scheduled_repeat from task where id = {}",
@@ -179,10 +230,11 @@ pub fn modify(
 
     // If the task is marked to completed, update the scheduled_at
     // based on repeat
-    if state_id.is_some() && state_id.unwrap() == 2 {
+    if let Some(2) = state_id {
         info!("Task is marked as completed, updating scheduled_at");
         for task_id in task_ids.iter() {
             update_schedule_at_for_repeat(&tx, &task_id)?;
+            update_dependency(&tx, &task_id)?;
         }
     }
     Ok(vec![])

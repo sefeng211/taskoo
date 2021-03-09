@@ -66,10 +66,36 @@ impl TaskManager {
             None => 1, // default to `Inbox` context
         };
 
-        let state_id = match state_name {
-            Some(state) => Some(TaskManager::convert_state_name_to_id(&tx, &state)?),
-            None => None,
-        };
+        // Always respect client provided state_name, however if the
+        // client doesn't provide one, and the task is blocked by
+        // other tasks, let's change the state to 'blocked'
+        let mut state_id = None;
+        match state_name {
+            Some(state) => {
+                state_id = Some(TaskManager::convert_state_name_to_id(&tx, &state)?);
+            }
+            None => {
+                if let Some(parent_task_ids) = parent_task_ids {
+                    for id in parent_task_ids.iter() {
+                        let task = &get(&tx, &None, &None, &vec![], &None, &None, &Some(*id))?;
+                        if task.is_empty() {
+                            return Err(CoreError::ArgumentError(String::from(
+                                "Invalid parent task is provided",
+                            )));
+                        }
+                        if !task[0].is_completed() {
+                            {
+                                state_id = Some(TaskManager::convert_state_name_to_id(
+                                    &tx,
+                                    &String::from("blocked"),
+                                )?);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         let mut tag_ids: Vec<i64> = vec![];
         for tag_name in tags.iter() {
