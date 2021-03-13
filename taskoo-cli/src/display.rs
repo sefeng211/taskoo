@@ -33,8 +33,11 @@ enum DisplayColors {
     StartedTask,
     BlockedTask,
     WaitedTask,
+    Tag,
 }
 
+// Default color codes; being used when the config
+// file is unable to find
 impl DisplayColors {
     fn get_color_code(&self) -> u8 {
         match *self {
@@ -47,65 +50,125 @@ impl DisplayColors {
             DisplayColors::StartedTask => 7,
             DisplayColors::BlockedTask => 102,
             DisplayColors::WaitedTask => 9,
+            DisplayColors::Tag => 10,
         }
     }
 }
 
 impl DisplayColumn {
-    fn get_header(&self) -> String {
+    fn get_header(&self, config: &Ini) -> String {
         match *self {
-            DisplayColumn::Id => Paint::new("Id")
-                .bold()
-                .fg(Color::Fixed(DisplayColors::IdHeader.get_color_code()))
-                .underline()
-                .to_string(),
-            DisplayColumn::Body => Paint::new("Body")
-                .fg(Color::Fixed(DisplayColors::BodyHeader.get_color_code()))
-                .bold()
-                .underline()
-                .to_string(),
-            DisplayColumn::Priority => Paint::new("P")
-                .fg(Color::Fixed(DisplayColors::PriorityHeader.get_color_code()))
-                .bold()
-                .underline()
-                .to_string(),
-            DisplayColumn::Created => Paint::new("Created   ")
-                .fg(Color::Fixed(DisplayColors::CreatedHeader.get_color_code()))
-                .bold()
-                .underline()
-                .to_string(),
-            DisplayColumn::Scheduled => Paint::new("Scheduled ")
-                .fg(Color::Fixed(
-                    DisplayColors::ScheduledHeader.get_color_code(),
-                ))
-                .bold()
-                .underline()
-                .to_string(),
-            DisplayColumn::Due => Paint::new("Due       ")
-                .fg(Color::Fixed(DisplayColors::DueHeader.get_color_code()))
-                .bold()
-                .underline()
-                .to_string(),
+            DisplayColumn::Id => {
+                let code = match config.get_from(Some("Id"), "color") {
+                    Some(code) => code
+                        .parse::<u8>()
+                        .unwrap_or(DisplayColors::IdHeader.get_color_code()),
+                    None => DisplayColors::IdHeader.get_color_code(),
+                };
+                return Paint::new("Id")
+                    .bold()
+                    .fg(Color::Fixed(code))
+                    .underline()
+                    .to_string();
+            }
+            DisplayColumn::Body => {
+                let code = match config.get_from(Some("Body"), "color") {
+                    Some(code) => code
+                        .parse::<u8>()
+                        .unwrap_or(DisplayColors::BodyHeader.get_color_code()),
+                    None => DisplayColors::BodyHeader.get_color_code(),
+                };
+                return Paint::new("Body")
+                    .bold()
+                    .fg(Color::Fixed(code))
+                    .underline()
+                    .to_string();
+            }
+            DisplayColumn::Priority => {
+                let code = match config.get_from(Some("Priority"), "color") {
+                    Some(code) => code
+                        .parse::<u8>()
+                        .unwrap_or(DisplayColors::PriorityHeader.get_color_code()),
+                    None => DisplayColors::PriorityHeader.get_color_code(),
+                };
+                return Paint::new("P")
+                    .bold()
+                    .fg(Color::Fixed(code))
+                    .underline()
+                    .to_string();
+            }
+            DisplayColumn::Created => {
+                let code = match config.get_from(Some("Date_Created"), "color") {
+                    Some(code) => code
+                        .parse::<u8>()
+                        .unwrap_or(DisplayColors::CreatedHeader.get_color_code()),
+                    None => DisplayColors::CreatedHeader.get_color_code(),
+                };
+                return Paint::new("Created   ")
+                    .bold()
+                    .fg(Color::Fixed(code))
+                    .underline()
+                    .to_string();
+            }
+            DisplayColumn::Scheduled => {
+                let code = match config.get_from(Some("Date_Scheduled"), "color") {
+                    Some(code) => code
+                        .parse::<u8>()
+                        .unwrap_or(DisplayColors::ScheduledHeader.get_color_code()),
+                    None => DisplayColors::ScheduledHeader.get_color_code(),
+                };
+                return Paint::new("Scheduled ")
+                    .bold()
+                    .fg(Color::Fixed(code))
+                    .underline()
+                    .to_string();
+            }
+            DisplayColumn::Due => {
+                let code = match config.get_from(Some("Date_Due"), "color") {
+                    Some(code) => code
+                        .parse::<u8>()
+                        .unwrap_or(DisplayColors::ScheduledHeader.get_color_code()),
+                    None => DisplayColors::ScheduledHeader.get_color_code(),
+                };
+                return Paint::new("Due       ")
+                    .bold()
+                    .fg(Color::Fixed(code))
+                    .underline()
+                    .to_string();
+            }
         }
     }
 
-    fn get_data(&self, task: &Task) -> String {
+    fn get_data(&self, task: &Task, config: &Ini) -> String {
         match *self {
             DisplayColumn::Id => {
                 let mut task_id = task.id.to_string();
                 if !task.repetition_due.is_empty() || !task.repetition_scheduled.is_empty() {
                     task_id.push_str("(R)");
                 }
-                Paint::new(task_id).fg(Color::Red).to_string()
+                let code = match config.get_from(Some("Id"), "color") {
+                    Some(code) => code
+                        .parse::<u8>()
+                        .unwrap_or(DisplayColors::IdHeader.get_color_code()),
+                    None => DisplayColors::IdHeader.get_color_code(),
+                };
+
+                Paint::new(task_id).fg(Color::Fixed(code)).to_string()
             }
             DisplayColumn::Body => {
                 let mut task_body = String::clone(&task.body);
 
-                // Tasks with annotation will have a star with it
                 if !task.annotation.is_empty() {
                     task_body.push_str(&Paint::new("*").fg(Color::White).bold().to_string());
                 }
 
+                // Tasks with annotation will have a star with it
+                let tag_color_code = match config.get_from(Some("Tag"), "color") {
+                    Some(code) => code
+                        .parse::<u8>()
+                        .unwrap_or(DisplayColors::Tag.get_color_code()),
+                    None => DisplayColors::Tag.get_color_code(),
+                };
                 // Append tags to the end of task body
                 for tag_name in task.tags.iter() {
                     let mut tag_output = String::from("+");
@@ -114,37 +177,80 @@ impl DisplayColumn {
                     task_body.push_str(
                         &Paint::new(tag_output)
                             .underline()
-                            .fg(Color::Yellow)
+                            .fg(Color::Fixed(tag_color_code))
                             .to_string(),
                     );
                 }
 
-                // Display different colors based on task's state
-                if task.is_started() {
-                    return Paint::new(task_body).fg(Color::Magenta).bold().to_string();
+                let color_code_name = if task.is_started() {
+                    "started_task_color"
                 } else if task.is_completed() {
-                    return Paint::new(task_body).fg(Color::Green).bold().to_string();
+                    "completed_task_color"
                 } else if task.is_blocked() {
-                    return Paint::new(task_body)
-                        .fg(Color::Fixed(DisplayColors::BlockedTask.get_color_code()))
-                        .bold()
-                        .to_string();
+                    "blocked_task_color"
+                } else if task.is_ready() {
+                    "ready_task_color"
                 } else {
-                    return Paint::new(task_body).fg(Color::White).to_string();
+                    info!("Custom state, use custom state color");
+                    "custom_task_color"
                 };
+
+                let code = match config.get_from(Some("Body"), color_code_name) {
+                    Some(code) => code
+                        .parse::<u8>()
+                        .unwrap_or(DisplayColors::BodyHeader.get_color_code()),
+                    None => {
+                        info!("Unable to find color code for body");
+                        DisplayColors::BodyHeader.get_color_code()
+                    }
+                };
+
+                return Paint::new(task_body).fg(Color::Fixed(code)).to_string();
             }
-            DisplayColumn::Priority => Paint::new(task.priority.to_uppercase().clone())
-                .fg(Color::White)
-                .to_string(),
-            DisplayColumn::Created => Paint::new(task.date_created.clone())
-                .fg(Color::Green)
-                .to_string(),
-            DisplayColumn::Scheduled => Paint::new(task.date_scheduled.clone())
-                .fg(Color::Blue)
-                .to_string(),
-            DisplayColumn::Due => Paint::new(task.date_due.clone())
-                .fg(Color::Magenta)
-                .to_string(),
+            DisplayColumn::Priority => {
+                let code = match config.get_from(Some("Priority"), "color") {
+                    Some(code) => code
+                        .parse::<u8>()
+                        .unwrap_or(DisplayColors::PriorityHeader.get_color_code()),
+                    None => DisplayColors::PriorityHeader.get_color_code(),
+                };
+                return Paint::new(task.priority.to_uppercase().clone())
+                    .fg(Color::Fixed(code))
+                    .to_string();
+            }
+            DisplayColumn::Created => {
+                let code = match config.get_from(Some("Date_Created"), "color") {
+                    Some(code) => code
+                        .parse::<u8>()
+                        .unwrap_or(DisplayColors::CreatedHeader.get_color_code()),
+                    None => DisplayColors::CreatedHeader.get_color_code(),
+                };
+                return Paint::new(task.date_created.clone())
+                    .fg(Color::Fixed(code))
+                    .to_string();
+            }
+            DisplayColumn::Scheduled => {
+                let code = match config.get_from(Some("Date_Scheduled"), "color") {
+                    Some(code) => code
+                        .parse::<u8>()
+                        .unwrap_or(DisplayColors::ScheduledHeader.get_color_code()),
+                    None => DisplayColors::ScheduledHeader.get_color_code(),
+                };
+                return Paint::new(task.date_scheduled.clone())
+                    .fg(Color::Fixed(code))
+                    .to_string();
+            }
+            DisplayColumn::Due => {
+                let code = match config.get_from(Some("Date_Due"), "color") {
+                    Some(code) => code
+                        .parse::<u8>()
+                        .unwrap_or(DisplayColors::DueHeader.get_color_code()),
+                    None => DisplayColors::DueHeader.get_color_code(),
+                };
+                return Paint::new(task.date_due.clone())
+                    .fg(Color::Fixed(code))
+                    .to_string();
+            }
         }
     }
 }
@@ -219,13 +325,10 @@ impl Display {
 
         Ok(final_tabbed_string)
     }
-    fn get_formatted_row_for_header(
-        columns_to_output: Vec<DisplayColumn>,
-        _config: &Ini,
-    ) -> String {
+    fn get_formatted_row_for_header(columns_to_output: Vec<DisplayColumn>, config: &Ini) -> String {
         let mut output = String::new();
         for column in columns_to_output.iter() {
-            let data = column.get_header();
+            let data = column.get_header(&config);
             output.push_str(&data);
             output.push_str("\t");
         }
@@ -238,11 +341,11 @@ impl Display {
     fn get_formatted_row_for_task(
         columns_to_output: Vec<DisplayColumn>,
         task: &Task,
-        _config: &Ini,
+        config: &Ini,
     ) -> String {
         let mut output = String::new();
         for column in columns_to_output.iter() {
-            let data = column.get_data(&task);
+            let data = column.get_data(&task, &config);
             output.push_str(&data);
             output.push_str("\t");
         }

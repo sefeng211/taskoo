@@ -4,15 +4,11 @@ use anyhow::{Context, Result};
 use clap::{App, load_yaml};
 use dirs::config_dir;
 use ini::Ini;
-use log::info;
+use log::{info, debug};
 use std::fs::create_dir_all;
 use std::fs::OpenOptions;
-
-mod commands;
-mod display;
-mod error;
-mod extra;
-mod option_parser;
+use directories::ProjectDirs;
+use std::backtrace::Backtrace;
 
 use commands::add::Add;
 use commands::delete::Delete;
@@ -24,52 +20,35 @@ use commands::review::Review;
 use commands::view::View;
 use commands::clean::Clean;
 
+mod commands;
+mod display;
+mod error;
+mod extra;
+mod option_parser;
+
+use crate::error::ClientError;
+
 fn get_config() -> Ini {
-    let mut config_dir_path = config_dir().expect("Unable to find user's config directory");
-
-    config_dir_path.push("taskoo");
-    let mut config_file_path = config_dir_path.clone();
-
-    config_file_path.push("cli_config");
-    if !config_file_path.exists() {
-        info!("Taskoo cli's config file doesn't exist");
-        let _ =
-            create_dir_all(&config_dir_path).expect("Unable to create taskoo's config directory");
-        OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&config_file_path)
-            .expect("Unable to create taskoo cli's config file");
-        // Create default configuration
-        let mut conf = Ini::new();
-        conf.with_section(None::<String>)
-            .set("columns", "Id,Body,Tag,Created_At,Scheduled_At,State");
-        conf.with_section(Some("Id"))
-            .set("color", "Yellow")
-            .set("bold", "false");
-        conf.with_section(Some("Body"))
-            .set("color", "Yellow")
-            .set("bold", "true");
-        conf.with_section(Some("Tag"))
-            .set("color", "Yellow")
-            .set("bold", "true");
-        conf.with_section(Some("Created_At"))
-            .set("color", "Yellow")
-            .set("bold", "true");
-        conf.with_section(Some("Scheduled_At"))
-            .set("color", "Yellow")
-            .set("bold", "true");
-        conf.with_section(Some("Due"))
-            .set("color", "Yellow")
-            .set("bold", "true");
-
-        conf.write_to_file(&config_file_path)
-            .expect("Failed to write default configuation to the config file");
+    match ProjectDirs::from("dev", "sefeng", "taskoo") {
+        Some(dir) => {
+            let mut dir_path = dir.config_dir().to_path_buf();
+            dir_path.push("cli-conf.ini");
+            if !dir_path.exists() {
+                debug!("Unable to find the cli-confi.ini file");
+                return Ini::new();
+            }
+            debug!("Successfully loaded the config file");
+            return Ini::load_from_file(dir_path).unwrap();
+        }
+        None => {
+            debug!("Unable to find the directory pat");
+        }
     }
-    return Ini::load_from_file(config_file_path).unwrap();
+    debug!("Unable to loaded the config file, use a empty object");
+    return Ini::new();
 }
 
-fn main() -> Result<()> {
+fn main() -> Result<(), ClientError> {
     env_logger::init();
     let yaml = load_yaml!("../config/cli.yml");
     let matches = App::from(yaml).get_matches();

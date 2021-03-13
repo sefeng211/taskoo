@@ -1,3 +1,6 @@
+# Requirement 
+* A terminal supports 256 colors
+
 # Commands
 ## Add
 taskoo add I am a body <- Goes to Inbox context by default

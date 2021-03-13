@@ -66,8 +66,8 @@ fn insert_or_replace_priority(
     Ok(())
 }
 
-// Check all tasks that are depended on this task_id, and update their state to 
-// completed if all of their depended tasks are completed 
+// Check all tasks that are depended on this task_id, and update their state to
+// completed if all of their depended tasks are completed
 fn update_dependency(conn: &Transaction, task_id: &i64) -> Result<(), CoreError> {
     let mut get_child_tasks_statement =
         conn.prepare("SELECT task_id FROM dependency WHERE parent_task_id = :parent_task_id")?;
