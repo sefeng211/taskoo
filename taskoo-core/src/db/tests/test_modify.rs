@@ -61,8 +61,8 @@ fn test_modify_single() -> Result<(), CoreError> {
     assert_eq!(tasks[0].body, "New Body");
     assert_eq!(tasks[0].priority, "h");
     assert_eq!(tasks[0].context, "Work");
-    assert_eq!(tasks[0].date_due, "2020-11-10");
-    assert_eq!(tasks[0].date_scheduled, "2020-11-11");
+    assert_eq!(tasks[0].date_due, "2020-11-10 00:00:00");
+    assert_eq!(tasks[0].date_scheduled, "2020-11-11 00:00:00");
     //assert_eq!(tasks[0].is_repeat, 1);
     //assert_eq!(tasks[0].is_recurrence, 1);
 
@@ -114,8 +114,8 @@ fn test_modify_single_with_tag() -> Result<(), CoreError> {
     assert_eq!(tasks[0].body, "New Body");
     assert_eq!(tasks[0].tags, ["Blocked".to_string()]);
     assert_eq!(tasks[0].context, "Work");
-    assert_eq!(tasks[0].date_due, "2020-11-10");
-    assert_eq!(tasks[0].date_scheduled, "2020-11-11");
+    assert_eq!(tasks[0].date_due, "2020-11-10 00:00:00");
+    assert_eq!(tasks[0].date_scheduled, "2020-11-11 00:00:00");
     //assert_eq!(tasks[0].is_repeat, 1);
     //assert_eq!(tasks[0].is_recurrence, 1);
 

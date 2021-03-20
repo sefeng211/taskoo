@@ -35,14 +35,14 @@ impl Info {
         execute(&mut operation)?;
 
         let tasks = &operation.get_result();
-        if tasks.len() != 1 {
+        if tasks.is_empty() {
             return Err(ClientError::UnexpectedFailure(
-                String::from(
-                    "AddAnnotation operation failed in an unexpected way, please consider to report it",
-                ),
+                String::from(format!("Unable to find task with id : {}", task_id)),
                 Backtrace::capture(),
             ));
         }
+
+        assert_eq!(tasks.len(), 1);
 
         if let Some(attr) = matches.value_of("attribute") {
             println!("{}", tasks[0].get_property_value(attr)?);

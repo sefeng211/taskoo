@@ -14,7 +14,7 @@ pub struct ModifyOperation<'a> {
     pub scheduled_at: Option<&'a str>,
     pub due_repeat: Option<&'a str>,
     pub scheduled_repeat: Option<&'a str>,
-    pub state_name: Option<&'a str>,
+    state: Option<String>,
     pub tags_to_remove: Vec<String>,
     database_manager: Option<TaskManager>,
     result: Vec<Task>,
@@ -34,23 +34,26 @@ impl<'a> ModifyOperation<'a> {
             scheduled_at: None,
             due_repeat: None,
             scheduled_repeat: None,
-            state_name: None,
+            state: None,
             tags_to_remove: vec![],
         }
     }
 
     pub fn set_state_to_started(&mut self) {
-        self.state_name = Some("started");
+        self.state = Some(String::from("started"));
     }
 
     pub fn set_state_to_completed(&mut self) {
-        self.state_name = Some("completed");
+        self.state = Some(String::from("completed"));
     }
     pub fn set_state_to_ready(&mut self) {
-        self.state_name = Some("ready");
+        self.state = Some(String::from("ready"));
     }
     pub fn set_state_to_blocked(&mut self) {
-        self.state_name = Some("blocked");
+        self.state = Some(String::from("blocked"));
+    }
+    pub fn set_custom_state(&mut self, state: String) {
+        self.state = Some(state);
     }
 }
 impl<'a> Operation for ModifyOperation<'a> {
@@ -76,7 +79,7 @@ impl<'a> Operation for ModifyOperation<'a> {
             None => None,
         };
 
-        return TaskManager::modify(
+        let tasks = TaskManager::modify(
             self.database_manager.as_mut().unwrap(),
             &self.task_ids,
             &self.body,
@@ -87,9 +90,11 @@ impl<'a> Operation for ModifyOperation<'a> {
             &self.scheduled_at,
             &self.due_repeat,
             &self.scheduled_repeat,
-            &self.state_name,
+            &self.state.as_deref(),
             &self.tags_to_remove,
-        );
+        )?;
+
+        Ok(tasks)
     }
     fn set_result(&mut self, result: Vec<Task>) {
         self.result = result;

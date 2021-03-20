@@ -1,5 +1,6 @@
 use crate::core::Operation;
-use chrono::{Date, DateTime, Duration, Local, NaiveDate, Utc};
+use std::error::Error;
+use chrono::{Date, DateTime, Duration, Local, NaiveDate, Utc, NaiveDateTime};
 use rusqlite::{Result, NO_PARAMS};
 use std::collections::HashMap;
 
@@ -32,7 +33,7 @@ fn test_add_simple() -> Result<(), CoreError> {
     assert_eq!(tasks.len(), 1);
 
     let created_at_datetime = Date::<Utc>::from_utc(
-        NaiveDate::parse_from_str(&tasks[0].date_created, "%Y-%m-%d").expect(""),
+        NaiveDate::parse_from_str(&tasks[0].date_created, "%Y-%m-%d %H:%M:%S").expect(""),
         Utc,
     );
 
@@ -76,12 +77,11 @@ fn test_add_complex() -> Result<(), CoreError> {
 
     assert_eq!(tasks.len(), 1);
 
-    let created_at_datetime = Date::<Utc>::from_utc(
-        NaiveDate::parse_from_str(&tasks[0].date_created, "%Y-%m-%d").expect(""),
-        Utc,
-    );
+    println!("{}", &tasks[0].date_created);
+    let created_at_datetime =
+        NaiveDateTime::parse_from_str(&tasks[0].date_created, "%Y-%m-%d %H:%M:%S").expect("");
 
-    let current_datetime: DateTime<Utc> = Utc::now();
+    let current_date: Date<Local> = Local::today();
 
     assert_eq!(tasks[0].id, 1);
     assert_eq!(tasks[0].body, "Test Body");
@@ -89,7 +89,7 @@ fn test_add_complex() -> Result<(), CoreError> {
     assert_eq!(tasks[0].priority, "h");
     // TODO: Improve the assert_eq here to ensure the auto created `created_at` timestamp is
     // correct
-    assert_eq!(created_at_datetime, current_datetime.date());
+    assert_eq!(created_at_datetime.date(), current_date.naive_local());
     assert_eq!(tasks[0].date_due.is_empty(), true);
     assert_eq!(tasks[0].date_scheduled.is_empty(), true);
     //assert_eq!(tasks[0].is_repeat, 0);
@@ -157,10 +157,10 @@ fn test_add_scheduled_at_days() -> Result<(), CoreError> {
 
     // Scheduled_at should be in between start and end;
     let scheduled_at_parsed =
-        NaiveDate::parse_from_str(&tasks[0].date_scheduled, "%Y-%m-%d").expect("");
+        NaiveDateTime::parse_from_str(&tasks[0].date_scheduled, "%Y-%m-%d %H:%M:%S").expect("");
 
-    assert_ge!(scheduled_at_parsed, start.naive_local());
-    assert_le!(scheduled_at_parsed, end.naive_local());
+    assert_ge!(scheduled_at_parsed.date(), start.naive_local());
+    assert_le!(scheduled_at_parsed.date(), end.naive_local());
     Ok(())
 }
 
@@ -194,7 +194,7 @@ fn test_add_scheduled_at_hours() -> Result<(), CoreError> {
 
     // Scheduled_at should be in between start and end;
     let scheduled_at_parsed =
-        NaiveDate::parse_from_str(&tasks[0].date_scheduled, "%Y-%m-%d").expect("");
+        NaiveDate::parse_from_str(&tasks[0].date_scheduled, "%Y-%m-%d %H:%M:%S").expect("");
 
     assert_ge!(scheduled_at_parsed, start.naive_local());
     assert_le!(scheduled_at_parsed, end.naive_local());
@@ -229,7 +229,7 @@ fn test_add_scheduled_at_weeks() -> Result<(), CoreError> {
 
     // Scheduled_at should be in between start and end;
     let scheduled_at_parsed =
-        NaiveDate::parse_from_str(&tasks[0].date_scheduled, "%Y-%m-%d").expect("");
+        NaiveDate::parse_from_str(&tasks[0].date_scheduled, "%Y-%m-%d %H:%M:%S").expect("");
 
     assert_ge!(scheduled_at_parsed, start.naive_local());
     assert_le!(scheduled_at_parsed, end.naive_local());
@@ -260,7 +260,7 @@ fn test_add_scheduled_at_raw_timestamp() -> Result<(), CoreError> {
 
     assert_eq!(tasks.len(), 1);
 
-    assert_eq!(&tasks[0].date_scheduled, "2020-11-11");
+    assert_eq!(&tasks[0].date_scheduled, "2020-11-11 00:00:00");
     Ok(())
 }
 
@@ -292,7 +292,7 @@ fn test_add_scheduled_at_tmr() -> Result<(), CoreError> {
 
     // Scheduled_at should be in between start and end;
     let scheduled_at_parsed =
-        NaiveDate::parse_from_str(&tasks[0].date_scheduled, "%Y-%m-%d").expect("");
+        NaiveDate::parse_from_str(&tasks[0].date_scheduled, "%Y-%m-%d %H:%M:%S").expect("");
 
     assert_ge!(scheduled_at_parsed, expected.naive_local());
     Ok(())
@@ -326,7 +326,7 @@ fn test_add_scheduled_at_today() -> Result<(), CoreError> {
 
     // Scheduled_at should be in between start and end;
     let scheduled_at_parsed =
-        NaiveDate::parse_from_str(&tasks[0].date_scheduled, "%Y-%m-%d").expect("");
+        NaiveDate::parse_from_str(&tasks[0].date_scheduled, "%Y-%m-%d %H:%M:%S").expect("");
 
     assert_ge!(scheduled_at_parsed, expected.naive_local());
     Ok(())
@@ -336,7 +336,7 @@ fn test_add_completed_task() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
     let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
-    operation.state = Some(String::from("completed"));
+    operation.set_state_to_completed();
     execute(&mut operation)?;
 
     let rows = database_manager
@@ -366,7 +366,7 @@ fn test_add_repeat_scheduled_task() -> Result<(), CoreError> {
 
     assert_eq!(tasks.len(), 1);
     let scheduled_at_parsed =
-        NaiveDate::parse_from_str(&tasks[0].date_scheduled, "%Y-%m-%d").expect("");
+        NaiveDate::parse_from_str(&tasks[0].date_scheduled, "%Y-%m-%d %H:%M:%S").expect("");
     assert_ge!(scheduled_at_parsed, expected.naive_local());
     assert_ge!(tasks[0].state, "ready".to_string());
 
@@ -392,7 +392,7 @@ fn test_add_repeat_scheduled_task() -> Result<(), CoreError> {
 
     let expected = Local::today() + Duration::weeks(3);
     let scheduled_at_parsed =
-        NaiveDate::parse_from_str(&tasks[0].date_scheduled, "%Y-%m-%d").expect("");
+        NaiveDate::parse_from_str(&tasks[0].date_scheduled, "%Y-%m-%d %H:%M:%S").expect("");
     assert_ge!(scheduled_at_parsed, expected.naive_local());
     assert_ge!(tasks[0].state, "completed".to_string());
     Ok(())
@@ -412,13 +412,14 @@ fn test_add_repeat_due_task() -> Result<(), CoreError> {
         .get(&None, &None, &vec![], &None, &None, &None)
         .unwrap();
 
-    let expected = Local::today() + Duration::weeks(2);
+    let expected = Local::now() + Duration::weeks(2);
 
     assert_eq!(tasks.len(), 1);
-    let due_date_parsed = NaiveDate::parse_from_str(&tasks[0].date_due, "%Y-%m-%d").expect("");
+    let due_date_parsed =
+        NaiveDateTime::parse_from_str(&tasks[0].date_due, "%Y-%m-%d %H:%M:%S").expect("");
     assert_ge!(
         due_date_parsed.to_string(),
-        expected.format("%Y-%m-%d").to_string()
+        expected.format("%Y-%m-%d %H:%M:%S").to_string()
     );
     assert_ge!(tasks[0].state, "ready".to_string());
 
@@ -443,8 +444,9 @@ fn test_add_repeat_due_task() -> Result<(), CoreError> {
         .unwrap();
 
     let expected = Local::now() + Duration::weeks(3);
-    let due_date_parsed = NaiveDate::parse_from_str(&tasks[0].date_due, "%Y-%m-%d").expect("");
-    assert_ge!(due_date_parsed, expected.date().naive_local());
+    let due_date_parsed =
+        NaiveDateTime::parse_from_str(&tasks[0].date_due, "%Y-%m-%d %H:%M:%S").expect("");
+    assert_ge!(due_date_parsed.date(), expected.date().naive_local());
     assert_ge!(tasks[0].state, "completed".to_string());
     Ok(())
 }
@@ -506,7 +508,7 @@ fn test_add_dependency_parent_not_exist() -> Result<(), CoreError> {
         return Ok(());
     }
 
-    Err(CoreError::UnexpetedError(
-        String::from("Parent task doesn't exist, should crash"),
-    ))
+    Err(CoreError::UnexpetedError(String::from(
+        "Parent task doesn't exist, should crash",
+    )))
 }

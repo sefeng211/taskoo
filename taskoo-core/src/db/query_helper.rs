@@ -3,7 +3,7 @@ pub const CREATE_TASK_TABLE_QUERY: &str = "
         id integer primary key,
         body text not null,
         context_id INTEGER not null,
-        created_at Text DEFAULT CURRENT_DATE,
+        created_at Text DEFAULT CURRENT_TIMESTAMP,
         due_date TEXT nullable,
         scheduled_at Text nullable,
         due_repeat TEXT nullable,

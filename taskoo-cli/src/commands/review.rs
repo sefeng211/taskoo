@@ -38,7 +38,7 @@ impl Review {
         let (option, context_name) = match matches.values_of("arguments") {
             Some(arguments) => {
                 let option = parse_command_option(&arguments.collect(), false, false, false)?;
-                match option.context_name {
+                match option.context {
                     Some(ref context) => {
                         let cloned_context = context.clone();
                         (option, cloned_context)

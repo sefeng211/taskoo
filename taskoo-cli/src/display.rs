@@ -192,6 +192,8 @@ impl DisplayColumn {
                     "ready_task_color"
                 } else {
                     info!("Custom state, use custom state color");
+                    // TODO: We can implement something like xxxx_task_color to allow config
+                    // custom state's color differently
                     "custom_task_color"
                 };
 
@@ -204,7 +206,6 @@ impl DisplayColumn {
                         DisplayColors::BodyHeader.get_color_code()
                     }
                 };
-
                 return Paint::new(task_body).fg(Color::Fixed(code)).to_string();
             }
             DisplayColumn::Priority => {
@@ -264,11 +265,11 @@ fn get_output_columns() -> Vec<DisplayColumn> {
         } else {
             vec![
                 DisplayColumn::Id,
-                DisplayColumn::Body,
                 DisplayColumn::Priority,
                 DisplayColumn::Created,
                 DisplayColumn::Scheduled,
                 DisplayColumn::Due,
+                DisplayColumn::Body,
             ]
         }
     } else {

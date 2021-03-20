@@ -1,4 +1,5 @@
 use super::query_helper::generate_condition;
+use super::get_base::get_base;
 use crate::db::task_helper::Task;
 use crate::db::task_manager::TaskManager;
 use crate::error::CoreError;
@@ -179,8 +180,8 @@ pub fn modify(
     priority: &Option<i64>,
     context_id: &Option<i64>,
     tag_ids: Vec<i64>,
-    due_date: &Option<&str>,
-    scheduled_at: &Option<&str>,
+    date_due: &Option<&str>,
+    date_scheduled: &Option<&str>,
     repeat: &Option<&str>,
     recurrence: &Option<&str>,
     state_id: &Option<i64>,
@@ -190,8 +191,8 @@ pub fn modify(
     let conditions = generate_condition(
         body,
         context_id,
-        due_date,
-        scheduled_at,
+        date_due,
+        date_scheduled,
         repeat,
         recurrence,
         state_id,
@@ -237,5 +238,13 @@ pub fn modify(
             update_dependency(&tx, &task_id)?;
         }
     }
-    Ok(vec![])
+    let mut tasks = vec![];
+
+    for task_id in task_ids.iter() {
+        let mut modified_tasks = get_base(&tx, &format!("task.id = {}", task_id))?;
+        assert_eq!(modified_tasks.len(), 1);
+        let task = modified_tasks.remove(0);
+        tasks.push(task);
+    }
+    Ok(tasks)
 }

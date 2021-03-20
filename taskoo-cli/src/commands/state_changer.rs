@@ -3,6 +3,7 @@ use log::{debug, info};
 use anyhow::{Result, Context};
 
 use taskoo_core::operation::{execute, ModifyOperation};
+use taskoo_core::core::Operation;
 
 use crate::option_parser::{parse_command_option, CommandOption};
 
@@ -66,7 +67,7 @@ impl<'a> StateChanger<'a> {
     }
 
     pub fn run(&self, matches: &ArgMatches) -> Result<String> {
-        info!("Running done command");
+        info!("Running state_changer command");
 
         let mut option = CommandOption::new();
         if matches.is_present("task_ids") {
@@ -75,7 +76,7 @@ impl<'a> StateChanger<'a> {
                 .context("Unable to parse the provided option for modify")?;
         }
 
-        debug!("Running Modify with {:?}", option.task_ids);
+        debug!("Running state_changer with {:?}", option.task_ids);
 
         let task_ids_copy = option.task_ids.clone();
         let mut operation = ModifyOperation::new(option.task_ids);
@@ -89,10 +90,14 @@ impl<'a> StateChanger<'a> {
             operation.set_state_to_blocked();
         } else {
             assert!(self.custom_state.is_some());
-            operation.state_name = Some(self.custom_state.unwrap());
+            operation.set_custom_state(self.custom_state.unwrap().to_string());
         }
 
         execute(&mut operation)?;
-        Ok(String::from(format!("{:?}", task_ids_copy)))
+
+        let modified_task = operation.get_result();
+        assert_eq!(modified_task.len(), 1);
+
+        Ok(String::from(format!("Task: {}", modified_task[0].body)))
     }
 }

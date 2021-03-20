@@ -1,4 +1,4 @@
-use chrono::{DateTime, NaiveDate, Date, Utc};
+use chrono::{DateTime, NaiveDate, Date, Utc, NaiveDateTime};
 use rusqlite::Result;
 use std::collections::HashMap;
 
@@ -30,8 +30,8 @@ fn test_get_simple() -> Result<(), CoreError> {
         .unwrap();
 
     assert_eq!(rows.len(), 1);
-    let created_at_datetime = Date::<Utc>::from_utc(
-        NaiveDate::parse_from_str(&rows[0].date_created, "%Y-%m-%d").expect(""),
+    let created_at_datetime = DateTime::<Utc>::from_utc(
+        NaiveDateTime::parse_from_str(&rows[0].date_created, "%Y-%m-%d %H:%M:%S").expect(""),
         Utc,
     );
 
@@ -41,7 +41,7 @@ fn test_get_simple() -> Result<(), CoreError> {
     assert_eq!(rows[0].body, "Test Body");
     assert_eq!(rows[0].priority, "");
     assert_eq!(rows[0].context, "inbox");
-    assert_eq!(created_at_datetime, current_datetime.date());
+    assert_eq!(created_at_datetime.date(), current_datetime.date());
     assert_eq!(rows[0].date_due.is_empty(), true);
     assert_eq!(rows[0].date_scheduled.is_empty(), false);
     //assert_eq!(rows[0].is_repeat, 1);
@@ -90,7 +90,6 @@ fn test_get_with_tag_ids() -> Result<(), CoreError> {
     operation.tags = vec!["Blocked".to_owned(), "Completed".to_owned()];
     execute(&mut operation)?;
 
-        
     let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
     operation.tags = vec!["Blocked".to_owned(), "Completed".to_owned()];
     execute(&mut operation)?;

@@ -8,6 +8,7 @@ mod modify;
 mod view;
 
 mod query_helper;
+mod get_base;
 
 #[cfg(test)]
 mod tests;

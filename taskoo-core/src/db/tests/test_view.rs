@@ -1,4 +1,4 @@
-use chrono::{Date, DateTime, Duration, Local, NaiveDate};
+use chrono::{Date, DateTime, Duration, Local, NaiveDate, NaiveDateTime};
 use rusqlite::Result;
 use std::collections::HashMap;
 
@@ -39,7 +39,7 @@ fn test_view_due() -> Result<(), CoreError> {
 
     assert_eq!(rows.len(), 1);
 
-    assert_eq!(rows[0].date_due, "2020-11-13".to_string());
+    assert_eq!(rows[0].date_due, "2020-11-13 00:00:00".to_string());
 
     Ok(())
 }
@@ -68,7 +68,7 @@ fn test_view_overdue() -> Result<(), CoreError> {
 
     assert_eq!(rows.len(), 1);
 
-    assert_eq!(rows[0].date_due, "2020-11-11".to_string());
+    assert_eq!(rows[0].date_due, "2020-11-11 00:00:00".to_string());
 
     Ok(())
 }
@@ -101,7 +101,7 @@ fn test_view_schedule() -> Result<(), CoreError> {
 
     assert_eq!(rows.len(), 1);
 
-    assert_eq!(rows[0].date_scheduled, "2020-11-13".to_string());
+    assert_eq!(rows[0].date_scheduled, "2020-11-13 00:00:00".to_string());
 
     Ok(())
 }
@@ -136,9 +136,9 @@ fn test_view_schedule_today() -> Result<(), CoreError> {
     assert_eq!(rows.len(), 1);
 
     let scheduled_at_parsed =
-        NaiveDate::parse_from_str(&rows[0].date_scheduled, "%Y-%m-%d").expect("");
+        NaiveDateTime::parse_from_str(&rows[0].date_scheduled, "%Y-%m-%d %H:%M:%S").expect("");
 
-    assert_eq!(scheduled_at_parsed, expected.naive_local());
+    assert_eq!(scheduled_at_parsed.date(), expected.naive_local());
 
     Ok(())
 }
@@ -170,9 +170,9 @@ fn test_view_all_today() -> Result<(), CoreError> {
     assert_eq!(rows.len(), 2);
 
     let scheduled_at_parsed =
-        NaiveDate::parse_from_str(&rows[0].date_scheduled, "%Y-%m-%d").expect("");
+        NaiveDateTime::parse_from_str(&rows[0].date_scheduled, "%Y-%m-%d %H:%M:%S").expect("");
 
-    assert_eq!(scheduled_at_parsed, expected.naive_local());
+    assert_eq!(scheduled_at_parsed.date(), expected.naive_local());
 
     Ok(())
 }

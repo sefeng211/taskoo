@@ -128,7 +128,7 @@ fn main() -> Result<(), ClientError> {
                 eprintln!("{:?}", e);
             }
             Ok(message) => {
-                println!("Tasks: {}, state changed to {}", message, "done")
+                println!("{}, state has changed to {}", message, "done")
             }
         }
     } else if matches.is_present("ready") {

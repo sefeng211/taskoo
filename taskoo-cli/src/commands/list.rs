@@ -25,7 +25,7 @@ impl List {
                 let config: Vec<&str> = arguments.collect();
                 let option = parse_command_option(&config, false, false, false).unwrap();
 
-                match option.context_name {
+                match option.context {
                     Some(ref context) => {
                         let context_name = context.clone();
                         let mut operations_tuple =
@@ -104,9 +104,9 @@ impl List {
         for context in context_names.iter() {
             let mut operation = GetOp::new();
             operation.context_name = Some(context.to_string());
-            operation.tag_names = command_option.tag_names.clone();
-            operation.due_date = command_option.due_date;
-            operation.scheduled_at = command_option.scheduled_at;
+            operation.tag_names = command_option.tags.clone();
+            operation.due_date = command_option.date_due;
+            operation.scheduled_at = command_option.date_scheduled;
             result.push((context.to_string(), operation));
         }
         Ok(result)

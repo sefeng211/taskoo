@@ -28,8 +28,21 @@ pub struct Task {
 impl Task {
     pub fn get_property_value(&self, attr: &str) -> Result<String, ArgumentError> {
         match attr {
+            "priority" => Ok(self.priority.clone()),
+            "context" => Ok(self.context.clone()),
+            "tags" => Ok(self.tags.join(",")),
+            "date_created" => Ok(self.date_created.clone()),
+            "date_due" => Ok(self.date_due.clone()),
+            "date_scheduled" => Ok(self.date_scheduled.clone()),
+            "repetition_due" => Ok(self.repetition_due.clone()),
+            "repetition_scheduled" => Ok(self.repetition_scheduled.clone()),
+            "state" => Ok(self.state.clone()),
             "annotation" => Ok(self.annotation.clone()),
-            _ => Err(ArgumentError::InvalidOption(String::from(attr))),
+            "parent_task_ids" => Ok(self.parent_task_ids.join(",")),
+            _ => Err(ArgumentError::InvalidOption(format!(
+                "{} is not a supported property",
+                attr
+            ))),
         }
     }
 

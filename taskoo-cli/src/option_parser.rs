@@ -2,15 +2,15 @@ use crate::extra::CommandError;
 
 #[derive(Debug)]
 pub struct CommandOption<'a> {
-    pub scheduled_at: Option<&'a str>,
-    pub scheudled_repeat: Option<&'a str>,
-    pub due_date: Option<&'a str>,
-    pub due_repeat: Option<&'a str>,
-    pub tag_names: Vec<String>,
+    pub date_scheduled: Option<&'a str>,
+    pub repetition_scheduled: Option<&'a str>,
+    pub date_due: Option<&'a str>,
+    pub reprition_due: Option<&'a str>,
+    pub tags: Vec<String>,
     pub tags_to_remove: Vec<String>,
     pub task_ids: Vec<i64>,
-    pub context_name: Option<String>,
-    pub state_name: Option<String>,
+    pub context: Option<String>,
+    pub state: Option<String>,
     pub body: Option<String>,
     pub priority: Option<String>,
     pub parent_task_ids: Option<Vec<i64>>,
@@ -19,14 +19,14 @@ pub struct CommandOption<'a> {
 impl<'a> CommandOption<'a> {
     pub fn new() -> CommandOption<'a> {
         return CommandOption {
-            scheduled_at: None,
-            scheudled_repeat: None,
-            due_date: None,
-            due_repeat: None,
-            tag_names: vec![],
+            date_scheduled: None,
+            repetition_scheduled: None,
+            date_due: None,
+            reprition_due: None,
+            tags: vec![],
             task_ids: vec![],
-            context_name: None,
-            state_name: None,
+            context: None,
+            state: None,
             body: None,
             priority: None,
             tags_to_remove: vec![],
@@ -54,11 +54,11 @@ pub fn parse_command_option<'a>(
     for option in options.iter() {
         if option.starts_with("s:") {
             start_parse_options = true;
-            if command_option.scheduled_at.is_none() {
+            if command_option.date_scheduled.is_none() {
                 let period: Vec<&str> = option[2 ..].split("+").collect();
-                command_option.scheduled_at = Some(&period[0]);
+                command_option.date_scheduled = Some(&period[0]);
                 if period.len() > 1 {
-                    command_option.scheudled_repeat = Some(&period[1]);
+                    command_option.repetition_scheduled = Some(&period[1]);
                 }
             // Check to see if users provide repetition
             } else {
@@ -66,19 +66,19 @@ pub fn parse_command_option<'a>(
             };
         } else if option.starts_with("d:") {
             start_parse_options = true;
-            if command_option.due_date.is_none() {
+            if command_option.date_due.is_none() {
                 let period: Vec<&str> = option[2 ..].split("+").collect();
-                command_option.due_date = Some(&period[0]);
+                command_option.date_due = Some(&period[0]);
                 if period.len() > 1 {
-                    command_option.due_repeat = Some(&period[1]);
+                    command_option.reprition_due = Some(&period[1]);
                 }
             } else {
                 return Err(CommandError::InvalidDueDate(option.to_string()));
             };
         } else if option.starts_with("c:") {
             start_parse_options = true;
-            if command_option.context_name.is_none() {
-                command_option.context_name = Some(option[2 ..].to_string());
+            if command_option.context.is_none() {
+                command_option.context = Some(option[2 ..].to_string());
             } else {
                 return Err(CommandError::InvalidContextName(option.to_string()));
             };
@@ -112,11 +112,11 @@ pub fn parse_command_option<'a>(
             }
         } else if option.starts_with("+") {
             start_parse_options = true;
-            command_option.tag_names.push(option[1 ..].to_string());
+            command_option.tags.push(option[1 ..].to_string());
         } else if option.starts_with("@") {
             start_parse_options = true;
-            if command_option.state_name.is_none() {
-                command_option.state_name = Some(option[1 ..].to_string());
+            if command_option.state.is_none() {
+                command_option.state = Some(option[1 ..].to_string());
             } else {
                 return Err(CommandError::InvalidContextName(option.to_string()));
             }
@@ -166,7 +166,7 @@ mod tests {
     fn test_parse_schedule_at_ok() {
         let option = vec!["s:2020-11-11"];
         let parsed_option = parse_command_option(&option, false, false, false).unwrap();
-        assert_eq!(parsed_option.scheduled_at, Some("2020-11-11"));
+        assert_eq!(parsed_option.date_scheduled, Some("2020-11-11"));
     }
 
     #[test]
@@ -180,7 +180,7 @@ mod tests {
     fn test_parse_due_date_ok() {
         let option = vec!["d:2020-11-11"];
         let parsed_option = parse_command_option(&option, false, false, false).unwrap();
-        assert_eq!(parsed_option.due_date, Some("2020-11-11"));
+        assert_eq!(parsed_option.date_due, Some("2020-11-11"));
     }
 
     #[test]
@@ -194,14 +194,14 @@ mod tests {
     fn test_parse_tags_ok() {
         let option = vec!["+hello", "+world"];
         let parsed_option = parse_command_option(&option, false, false, false).unwrap();
-        assert_eq!(parsed_option.tag_names, vec!["hello", "world"]);
+        assert_eq!(parsed_option.tags, vec!["hello", "world"]);
     }
 
     #[test]
     fn test_parse_context_ok() {
         let option = vec!["c:inbox"];
         let parsed_option = parse_command_option(&option, false, false, false).unwrap();
-        assert_eq!(parsed_option.context_name, Some("inbox".to_string()));
+        assert_eq!(parsed_option.context, Some("inbox".to_string()));
     }
 
     #[test]
@@ -229,7 +229,7 @@ mod tests {
     fn test_parse_state_name() {
         let option = vec!["@ready"];
         let parsed_option = parse_command_option(&option, true, false, false).unwrap();
-        assert_eq!(parsed_option.state_name, Some("ready".to_string()));
+        assert_eq!(parsed_option.state, Some("ready".to_string()));
     }
 
     #[test]

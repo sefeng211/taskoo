@@ -1,5 +1,5 @@
 use crate::core::{ConfigManager, Operation};
-use crate::db::task_helper::Task;
+use crate::db::task_helper::{Task, TASK_STATES};
 use crate::db::task_manager::TaskManager;
 use crate::error::*;
 use log::debug;
@@ -8,7 +8,7 @@ pub struct Add<'a> {
     pub body: &'a str,
     pub priority: Option<String>,
     pub context: Option<String>,
-    pub state: Option<String>,
+    state: Option<String>,
     pub tags: Vec<String>,
     pub date_due: Option<&'a str>,
     pub date_scheduled: Option<&'a str>,
@@ -66,6 +66,25 @@ impl Add<'_> {
             result: None,
         }
     }
+
+    pub fn set_custom_state(&mut self, state: String) {
+        self.state = Some(state);
+    }
+    pub fn set_state_to_ready(&mut self) {
+        self.state = Some(String::from(TASK_STATES[0]));
+    }
+
+    pub fn set_state_to_completed(&mut self) {
+        self.state = Some(String::from(TASK_STATES[1]));
+    }
+
+    pub fn set_state_to_blocked(&mut self) {
+        self.state = Some(String::from(TASK_STATES[2]));
+    }
+
+    pub fn set_state_to_started(&mut self) {
+        self.state = Some(String::from(TASK_STATES[3]));
+    }
 }
 
 impl AddAnnotation {
@@ -91,6 +110,11 @@ impl Operation for Add<'_> {
 
     fn do_work(&mut self) -> Result<Vec<Task>, CoreError> {
         for tag in self.tags.iter_mut() {
+            if tag.is_empty() {
+                return Err(CoreError::ArgumentError(String::from(
+                    "Empty tag is provided, not allowed!",
+                )));
+            }
             *tag = tag.to_lowercase();
         }
 

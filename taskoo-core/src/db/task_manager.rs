@@ -10,7 +10,7 @@ use crate::db::query_helper::{
 use crate::db::task_helper::{Task, DEFAULT_CONTEXT, TASK_STATES, PRIORITIES};
 use crate::db::view::view;
 use crate::error::{CoreError, ArgumentError};
-use chrono::{Date, DateTime, Duration, Local, NaiveDate, Utc};
+use chrono::{Date, DateTime, Duration, Local, NaiveDate, Utc, NaiveDateTime};
 use log::{info, debug};
 use rusqlite::{named_params, Connection, Result, Transaction, NO_PARAMS};
 use std::collections::HashMap;
@@ -99,6 +99,7 @@ impl TaskManager {
 
         let mut tag_ids: Vec<i64> = vec![];
         for tag_name in tags.iter() {
+            assert!(!tag_name.is_empty());
             tag_ids.push(TaskManager::convert_tag_name_to_id(&tx, &tag_name)?);
         }
 
@@ -217,13 +218,13 @@ impl TaskManager {
         task_ids: &Vec<i64>,
         body: &Option<&str>,
         priority: &Option<String>,
-        context_name: &Option<String>,
-        tag_names: &Vec<String>,
-        due_date: &Option<&str>,
-        scheduled_at: &Option<&str>,
-        due_repeat: &Option<&str>,
-        scheduled_repeat: &Option<&str>,
-        state_name: &Option<&str>,
+        context: &Option<String>,
+        tags: &Vec<String>,
+        date_due: &Option<&str>,
+        date_scheduled: &Option<&str>,
+        repetition_due: &Option<&str>,
+        repetition_scheduled: &Option<&str>,
+        state: &Option<&str>,
         tags_to_remove: &Vec<String>,
     ) -> Result<Vec<Task>, CoreError> {
         let mut tx = self.conn.transaction()?;
@@ -232,12 +233,12 @@ impl TaskManager {
                 "Task Ids can't be empty".to_string(),
             ))?
         }
-        let context_id = match context_name {
+        let context_id = match context {
             Some(name) => Some(TaskManager::convert_context_name_to_id(&tx, &name, true)?),
             None => None,
         };
 
-        let state_id = match state_name {
+        let state_id = match state {
             Some(name) => Some(TaskManager::convert_state_name_to_id(
                 &tx,
                 &name.to_string(),
@@ -255,7 +256,7 @@ impl TaskManager {
             )?),
             None => None,
         };
-        for tag_name in tag_names.iter() {
+        for tag_name in tags.iter() {
             tag_ids.push(TaskManager::convert_tag_name_to_id(&tx, &tag_name)?);
         }
 
@@ -263,12 +264,12 @@ impl TaskManager {
             tag_ids_to_remove.push(TaskManager::convert_tag_name_to_id(&tx, &tag_name)?);
         }
 
-        let parse_scheduled_at = match scheduled_at {
+        let parse_scheduled_at = match date_scheduled {
             Some(period) => Some(TaskManager::parse_date_string(period)?),
             None => None,
         };
 
-        let parsed_due_date = match due_date {
+        let parsed_due_date = match date_due {
             Some(period) => Some(TaskManager::parse_date_string(period)?),
             None => None,
         };
@@ -282,8 +283,8 @@ impl TaskManager {
             tag_ids,
             &parsed_due_date.as_deref(),
             &parse_scheduled_at.as_deref(),
-            &due_repeat,
-            &scheduled_repeat,
+            &repetition_due,
+            &repetition_scheduled,
             &state_id,
             tag_ids_to_remove,
         )?;
@@ -417,13 +418,13 @@ impl TaskManager {
     }
 
     pub fn parse_date_string(scheduled_at: &str) -> Result<String, CoreError> {
-        let current_date: Date<Local> = Local::today();
+        let datetime_now: DateTime<Local> = Local::now();
         if scheduled_at == "tmr" || scheduled_at == "tomorrow" {
-            return Ok((current_date + Duration::days(1))
-                .format("%Y-%m-%d")
+            return Ok((datetime_now + Duration::days(1))
+                .format("%Y-%m-%d %H:%M:%S")
                 .to_string());
         } else if scheduled_at == "today" {
-            return Ok(current_date.format("%Y-%m-%d").to_string());
+            return Ok(datetime_now.format("%Y-%m-%d %H:%M:%S").to_string());
         } else if scheduled_at.ends_with("hours") {
             let scheduled_at_split: Vec<&str> = scheduled_at.split("hours").collect();
             let key: i64;
@@ -439,8 +440,8 @@ impl TaskManager {
                 }
             }
             // return now + x hours
-            return Ok((current_date + Duration::hours(key))
-                .format("%Y-%m-%d")
+            return Ok((datetime_now + Duration::hours(key))
+                .format("%Y-%m-%d %H:%M:%S")
                 .to_string());
         } else if scheduled_at.ends_with("days") {
             let scheduled_at_split: Vec<&str> = scheduled_at.split("days").collect();
@@ -457,8 +458,8 @@ impl TaskManager {
                 }
             }
             // return now + x days
-            return Ok((current_date + Duration::days(key))
-                .format("%Y-%m-%d")
+            return Ok((datetime_now + Duration::days(key))
+                .format("%Y-%m-%d %H:%M:%S")
                 .to_string());
         } else if scheduled_at.ends_with("weeks") {
             let scheduled_at_split: Vec<&str> = scheduled_at.split("weeks").collect();
@@ -474,23 +475,25 @@ impl TaskManager {
                 }
             };
             // return now + x days
-            return Ok((current_date + Duration::weeks(key))
-                .format("%Y-%m-%d")
+            return Ok((datetime_now + Duration::weeks(key))
+                .format("%Y-%m-%d %H:%M:%S")
                 .to_string());
         }
 
-        // Try to parse it from a raw string, note that it's client's job to convert the timestamp
-        // to utc
-        let parsed_timestamp = Date::<Utc>::from_utc(
-            NaiveDate::parse_from_str(&scheduled_at, "%Y-%m-%d").map_err(|source| {
-                CoreError::ChronoParseError {
-                    period: scheduled_at.to_string(),
-                    source: source,
+        // Ensure the client passed date string is valid
+        let parsed_date_string =
+            match NaiveDateTime::parse_from_str(&scheduled_at, "%Y-%m-%d %H:%M:%S") {
+                Ok(parsed_datetime) => parsed_datetime,
+                Err(_) => {
+                    let parsed_date = NaiveDate::parse_from_str(&scheduled_at, "%Y-%m-%d")
+                        .map_err(|source| CoreError::ChronoParseError {
+                            period: scheduled_at.to_string(),
+                            source: source,
+                        })?;
+                    parsed_date.and_hms(0, 0, 0) // Fulfill the missing hms
                 }
-            })?,
-            Utc,
-        );
-        Ok(parsed_timestamp.format("%Y-%m-%d").to_string())
+            };
+        Ok(parsed_date_string.format("%Y-%m-%d %H:%M:%S").to_string())
     }
 
     fn create_table_if_needed(&mut self, context: [&'static str; 1]) -> Result<(), CoreError> {
