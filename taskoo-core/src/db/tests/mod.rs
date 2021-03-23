@@ -15,3 +15,6 @@ mod test_modify;
 
 #[cfg(test)]
 mod test_view;
+
+#[cfg(test)]
+mod test_agenda;

@@ -1,3 +1,4 @@
+use chrono::{NaiveDate, Duration};
 pub const CREATE_TASK_TABLE_QUERY: &str = "
     create table if not exists task (
         id integer primary key,
@@ -67,21 +68,40 @@ pub const CREATE_PRIORITY_TASK_TABLE_QUERY: &str = "
     )
 ";
 
+pub fn generate_agenda_condition(start_day: &NaiveDate) -> Vec<String> {
+    let mut conditions: Vec<String> = vec![];
+
+    let start_end_day = start_day.clone() + Duration::days(1);
+
+    // Includes both DUE and OVERDUE tasks
+    conditions.push(
+        format!(
+            "(due_date < '{}' and due_date <> '')",
+            start_end_day.format("%Y-%m-%d")
+        )
+        .as_str()
+        .to_string(),
+    );
+    // Includes both SCHEDULED and OVERSCHEDULED tasks
+    conditions.push(
+        format!(
+            "(scheduled_at < '{}' and scheduled_at <> '')",
+            start_end_day.format("%Y-%m-%d")
+        )
+        .as_str()
+        .to_string(),
+    );
+    return conditions;
+}
+
 pub fn generate_view_condition(
     context_id: &i64,
     _view_range_start: &Option<String>,
     view_range_end: &String,
     view_type: &Option<String>,
 ) -> Vec<String> {
-    let mut conditions = generate_condition(
-        &None,
-        &Some(*context_id),
-        &None,
-        &None,
-        &None,
-        &None,
-        &None,
-    );
+    let mut conditions =
+        generate_condition(&None, &Some(*context_id), &None, &None, &None, &None, &None);
     if view_type == &Some("overdue".to_string()) {
         conditions.push(
             format!("due_date < '{}'", view_range_end)

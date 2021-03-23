@@ -87,7 +87,15 @@ impl Review {
                 .to_string()
         );
         let tt = Confirm::with_theme(&ColorfulTheme::default())
-            .with_prompt("q: Skip this task, y: start to review, n: delete the task")
+            .with_prompt(format!(
+                "{}: {} this task, {}: start to {}, {}: {} the task",
+                Paint::yellow("<q>"),
+                Paint::yellow("Skip").bold(),
+                Paint::yellow("<y>"),
+                Paint::yellow("review").bold(),
+                Paint::yellow("<n>"),
+                Paint::yellow("Delete").bold()
+            ))
             .interact_opt()
             .map_err(|error| ClientError::TerminalError { source: error })?;
 
@@ -195,7 +203,6 @@ impl Review {
 
             execute(&mut modify_operation)?;
             println!("Task Modified!");
-        } else {
         }
         Ok(())
     }

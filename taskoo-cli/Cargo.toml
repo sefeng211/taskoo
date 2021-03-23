@@ -16,12 +16,13 @@ rust-ini = "0.16.0"
 dirs = "3.0"
 anyhow = "1.0.37"
 shrust = "0.0.7"
+chrono = "0.4.19"
 terminal_size = "0.1.16"
 directories = "3.0.1"
 ctrlc = { version = "3.0", features = ["termination"] }
 
 # Using this commit allows Confirm prompt to return None
-dialoguer = { git = "https://github.com/mitsuhiko/dialoguer.git", rev = "64f5f9c6f597f674db5a1e7ce57b1fc12931f764" }
+dialoguer = { git = "https://github.com/mitsuhiko/dialoguer.git", rev = "2c3fe6b64641cfb57eb0e1d428274f63976ec150" }
 
 
 [dependencies.tabwriter]

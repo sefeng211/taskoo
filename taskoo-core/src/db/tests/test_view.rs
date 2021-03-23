@@ -29,7 +29,7 @@ fn test_view_due() -> Result<(), CoreError> {
     execute(&mut operation)?;
 
     let rows = database_manager
-        .view(
+        .agenda(
             &"inbox".to_string(),
             &Some("due".to_string()),
             &None,
@@ -58,7 +58,7 @@ fn test_view_overdue() -> Result<(), CoreError> {
     execute(&mut operation)?;
 
     let rows = database_manager
-        .view(
+        .agenda(
             &"inbox".to_string(),
             &Some("overdue".to_string()),
             &None,
@@ -91,7 +91,7 @@ fn test_view_schedule() -> Result<(), CoreError> {
     execute(&mut operation)?;
 
     let rows = database_manager
-        .view(
+        .agenda(
             &"inbox".to_string(),
             &Some("schedule".to_string()),
             &None,
@@ -125,7 +125,7 @@ fn test_view_schedule_today() -> Result<(), CoreError> {
     execute(&mut operation)?;
 
     let rows = database_manager
-        .view(
+        .agenda(
             &"inbox".to_string(),
             &Some("schedule".to_string()),
             &None,
@@ -159,7 +159,7 @@ fn test_view_all_today() -> Result<(), CoreError> {
     execute(&mut operation)?;
 
     let rows = database_manager
-        .view(
+        .agenda(
             &"inbox".to_string(),
             &Some("all".to_string()),
             &None,

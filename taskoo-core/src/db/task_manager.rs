@@ -2,6 +2,7 @@ use crate::db::add::{add, add_annotation};
 use crate::db::delete::delete;
 use crate::db::get::get;
 use crate::db::modify::modify;
+use crate::db::agenda::{agenda};
 use crate::db::query_helper::{
     CREATE_CONTEXT_TABLE_QUERY, CREATE_DEPENDENCY_TABLE_QUERY, CREATE_STATE_TABLE_QUERY,
     CREATE_TAG_TABLE_QUERY, CREATE_TASK_TABLE_QUERY, CREATE_TASK_TAG_TABLE_QUERY,
@@ -292,7 +293,33 @@ impl TaskManager {
         Ok(tasks)
     }
 
-    pub fn view(
+    pub fn view_agenda(
+        &mut self,
+        start_day: String,
+        end_day: Option<String>,
+    ) -> Result<Vec<(NaiveDate, Vec<Task>)>, CoreError> {
+        let mut tx = self.conn.transaction()?;
+        let start_day_in_date = NaiveDateTime::parse_from_str(
+            &TaskManager::parse_date_string(&start_day)?,
+            "%Y-%m-%d %H:%M:%S",
+        )
+        .expect("")
+        .date();
+        let end_day_in_date = match end_day {
+            None => None,
+            Some(day) => Some(
+                NaiveDateTime::parse_from_str(
+                    &TaskManager::parse_date_string(&day)?,
+                    "%Y-%m-%d %H:%M:%S",
+                )
+                .expect("")
+                .date(),
+            ),
+        };
+        return agenda(&tx, &start_day_in_date, &end_day_in_date);
+    }
+
+    pub fn agenda(
         &mut self,
         context_name: &String,
         view_type: &Option<String>,

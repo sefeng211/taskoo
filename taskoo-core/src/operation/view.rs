@@ -37,7 +37,7 @@ impl Operation for View {
     }
 
     fn do_work(&mut self) -> Result<Vec<Task>, CoreError> {
-        return TaskManager::view(
+        return TaskManager::agenda(
             self.database_manager.as_mut().unwrap(),
             &self.context_name,
             &self.view_type,

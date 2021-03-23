@@ -6,6 +6,7 @@ mod get;
 mod delete;
 mod modify;
 mod view;
+mod agenda;
 
 mod query_helper;
 mod get_base;

@@ -17,7 +17,7 @@ use commands::info::Info;
 use commands::list::List;
 use commands::modify::Modify;
 use commands::review::Review;
-use commands::view::View;
+use commands::view::Agenda;
 use commands::clean::Clean;
 
 mod commands;
@@ -107,9 +107,9 @@ fn main() -> Result<(), ClientError> {
             }
         }
     } else if matches.is_present("view") {
-        let view = View::new(get_config());
+        let view = Agenda::new(get_config());
         match view
-            .view(&matches.subcommand_matches("view").unwrap())
+            .agenda(&matches.subcommand_matches("view").unwrap())
             .context("View command failed")
         {
             Err(e) => {

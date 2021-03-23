@@ -1,3 +1,4 @@
+use chrono::{NaiveDate, NaiveDateTime, Local};
 use ini::Ini;
 use log::info;
 use std::io::Write;
@@ -13,6 +14,7 @@ use terminal_size::{Width, Height, terminal_size};
 
 const TASK_PRIORITY_ORDER: &'static [&'static str] = &["l", "m", "h"];
 pub struct Display;
+pub struct DisplayAgenda;
 
 enum DisplayColumn {
     Id,
@@ -275,11 +277,11 @@ fn get_output_columns() -> Vec<DisplayColumn> {
     } else {
         vec![
             DisplayColumn::Id,
-            DisplayColumn::Body,
             DisplayColumn::Priority,
             DisplayColumn::Created,
             DisplayColumn::Scheduled,
             DisplayColumn::Due,
+            DisplayColumn::Body,
         ]
     };
 }
@@ -289,6 +291,166 @@ fn to_first_letter_capitalized(s: &str) -> String {
     match c.next() {
         None => String::new(),
         Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+    }
+}
+
+enum AgendaDisplayDateType {
+    Scheduled,
+    Deadline,
+}
+
+impl AgendaDisplayDateType {
+    pub fn to_string(&self, task: &Task) -> String {
+        match *self {
+            AgendaDisplayDateType::Scheduled => {
+                let parsed_time =
+                    NaiveDateTime::parse_from_str(&task.date_scheduled, "%Y-%m-%d %H:%M:%S")
+                        .expect("");
+                let now = Local::now().naive_local();
+                let num_days = now - parsed_time;
+
+                if num_days.num_days() == 0 {
+                    return "Scheduled:".to_string();
+                }
+
+                let mut output = String::new();
+                output.push_str(&format!("Sched x{}:", num_days.num_days()));
+                return output;
+            }
+
+            AgendaDisplayDateType::Deadline => {
+                let parsed_time =
+                    NaiveDateTime::parse_from_str(&task.date_due, "%Y-%m-%d %H:%M:%S").expect("");
+                let now = Local::now().naive_local();
+                let num_days = now - parsed_time;
+
+                if num_days.num_days() == 0 {
+                    return "Deadline:".to_string();
+                }
+                let mut output = String::new();
+                output.push_str(&format!("Due x{}:", num_days.num_days()));
+                return output;
+            }
+        }
+    }
+}
+enum AgendaDisplayColumn {
+    Context,
+    Time,
+    DateType,
+    State,
+    Body,
+}
+
+impl AgendaDisplayColumn {
+    pub fn get_data(&self, task: &Task) -> String {
+        let mut output = String::new();
+        match *self {
+            AgendaDisplayColumn::Context => {
+                output.push_str(&task.context);
+                output.push_str(":");
+                return output;
+            }
+            AgendaDisplayColumn::Time => match DisplayAgenda::get_type(&task) {
+                AgendaDisplayDateType::Deadline => {
+                    let parsed_time =
+                        NaiveDateTime::parse_from_str(&task.date_due, "%Y-%m-%d %H:%M:%S")
+                            .expect("");
+
+                    if parsed_time.date() != Local::today().naive_local() {
+                        return String::new();
+                    }
+                    return parsed_time.format("%H:%M").to_string();
+                }
+                AgendaDisplayDateType::Scheduled => {
+                    let parsed_time =
+                        NaiveDateTime::parse_from_str(&task.date_scheduled, "%Y-%m-%d %H:%M:%S")
+                            .expect("");
+                    if parsed_time.date() != Local::today().naive_local() {
+                        return String::new();
+                    }
+                    return parsed_time.format("%H:%M").to_string();
+                }
+            },
+            AgendaDisplayColumn::DateType => {
+                return DisplayAgenda::get_type(&task).to_string(&task);
+            }
+            AgendaDisplayColumn::State => {
+                let mut formated_state = String::new();
+                formated_state.push_str("[");
+                formated_state.push_str(&to_first_letter_capitalized(&task.state));
+                formated_state.push_str("]");
+                return formated_state;
+            }
+            AgendaDisplayColumn::Body => {
+                return task.body.clone();
+            }
+        }
+    }
+}
+impl DisplayAgenda {
+    pub fn display(tasks: &Vec<(NaiveDate, Vec<Task>)>) -> Result<String, CoreError> {
+        let mut output = String::new();
+        for day_tasks in tasks.iter() {
+            let day = day_tasks.0;
+            let tasks_on_day = &day_tasks.1;
+            // Print the day as `Sunday 27 March 2016`
+            println!("{}", day.format("%A %d %B %Y").to_string());
+
+            let columns_to_output = vec![
+                AgendaDisplayColumn::Context,
+                AgendaDisplayColumn::Time,
+                AgendaDisplayColumn::DateType,
+                AgendaDisplayColumn::State,
+                AgendaDisplayColumn::Body,
+            ];
+
+            for task in tasks_on_day.iter() {
+                if DisplayAgenda::is_old_completed(task) {
+                    continue;
+                }
+                let mut task_row = String::new();
+                for column in columns_to_output.iter() {
+                    task_row.push_str(&column.get_data(task));
+                    task_row.push_str("\t");
+                }
+                output.push_str(&task_row);
+                output.push_str("\n");
+            }
+        }
+
+        Ok(output)
+    }
+
+    fn get_type(task: &Task) -> AgendaDisplayDateType {
+        assert!(!task.date_due.is_empty() || !task.date_scheduled.is_empty());
+        if !task.date_scheduled.is_empty() {
+            return AgendaDisplayDateType::Scheduled;
+        }
+        return AgendaDisplayDateType::Deadline;
+    }
+
+    fn is_old_completed(task: &Task) -> bool {
+        match DisplayAgenda::get_type(&task) {
+            AgendaDisplayDateType::Deadline => {
+                let parsed_time =
+                    NaiveDateTime::parse_from_str(&task.date_due, "%Y-%m-%d %H:%M:%S").expect("");
+
+                if parsed_time.date() != Local::today().naive_local() {
+                    return task.is_completed();
+                }
+                return false;
+            }
+            AgendaDisplayDateType::Scheduled => {
+                let parsed_time =
+                    NaiveDateTime::parse_from_str(&task.date_scheduled, "%Y-%m-%d %H:%M:%S")
+                        .expect("");
+                if parsed_time.date() != Local::today().naive_local() {
+                    return task.is_completed();
+                }
+                return false;
+            }
+        }
     }
 }
 
@@ -326,6 +488,7 @@ impl Display {
 
         Ok(final_tabbed_string)
     }
+
     fn get_formatted_row_for_header(columns_to_output: Vec<DisplayColumn>, config: &Ini) -> String {
         let mut output = String::new();
         for column in columns_to_output.iter() {
