@@ -1,0 +1,2536 @@
+warning: unused import: `DateTime`
+  --> taskoo-core/src/db/task_manager.rs:13:20
+   |
+13 | use chrono::{Date, DateTime, Duration, Local, NaiveDate, Utc};
+   |                    ^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused variable: `parnet_task_id`
+  --> taskoo-core/src/db/add.rs:63:5
+   |
+63 |     parnet_task_id: &Option<i64>
+   |     ^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_parnet_task_id`
+   |
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `priority`
+  --> taskoo-core/src/db/get.rs:18:5
+   |
+18 |     priority: &Option<u8>,
+   |     ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_priority`
+
+warning: variable does not need to be mutable
+  --> taskoo-core/src/db/task_helper.rs:79:13
+   |
+79 |         let mut parent_task_ids: Vec<i64> = vec![];
+   |             ----^^^^^^^^^^^^^^^
+   |             |
+   |             help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` on by default
+
+warning: 4 warnings emitted
+
+   Compiling taskoo-core v0.1.0 (/home/saber/.local/workspace/repos/taskoo/taskoo-core)
+error[E0412]: cannot find type `HashMap` in this scope
+   --> taskoo-core/src/command.rs:166:25
+    |
+166 |     fn get_setting() -> HashMap<String, String> {
+    |                         ^^^^^^^ not found in this scope
+    |
+help: consider importing one of these items
+    |
+165 |     use crate::core::io::sys::ext::net::raw_fd::sys_common::util::thread::panic::collections::hash::map::base::HashMap;
+    |
+165 |     use crate::db::tests::test_view::HashMap;
+    |
+165 |     use std::collections::HashMap;
+    |
+
+error[E0433]: failed to resolve: use of undeclared type `HashMap`
+   --> taskoo-core/src/command.rs:167:27
+    |
+167 |         let mut setting = HashMap::new();
+    |                           ^^^^^^^ not found in this scope
+    |
+help: consider importing one of these items
+    |
+165 |     use crate::core::io::sys::ext::net::raw_fd::sys_common::util::thread::panic::collections::hash::map::base::HashMap;
+    |
+165 |     use crate::db::tests::test_view::HashMap;
+    |
+165 |     use std::collections::HashMap;
+    |
+
+warning: unused import: `DateTime`
+  --> taskoo-core/src/db/task_manager.rs:13:20
+   |
+13 | use chrono::{Date, DateTime, Duration, Local, NaiveDate, Utc};
+   |                    ^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `crate::db::task_helper::convert_rows_into_task`
+ --> taskoo-core/src/db/tests/test_add.rs:5:5
+  |
+5 | use crate::db::task_helper::convert_rows_into_task;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `DateTime`, `Date`
+ --> taskoo-core/src/db/tests/test_view.rs:1:14
+  |
+1 | use chrono::{Date, DateTime, Duration, Local, NaiveDate};
+  |              ^^^^  ^^^^^^^^
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/command.rs:186:28
+    |
+186 |         command.db_manager.add(
+    |                            ^^^ expected 11 arguments
+187 |             "Test",
+    |             ------
+188 |             &None,
+    |             -----
+189 |             &None,
+    |             -----
+190 |             &vec![String::from("tag1")],
+    |             ---------------------------
+191 |             &None,
+    |             -----
+192 |             &None,
+    |             -----
+193 |             &None,
+    |             -----
+194 |             &None,
+    |             -----
+195 |             &None,
+    |             -----
+196 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/command.rs:208:28
+    |
+208 |         command.db_manager.add(
+    |                            ^^^ expected 11 arguments
+209 |             "Test",
+    |             ------
+210 |             &None,
+    |             -----
+211 |             &None,
+    |             -----
+212 |             &vec![String::from("tag1")],
+    |             ---------------------------
+213 |             &None,
+    |             -----
+214 |             &None,
+    |             -----
+215 |             &None,
+    |             -----
+216 |             &None,
+    |             -----
+217 |             &None,
+    |             -----
+218 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/command.rs:229:28
+    |
+229 |         command.db_manager.add(
+    |                            ^^^ expected 11 arguments
+230 |             "Test",
+    |             ------
+231 |             &None,
+    |             -----
+232 |             &None,
+    |             -----
+233 |             &vec![String::from("tag1")],
+    |             ---------------------------
+234 |             &None,
+    |             -----
+235 |             &None,
+    |             -----
+236 |             &None,
+    |             -----
+237 |             &None,
+    |             -----
+238 |             &None,
+    |             -----
+239 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/command.rs:249:28
+    |
+249 |         command.db_manager.add(
+    |                            ^^^ expected 11 arguments
+250 |             "Test",
+    |             ------
+251 |             &None,
+    |             -----
+252 |             &None,
+    |             -----
+253 |             &vec![String::from("tag1")],
+    |             ---------------------------
+254 |             &None,
+    |             -----
+255 |             &None,
+    |             -----
+256 |             &None,
+    |             -----
+257 |             &None,
+    |             -----
+258 |             &None,
+    |             -----
+259 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/command.rs:285:28
+    |
+285 |         command.db_manager.add(
+    |                            ^^^ expected 11 arguments
+286 |             "Test",
+    |             ------
+287 |             &None,
+    |             -----
+288 |             &None,
+    |             -----
+289 |             &vec![String::from("tag1")],
+    |             ---------------------------
+290 |             &None,
+    |             -----
+291 |             &None,
+    |             -----
+292 |             &None,
+    |             -----
+293 |             &None,
+    |             -----
+294 |             &None,
+    |             -----
+295 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/command.rs:309:28
+    |
+309 |         command.db_manager.add(
+    |                            ^^^ expected 11 arguments
+310 |             "Test",
+    |             ------
+311 |             &None,
+    |             -----
+312 |             &None,
+    |             -----
+313 |             &vec![String::from("tag1")],
+    |             ---------------------------
+314 |             &None,
+    |             -----
+315 |             &None,
+    |             -----
+316 |             &None,
+    |             -----
+317 |             &None,
+    |             -----
+318 |             &None,
+    |             -----
+319 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0308]: mismatched types
+  --> taskoo-core/src/db/tests/test_add.rs:23:61
+   |
+23 |     let operation = Add::new_with_task_manager("Test Body", database_manager);
+   |                                                             ^^^^^^^^^^^^^^^^
+   |                                                             |
+   |                                                             expected `&mut task_manager::TaskManager`, found struct `task_manager::TaskManager`
+   |                                                             help: consider mutably borrowing here: `&mut database_manager`
+
+error[E0277]: `?` couldn't convert the error to `rusqlite::Error`
+  --> taskoo-core/src/db/tests/test_add.rs:24:28
+   |
+20 | fn test_add_simple() -> Result<()> {
+   |                         ---------- expected `rusqlite::Error` because of this
+...
+24 |     execute(&mut operation)?;
+   |                            ^ the trait `From<error::CoreError>` is not implemented for `rusqlite::Error`
+   |
+   = note: the question mark operation (`?`) implicitly performs a conversion on the error value using the `From` trait
+   = help: the following implementations were found:
+             <rusqlite::Error as From<FromSqlError>>
+             <rusqlite::Error as From<std::ffi::NulError>>
+             <rusqlite::Error as From<std::str::Utf8Error>>
+   = note: required by `from`
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+  --> taskoo-core/src/db/tests/test_add.rs:60:10
+   |
+60 |         .add(
+   |          ^^^ expected 11 arguments
+61 |             "Test Body",
+   |             -----------
+62 |             &Some(String::from("H")),
+   |             ------------------------
+63 |             &Some(String::from("Work")),
+   |             ---------------------------
+64 |             &vec![],
+   |             -------
+65 |             &None,
+   |             -----
+66 |             &None,
+   |             -----
+67 |             &None,
+   |             -----
+68 |             &None,
+   |             -----
+69 |             &None,
+   |             -----
+70 |             &None,
+   |             ----- supplied 10 arguments
+   |
+note: associated function defined here
+  --> taskoo-core/src/db/task_manager.rs:46:12
+   |
+46 |       pub fn add(
+   |              ^^^
+47 |           &mut self,
+   |           ---------
+48 |           body: &str,
+   |           ----------
+49 |           priority: &Option<String>,
+   |           -------------------------
+50 |           context: &Option<String>,
+   |           ------------------------
+51 |           tags: &Vec<String>,
+   |           ------------------
+52 |           date_due: &Option<&str>,
+   |           -----------------------
+53 |           date_scheduled: &Option<&str>,
+   |           -----------------------------
+54 |           repetition_due: &Option<&str>,
+   |           -----------------------------
+55 |           repetition_scheduled: &Option<&str>,
+   |           -----------------------------------
+56 |           annotation: &Option<&str>,
+   |           -------------------------
+57 |           state_name: &Option<String>,
+   |           ---------------------------
+58 | /         parent_task_id: &Option<i64>
+59 | |     ) -> Result<Vec<Task>, CoreError> {
+   | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_add.rs:116:10
+    |
+116 |         .add(
+    |          ^^^ expected 11 arguments
+117 |             "Test Body",
+    |             -----------
+118 |             &Some(String::from("H")),
+    |             ------------------------
+119 |             &Some(String::from("Work")),
+    |             ---------------------------
+120 |             &vec!["Ready".to_owned(), "Blocked".to_owned()],
+    |             -----------------------------------------------
+121 |             &None,
+    |             -----
+122 |             &None,
+    |             -----
+123 |             &None,
+    |             -----
+124 |             &None,
+    |             -----
+125 |             &None,
+    |             -----
+126 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_add.rs:154:10
+    |
+154 |         .add(
+    |          ^^^ expected 11 arguments
+155 |             "Test Body",
+    |             -----------
+156 |             &Some(String::from("H")),
+    |             ------------------------
+157 |             &Some(String::from("Work")),
+    |             ---------------------------
+158 |             &vec!["Blocked".to_owned()],
+    |             ---------------------------
+159 |             &None,
+    |             -----
+160 |             &Some("2days"),
+    |             --------------
+161 |             &None,
+    |             -----
+162 |             &None,
+    |             -----
+163 |             &None,
+    |             -----
+164 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_add.rs:199:10
+    |
+199 |         .add(
+    |          ^^^ expected 11 arguments
+200 |             "Test Body",
+    |             -----------
+201 |             &Some(String::from("H")),
+    |             ------------------------
+202 |             &Some(String::from("Work")),
+    |             ---------------------------
+203 |             &vec!["Blocked".to_owned()],
+    |             ---------------------------
+204 |             &None,
+    |             -----
+205 |             &Some("11hours"),
+    |             ----------------
+206 |             &None,
+    |             -----
+207 |             &None,
+    |             -----
+208 |             &None,
+    |             -----
+209 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_add.rs:242:10
+    |
+242 |         .add(
+    |          ^^^ expected 11 arguments
+243 |             "Test Body",
+    |             -----------
+244 |             &Some(String::from("H")),
+    |             ------------------------
+245 |             &Some(String::from("Work")),
+    |             ---------------------------
+246 |             &vec!["Blocked".to_owned()],
+    |             ---------------------------
+247 |             &None,
+    |             -----
+248 |             &Some("1weeks"),
+    |             ---------------
+249 |             &None,
+    |             -----
+250 |             &None,
+    |             -----
+251 |             &None,
+    |             -----
+252 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_add.rs:284:10
+    |
+284 |         .add(
+    |          ^^^ expected 11 arguments
+285 |             "Test Body",
+    |             -----------
+286 |             &Some(String::from("H")),
+    |             ------------------------
+287 |             &Some(String::from("Work")),
+    |             ---------------------------
+288 |             &vec!["Blocked".to_owned()],
+    |             ---------------------------
+289 |             &None,
+    |             -----
+290 |             &Some("2020-11-11"),
+    |             -------------------
+291 |             &None,
+    |             -----
+292 |             &None,
+    |             -----
+293 |             &None,
+    |             -----
+294 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_add.rs:321:10
+    |
+321 |         .add(
+    |          ^^^ expected 11 arguments
+322 |             "Test Body",
+    |             -----------
+323 |             &Some(String::from("H")),
+    |             ------------------------
+324 |             &Some(String::from("Work")),
+    |             ---------------------------
+325 |             &vec!["Blocked".to_owned()],
+    |             ---------------------------
+326 |             &None,
+    |             -----
+327 |             &Some("tmr"),
+    |             ------------
+328 |             &None,
+    |             -----
+329 |             &None,
+    |             -----
+330 |             &None,
+    |             -----
+331 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_add.rs:362:10
+    |
+362 |         .add(
+    |          ^^^ expected 11 arguments
+363 |             "Test Body",
+    |             -----------
+364 |             &Some(String::from("H")),
+    |             ------------------------
+365 |             &Some(String::from("Work")),
+    |             ---------------------------
+366 |             &vec!["Blocked".to_owned()],
+    |             ---------------------------
+367 |             &None,
+    |             -----
+368 |             &Some("today"),
+    |             --------------
+369 |             &None,
+    |             -----
+370 |             &None,
+    |             -----
+371 |             &None,
+    |             -----
+372 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_add.rs:401:10
+    |
+401 |         .add(
+    |          ^^^ expected 11 arguments
+402 |             "Test Body",
+    |             -----------
+403 |             &None,
+    |             -----
+404 |             &None,
+    |             -----
+405 |             &vec![],
+    |             -------
+406 |             &None,
+    |             -----
+407 |             &None,
+    |             -----
+408 |             &None,
+    |             -----
+409 |             &None,
+    |             -----
+410 |             &None,
+    |             -----
+411 |             &Some(String::from("completed")),
+    |             -------------------------------- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_add.rs:429:10
+    |
+429 |         .add(
+    |          ^^^ expected 11 arguments
+430 |             "Test Body",
+    |             -----------
+431 |             &None,
+    |             -----
+432 |             &None,
+    |             -----
+433 |             &vec!["Completed".to_owned()],
+    |             -----------------------------
+434 |             &None,
+    |             -----
+435 |             &Some("2weeks"),
+    |             ---------------
+436 |             &None,
+    |             -----
+437 |             &Some("3weeks"),
+    |             ---------------
+438 |             &None,
+    |             -----
+439 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_add.rs:488:10
+    |
+488 |         .add(
+    |          ^^^ expected 11 arguments
+489 |             "Test Body",
+    |             -----------
+490 |             &None,
+    |             -----
+491 |             &None,
+    |             -----
+492 |             &vec!["Completed".to_owned()],
+    |             -----------------------------
+493 |             &Some("2weeks"),
+    |             ---------------
+494 |             &None,
+    |             -----
+495 |             &Some("3weeks"),
+    |             ---------------
+496 |             &None,
+    |             -----
+497 |             &None,
+    |             -----
+498 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_add.rs:545:10
+    |
+545 |         .add(
+    |          ^^^ expected 11 arguments
+546 |             "Test Body",
+    |             -----------
+547 |             &None,
+    |             -----
+548 |             &None,
+    |             -----
+549 |             &vec![],
+    |             -------
+550 |             &None,
+    |             -----
+551 |             &None,
+    |             -----
+552 |             &None,
+    |             -----
+553 |             &None,
+    |             -----
+554 |             &None,
+    |             -----
+555 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0308]: mismatched types
+  --> taskoo-core/src/db/tests/test_get.rs:21:65
+   |
+21 |     let mut operation = Add::new_with_task_manager("Test Body", &database_manager);
+   |                                                                 ^^^^^^^^^^^^^^^^^ types differ in mutability
+   |
+   = note: expected mutable reference `&mut task_manager::TaskManager`
+                      found reference `&task_manager::TaskManager`
+
+error[E0277]: `?` couldn't convert the error to `rusqlite::Error`
+  --> taskoo-core/src/db/tests/test_get.rs:26:28
+   |
+18 | fn test_get_simple() -> Result<()> {
+   |                         ---------- expected `rusqlite::Error` because of this
+...
+26 |     execute(&mut operation)?;
+   |                            ^ the trait `From<error::CoreError>` is not implemented for `rusqlite::Error`
+   |
+   = note: the question mark operation (`?`) implicitly performs a conversion on the error value using the `From` trait
+   = help: the following implementations were found:
+             <rusqlite::Error as From<FromSqlError>>
+             <rusqlite::Error as From<std::ffi::NulError>>
+             <rusqlite::Error as From<std::str::Utf8Error>>
+   = note: required by `from`
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+  --> taskoo-core/src/db/tests/test_get.rs:57:10
+   |
+57 |         .add(
+   |          ^^^ expected 11 arguments
+58 |             "Test Body",
+   |             -----------
+59 |             &None,
+   |             -----
+60 |             &Some("Work".to_string()),
+   |             -------------------------
+61 |             &vec![],
+   |             -------
+62 |             &None,
+   |             -----
+63 |             &None,
+   |             -----
+64 |             &None,
+   |             -----
+65 |             &None,
+   |             -----
+66 |             &None,
+   |             -----
+67 |             &None,
+   |             ----- supplied 10 arguments
+   |
+note: associated function defined here
+  --> taskoo-core/src/db/task_manager.rs:46:12
+   |
+46 |       pub fn add(
+   |              ^^^
+47 |           &mut self,
+   |           ---------
+48 |           body: &str,
+   |           ----------
+49 |           priority: &Option<String>,
+   |           -------------------------
+50 |           context: &Option<String>,
+   |           ------------------------
+51 |           tags: &Vec<String>,
+   |           ------------------
+52 |           date_due: &Option<&str>,
+   |           -----------------------
+53 |           date_scheduled: &Option<&str>,
+   |           -----------------------------
+54 |           repetition_due: &Option<&str>,
+   |           -----------------------------
+55 |           repetition_scheduled: &Option<&str>,
+   |           -----------------------------------
+56 |           annotation: &Option<&str>,
+   |           -------------------------
+57 |           state_name: &Option<String>,
+   |           ---------------------------
+58 | /         parent_task_id: &Option<i64>
+59 | |     ) -> Result<Vec<Task>, CoreError> {
+   | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+  --> taskoo-core/src/db/tests/test_get.rs:72:10
+   |
+72 |         .add(
+   |          ^^^ expected 11 arguments
+73 |             "Test Body",
+   |             -----------
+74 |             &None,
+   |             -----
+75 |             &Some("Work".to_string()),
+   |             -------------------------
+76 |             &vec![],
+   |             -------
+77 |             &None,
+   |             -----
+78 |             &None,
+   |             -----
+79 |             &None,
+   |             -----
+80 |             &None,
+   |             -----
+81 |             &None,
+   |             -----
+82 |             &None,
+   |             ----- supplied 10 arguments
+   |
+note: associated function defined here
+  --> taskoo-core/src/db/task_manager.rs:46:12
+   |
+46 |       pub fn add(
+   |              ^^^
+47 |           &mut self,
+   |           ---------
+48 |           body: &str,
+   |           ----------
+49 |           priority: &Option<String>,
+   |           -------------------------
+50 |           context: &Option<String>,
+   |           ------------------------
+51 |           tags: &Vec<String>,
+   |           ------------------
+52 |           date_due: &Option<&str>,
+   |           -----------------------
+53 |           date_scheduled: &Option<&str>,
+   |           -----------------------------
+54 |           repetition_due: &Option<&str>,
+   |           -----------------------------
+55 |           repetition_scheduled: &Option<&str>,
+   |           -----------------------------------
+56 |           annotation: &Option<&str>,
+   |           -------------------------
+57 |           state_name: &Option<String>,
+   |           ---------------------------
+58 | /         parent_task_id: &Option<i64>
+59 | |     ) -> Result<Vec<Task>, CoreError> {
+   | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+  --> taskoo-core/src/db/tests/test_get.rs:87:10
+   |
+87 |         .add(
+   |          ^^^ expected 11 arguments
+88 |             "Test Body",
+   |             -----------
+89 |             &None,
+   |             -----
+90 |             &Some("Life".to_string()),
+   |             -------------------------
+91 |             &vec![],
+   |             -------
+92 |             &None,
+   |             -----
+93 |             &None,
+   |             -----
+94 |             &None,
+   |             -----
+95 |             &None,
+   |             -----
+96 |             &None,
+   |             -----
+97 |             &None,
+   |             ----- supplied 10 arguments
+   |
+note: associated function defined here
+  --> taskoo-core/src/db/task_manager.rs:46:12
+   |
+46 |       pub fn add(
+   |              ^^^
+47 |           &mut self,
+   |           ---------
+48 |           body: &str,
+   |           ----------
+49 |           priority: &Option<String>,
+   |           -------------------------
+50 |           context: &Option<String>,
+   |           ------------------------
+51 |           tags: &Vec<String>,
+   |           ------------------
+52 |           date_due: &Option<&str>,
+   |           -----------------------
+53 |           date_scheduled: &Option<&str>,
+   |           -----------------------------
+54 |           repetition_due: &Option<&str>,
+   |           -----------------------------
+55 |           repetition_scheduled: &Option<&str>,
+   |           -----------------------------------
+56 |           annotation: &Option<&str>,
+   |           -------------------------
+57 |           state_name: &Option<String>,
+   |           ---------------------------
+58 | /         parent_task_id: &Option<i64>
+59 | |     ) -> Result<Vec<Task>, CoreError> {
+   | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_get.rs:122:10
+    |
+122 |         .add(
+    |          ^^^ expected 11 arguments
+123 |             "Test Body",
+    |             -----------
+124 |             &None,
+    |             -----
+125 |             &None,
+    |             -----
+126 |             &vec![],
+    |             -------
+127 |             &None,
+    |             -----
+128 |             &None,
+    |             -----
+129 |             &None,
+    |             -----
+130 |             &None,
+    |             -----
+131 |             &None,
+    |             -----
+132 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_get.rs:137:10
+    |
+137 |         .add(
+    |          ^^^ expected 11 arguments
+138 |             "Test Body",
+    |             -----------
+139 |             &None,
+    |             -----
+140 |             &None,
+    |             -----
+141 |             &vec!["Blocked".to_owned(), "Completed".to_owned()],
+    |             ---------------------------------------------------
+142 |             &None,
+    |             -----
+143 |             &None,
+    |             -----
+144 |             &None,
+    |             -----
+145 |             &None,
+    |             -----
+146 |             &None,
+    |             -----
+147 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_get.rs:152:10
+    |
+152 |         .add(
+    |          ^^^ expected 11 arguments
+153 |             "Test Body",
+    |             -----------
+154 |             &None,
+    |             -----
+155 |             &None,
+    |             -----
+156 |             &vec!["Blocked".to_owned(), "Completed".to_owned()],
+    |             ---------------------------------------------------
+157 |             &None,
+    |             -----
+158 |             &None,
+    |             -----
+159 |             &None,
+    |             -----
+160 |             &None,
+    |             -----
+161 |             &None,
+    |             -----
+162 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+  --> taskoo-core/src/db/tests/test_delete.rs:20:10
+   |
+20 |         .add(
+   |          ^^^ expected 11 arguments
+21 |             "Test Body",
+   |             -----------
+22 |             &None,
+   |             -----
+23 |             &None,
+   |             -----
+24 |             &vec![],
+   |             -------
+25 |             &None,
+   |             -----
+26 |             &None,
+   |             -----
+27 |             &None,
+   |             -----
+28 |             &None,
+   |             -----
+29 |             &None,
+   |             -----
+30 |             &None,
+   |             ----- supplied 10 arguments
+   |
+note: associated function defined here
+  --> taskoo-core/src/db/task_manager.rs:46:12
+   |
+46 |       pub fn add(
+   |              ^^^
+47 |           &mut self,
+   |           ---------
+48 |           body: &str,
+   |           ----------
+49 |           priority: &Option<String>,
+   |           -------------------------
+50 |           context: &Option<String>,
+   |           ------------------------
+51 |           tags: &Vec<String>,
+   |           ------------------
+52 |           date_due: &Option<&str>,
+   |           -----------------------
+53 |           date_scheduled: &Option<&str>,
+   |           -----------------------------
+54 |           repetition_due: &Option<&str>,
+   |           -----------------------------
+55 |           repetition_scheduled: &Option<&str>,
+   |           -----------------------------------
+56 |           annotation: &Option<&str>,
+   |           -------------------------
+57 |           state_name: &Option<String>,
+   |           ---------------------------
+58 | /         parent_task_id: &Option<i64>
+59 | |     ) -> Result<Vec<Task>, CoreError> {
+   | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+  --> taskoo-core/src/db/tests/test_delete.rs:55:10
+   |
+55 |         .add(
+   |          ^^^ expected 11 arguments
+56 |             "Test Body",
+   |             -----------
+57 |             &None,
+   |             -----
+58 |             &None,
+   |             -----
+59 |             &vec![],
+   |             -------
+60 |             &None,
+   |             -----
+61 |             &None,
+   |             -----
+62 |             &None,
+   |             -----
+63 |             &None,
+   |             -----
+64 |             &None,
+   |             -----
+65 |             &None,
+   |             ----- supplied 10 arguments
+   |
+note: associated function defined here
+  --> taskoo-core/src/db/task_manager.rs:46:12
+   |
+46 |       pub fn add(
+   |              ^^^
+47 |           &mut self,
+   |           ---------
+48 |           body: &str,
+   |           ----------
+49 |           priority: &Option<String>,
+   |           -------------------------
+50 |           context: &Option<String>,
+   |           ------------------------
+51 |           tags: &Vec<String>,
+   |           ------------------
+52 |           date_due: &Option<&str>,
+   |           -----------------------
+53 |           date_scheduled: &Option<&str>,
+   |           -----------------------------
+54 |           repetition_due: &Option<&str>,
+   |           -----------------------------
+55 |           repetition_scheduled: &Option<&str>,
+   |           -----------------------------------
+56 |           annotation: &Option<&str>,
+   |           -------------------------
+57 |           state_name: &Option<String>,
+   |           ---------------------------
+58 | /         parent_task_id: &Option<i64>
+59 | |     ) -> Result<Vec<Task>, CoreError> {
+   | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+  --> taskoo-core/src/db/tests/test_delete.rs:70:10
+   |
+70 |         .add(
+   |          ^^^ expected 11 arguments
+71 |             "Test Body",
+   |             -----------
+72 |             &None,
+   |             -----
+73 |             &None,
+   |             -----
+74 |             &vec![],
+   |             -------
+75 |             &None,
+   |             -----
+76 |             &None,
+   |             -----
+77 |             &None,
+   |             -----
+78 |             &None,
+   |             -----
+79 |             &None,
+   |             -----
+80 |             &None,
+   |             ----- supplied 10 arguments
+   |
+note: associated function defined here
+  --> taskoo-core/src/db/task_manager.rs:46:12
+   |
+46 |       pub fn add(
+   |              ^^^
+47 |           &mut self,
+   |           ---------
+48 |           body: &str,
+   |           ----------
+49 |           priority: &Option<String>,
+   |           -------------------------
+50 |           context: &Option<String>,
+   |           ------------------------
+51 |           tags: &Vec<String>,
+   |           ------------------
+52 |           date_due: &Option<&str>,
+   |           -----------------------
+53 |           date_scheduled: &Option<&str>,
+   |           -----------------------------
+54 |           repetition_due: &Option<&str>,
+   |           -----------------------------
+55 |           repetition_scheduled: &Option<&str>,
+   |           -----------------------------------
+56 |           annotation: &Option<&str>,
+   |           -------------------------
+57 |           state_name: &Option<String>,
+   |           ---------------------------
+58 | /         parent_task_id: &Option<i64>
+59 | |     ) -> Result<Vec<Task>, CoreError> {
+   | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+  --> taskoo-core/src/db/tests/test_modify.rs:20:10
+   |
+20 |         .add(
+   |          ^^^ expected 11 arguments
+21 |             "Test Body",
+   |             -----------
+22 |             &None,
+   |             -----
+23 |             &None,
+   |             -----
+24 |             &vec![],
+   |             -------
+25 |             &None,
+   |             -----
+26 |             &None,
+   |             -----
+27 |             &None,
+   |             -----
+28 |             &None,
+   |             -----
+29 |             &None,
+   |             -----
+30 |             &None,
+   |             ----- supplied 10 arguments
+   |
+note: associated function defined here
+  --> taskoo-core/src/db/task_manager.rs:46:12
+   |
+46 |       pub fn add(
+   |              ^^^
+47 |           &mut self,
+   |           ---------
+48 |           body: &str,
+   |           ----------
+49 |           priority: &Option<String>,
+   |           -------------------------
+50 |           context: &Option<String>,
+   |           ------------------------
+51 |           tags: &Vec<String>,
+   |           ------------------
+52 |           date_due: &Option<&str>,
+   |           -----------------------
+53 |           date_scheduled: &Option<&str>,
+   |           -----------------------------
+54 |           repetition_due: &Option<&str>,
+   |           -----------------------------
+55 |           repetition_scheduled: &Option<&str>,
+   |           -----------------------------------
+56 |           annotation: &Option<&str>,
+   |           -------------------------
+57 |           state_name: &Option<String>,
+   |           ---------------------------
+58 | /         parent_task_id: &Option<i64>
+59 | |     ) -> Result<Vec<Task>, CoreError> {
+   | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+  --> taskoo-core/src/db/tests/test_modify.rs:86:10
+   |
+86 |         .add(
+   |          ^^^ expected 11 arguments
+87 |             "Test Body",
+   |             -----------
+88 |             &None,
+   |             -----
+89 |             &None,
+   |             -----
+90 |             &vec![],
+   |             -------
+91 |             &None,
+   |             -----
+92 |             &None,
+   |             -----
+93 |             &None,
+   |             -----
+94 |             &None,
+   |             -----
+95 |             &None,
+   |             -----
+96 |             &None,
+   |             ----- supplied 10 arguments
+   |
+note: associated function defined here
+  --> taskoo-core/src/db/task_manager.rs:46:12
+   |
+46 |       pub fn add(
+   |              ^^^
+47 |           &mut self,
+   |           ---------
+48 |           body: &str,
+   |           ----------
+49 |           priority: &Option<String>,
+   |           -------------------------
+50 |           context: &Option<String>,
+   |           ------------------------
+51 |           tags: &Vec<String>,
+   |           ------------------
+52 |           date_due: &Option<&str>,
+   |           -----------------------
+53 |           date_scheduled: &Option<&str>,
+   |           -----------------------------
+54 |           repetition_due: &Option<&str>,
+   |           -----------------------------
+55 |           repetition_scheduled: &Option<&str>,
+   |           -----------------------------------
+56 |           annotation: &Option<&str>,
+   |           -------------------------
+57 |           state_name: &Option<String>,
+   |           ---------------------------
+58 | /         parent_task_id: &Option<i64>
+59 | |     ) -> Result<Vec<Task>, CoreError> {
+   | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_modify.rs:152:10
+    |
+152 |         .add(
+    |          ^^^ expected 11 arguments
+153 |             "Test Body",
+    |             -----------
+154 |             &None,
+    |             -----
+155 |             &None,
+    |             -----
+156 |             &vec![],
+    |             -------
+157 |             &None,
+    |             -----
+158 |             &None,
+    |             -----
+159 |             &None,
+    |             -----
+160 |             &None,
+    |             -----
+161 |             &None,
+    |             -----
+162 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+  --> taskoo-core/src/db/tests/test_view.rs:21:10
+   |
+21 |         .add(
+   |          ^^^ expected 11 arguments
+22 |             "Test Body",
+   |             -----------
+23 |             &None,
+   |             -----
+24 |             &None,
+   |             -----
+25 |             &vec![],
+   |             -------
+26 |             &Some("2020-11-14"),
+   |             -------------------
+27 |             &None,
+   |             -----
+28 |             &None,
+   |             -----
+29 |             &None,
+   |             -----
+30 |             &None,
+   |             -----
+31 |             &None,
+   |             ----- supplied 10 arguments
+   |
+note: associated function defined here
+  --> taskoo-core/src/db/task_manager.rs:46:12
+   |
+46 |       pub fn add(
+   |              ^^^
+47 |           &mut self,
+   |           ---------
+48 |           body: &str,
+   |           ----------
+49 |           priority: &Option<String>,
+   |           -------------------------
+50 |           context: &Option<String>,
+   |           ------------------------
+51 |           tags: &Vec<String>,
+   |           ------------------
+52 |           date_due: &Option<&str>,
+   |           -----------------------
+53 |           date_scheduled: &Option<&str>,
+   |           -----------------------------
+54 |           repetition_due: &Option<&str>,
+   |           -----------------------------
+55 |           repetition_scheduled: &Option<&str>,
+   |           -----------------------------------
+56 |           annotation: &Option<&str>,
+   |           -------------------------
+57 |           state_name: &Option<String>,
+   |           ---------------------------
+58 | /         parent_task_id: &Option<i64>
+59 | |     ) -> Result<Vec<Task>, CoreError> {
+   | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+  --> taskoo-core/src/db/tests/test_view.rs:36:10
+   |
+36 |         .add(
+   |          ^^^ expected 11 arguments
+37 |             "Test Body",
+   |             -----------
+38 |             &None,
+   |             -----
+39 |             &None,
+   |             -----
+40 |             &vec![],
+   |             -------
+41 |             &Some("2020-11-13"),
+   |             -------------------
+42 |             &None,
+   |             -----
+43 |             &None,
+   |             -----
+44 |             &None,
+   |             -----
+45 |             &None,
+   |             -----
+46 |             &None,
+   |             ----- supplied 10 arguments
+   |
+note: associated function defined here
+  --> taskoo-core/src/db/task_manager.rs:46:12
+   |
+46 |       pub fn add(
+   |              ^^^
+47 |           &mut self,
+   |           ---------
+48 |           body: &str,
+   |           ----------
+49 |           priority: &Option<String>,
+   |           -------------------------
+50 |           context: &Option<String>,
+   |           ------------------------
+51 |           tags: &Vec<String>,
+   |           ------------------
+52 |           date_due: &Option<&str>,
+   |           -----------------------
+53 |           date_scheduled: &Option<&str>,
+   |           -----------------------------
+54 |           repetition_due: &Option<&str>,
+   |           -----------------------------
+55 |           repetition_scheduled: &Option<&str>,
+   |           -----------------------------------
+56 |           annotation: &Option<&str>,
+   |           -------------------------
+57 |           state_name: &Option<String>,
+   |           ---------------------------
+58 | /         parent_task_id: &Option<i64>
+59 | |     ) -> Result<Vec<Task>, CoreError> {
+   | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+  --> taskoo-core/src/db/tests/test_view.rs:71:10
+   |
+71 |         .add(
+   |          ^^^ expected 11 arguments
+72 |             "Test Body",
+   |             -----------
+73 |             &None,
+   |             -----
+74 |             &None,
+   |             -----
+75 |             &vec![],
+   |             -------
+76 |             &Some("2020-11-11"),
+   |             -------------------
+77 |             &None,
+   |             -----
+78 |             &None,
+   |             -----
+79 |             &None,
+   |             -----
+80 |             &None,
+   |             -----
+81 |             &None,
+   |             ----- supplied 10 arguments
+   |
+note: associated function defined here
+  --> taskoo-core/src/db/task_manager.rs:46:12
+   |
+46 |       pub fn add(
+   |              ^^^
+47 |           &mut self,
+   |           ---------
+48 |           body: &str,
+   |           ----------
+49 |           priority: &Option<String>,
+   |           -------------------------
+50 |           context: &Option<String>,
+   |           ------------------------
+51 |           tags: &Vec<String>,
+   |           ------------------
+52 |           date_due: &Option<&str>,
+   |           -----------------------
+53 |           date_scheduled: &Option<&str>,
+   |           -----------------------------
+54 |           repetition_due: &Option<&str>,
+   |           -----------------------------
+55 |           repetition_scheduled: &Option<&str>,
+   |           -----------------------------------
+56 |           annotation: &Option<&str>,
+   |           -------------------------
+57 |           state_name: &Option<String>,
+   |           ---------------------------
+58 | /         parent_task_id: &Option<i64>
+59 | |     ) -> Result<Vec<Task>, CoreError> {
+   | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+  --> taskoo-core/src/db/tests/test_view.rs:86:10
+   |
+86 |         .add(
+   |          ^^^ expected 11 arguments
+87 |             "Test Body",
+   |             -----------
+88 |             &None,
+   |             -----
+89 |             &None,
+   |             -----
+90 |             &vec![],
+   |             -------
+91 |             &Some("2020-11-13"),
+   |             -------------------
+92 |             &None,
+   |             -----
+93 |             &None,
+   |             -----
+94 |             &None,
+   |             -----
+95 |             &None,
+   |             -----
+96 |             &None,
+   |             ----- supplied 10 arguments
+   |
+note: associated function defined here
+  --> taskoo-core/src/db/task_manager.rs:46:12
+   |
+46 |       pub fn add(
+   |              ^^^
+47 |           &mut self,
+   |           ---------
+48 |           body: &str,
+   |           ----------
+49 |           priority: &Option<String>,
+   |           -------------------------
+50 |           context: &Option<String>,
+   |           ------------------------
+51 |           tags: &Vec<String>,
+   |           ------------------
+52 |           date_due: &Option<&str>,
+   |           -----------------------
+53 |           date_scheduled: &Option<&str>,
+   |           -----------------------------
+54 |           repetition_due: &Option<&str>,
+   |           -----------------------------
+55 |           repetition_scheduled: &Option<&str>,
+   |           -----------------------------------
+56 |           annotation: &Option<&str>,
+   |           -------------------------
+57 |           state_name: &Option<String>,
+   |           ---------------------------
+58 | /         parent_task_id: &Option<i64>
+59 | |     ) -> Result<Vec<Task>, CoreError> {
+   | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_view.rs:121:10
+    |
+121 |         .add(
+    |          ^^^ expected 11 arguments
+122 |             "Test Body",
+    |             -----------
+123 |             &None,
+    |             -----
+124 |             &None,
+    |             -----
+125 |             &vec![],
+    |             -------
+126 |             &Some("2020-11-11"),
+    |             -------------------
+127 |             &Some("2020-11-13"),
+    |             -------------------
+128 |             &None,
+    |             -----
+129 |             &None,
+    |             -----
+130 |             &None,
+    |             -----
+131 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_view.rs:136:10
+    |
+136 |         .add(
+    |          ^^^ expected 11 arguments
+137 |             "Test Body 1",
+    |             -------------
+138 |             &None,
+    |             -----
+139 |             &None,
+    |             -----
+140 |             &vec![],
+    |             -------
+141 |             &Some("2020-11-13"),
+    |             -------------------
+142 |             &None,
+    |             -----
+143 |             &None,
+    |             -----
+144 |             &None,
+    |             -----
+145 |             &None,
+    |             -----
+146 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_view.rs:151:10
+    |
+151 |         .add(
+    |          ^^^ expected 11 arguments
+152 |             "Test Body 2",
+    |             -------------
+153 |             &None,
+    |             -----
+154 |             &None,
+    |             -----
+155 |             &vec![],
+    |             -------
+156 |             &Some("2020-11-13"),
+    |             -------------------
+157 |             &None,
+    |             -----
+158 |             &None,
+    |             -----
+159 |             &None,
+    |             -----
+160 |             &None,
+    |             -----
+161 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_view.rs:187:10
+    |
+187 |         .add(
+    |          ^^^ expected 11 arguments
+188 |             "Test Body",
+    |             -----------
+189 |             &None,
+    |             -----
+190 |             &None,
+    |             -----
+191 |             &vec![],
+    |             -------
+192 |             &Some("2020-11-11"),
+    |             -------------------
+193 |             &Some("today"),
+    |             --------------
+194 |             &None,
+    |             -----
+195 |             &None,
+    |             -----
+196 |             &None,
+    |             -----
+197 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_view.rs:202:10
+    |
+202 |         .add(
+    |          ^^^ expected 11 arguments
+203 |             "Test Body 1",
+    |             -------------
+204 |             &None,
+    |             -----
+205 |             &None,
+    |             -----
+206 |             &vec![],
+    |             -------
+207 |             &Some("2020-11-13"),
+    |             -------------------
+208 |             &None,
+    |             -----
+209 |             &None,
+    |             -----
+210 |             &None,
+    |             -----
+211 |             &None,
+    |             -----
+212 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_view.rs:217:10
+    |
+217 |         .add(
+    |          ^^^ expected 11 arguments
+218 |             "Test Body 2",
+    |             -------------
+219 |             &None,
+    |             -----
+220 |             &None,
+    |             -----
+221 |             &vec![],
+    |             -------
+222 |             &Some("2020-11-13"),
+    |             -------------------
+223 |             &None,
+    |             -----
+224 |             &None,
+    |             -----
+225 |             &None,
+    |             -----
+226 |             &None,
+    |             -----
+227 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_view.rs:256:10
+    |
+256 |         .add(
+    |          ^^^ expected 11 arguments
+257 |             "Test Body",
+    |             -----------
+258 |             &None,
+    |             -----
+259 |             &None,
+    |             -----
+260 |             &vec![],
+    |             -------
+261 |             &Some("2020-11-11"),
+    |             -------------------
+262 |             &Some("today"),
+    |             --------------
+263 |             &None,
+    |             -----
+264 |             &None,
+    |             -----
+265 |             &None,
+    |             -----
+266 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error[E0061]: this function takes 11 arguments but 10 arguments were supplied
+   --> taskoo-core/src/db/tests/test_view.rs:271:10
+    |
+271 |         .add(
+    |          ^^^ expected 11 arguments
+272 |             "Test Body 1",
+    |             -------------
+273 |             &None,
+    |             -----
+274 |             &None,
+    |             -----
+275 |             &vec![],
+    |             -------
+276 |             &Some("today"),
+    |             --------------
+277 |             &None,
+    |             -----
+278 |             &None,
+    |             -----
+279 |             &None,
+    |             -----
+280 |             &None,
+    |             -----
+281 |             &None,
+    |             ----- supplied 10 arguments
+    |
+note: associated function defined here
+   --> taskoo-core/src/db/task_manager.rs:46:12
+    |
+46  |       pub fn add(
+    |              ^^^
+47  |           &mut self,
+    |           ---------
+48  |           body: &str,
+    |           ----------
+49  |           priority: &Option<String>,
+    |           -------------------------
+50  |           context: &Option<String>,
+    |           ------------------------
+51  |           tags: &Vec<String>,
+    |           ------------------
+52  |           date_due: &Option<&str>,
+    |           -----------------------
+53  |           date_scheduled: &Option<&str>,
+    |           -----------------------------
+54  |           repetition_due: &Option<&str>,
+    |           -----------------------------
+55  |           repetition_scheduled: &Option<&str>,
+    |           -----------------------------------
+56  |           annotation: &Option<&str>,
+    |           -------------------------
+57  |           state_name: &Option<String>,
+    |           ---------------------------
+58  | /         parent_task_id: &Option<i64>
+59  | |     ) -> Result<Vec<Task>, CoreError> {
+    | |____-
+
+error: aborting due to 48 previous errors; 3 warnings emitted
+
+Some errors have detailed explanations: E0061, E0277, E0308, E0412, E0433.
+For more information about an error, try `rustc --explain E0061`.
+error: could not compile `taskoo-core`
+
+To learn more, run the command again with --verbose.
