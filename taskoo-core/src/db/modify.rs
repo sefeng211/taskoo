@@ -56,7 +56,7 @@ fn insert_or_replace_priority(
         task_ids, priority_id
     );
     let mut statement = conn.prepare(
-        "REPLACE INTO priority_task (task_id, priority_id) VALUES (:task_id, :priority_id)",
+        "INSERT OR REPLACE INTO priority_task (task_id, priority_id) VALUES (:task_id, :priority_id)",
     )?;
 
     for task_id in task_ids.iter() {

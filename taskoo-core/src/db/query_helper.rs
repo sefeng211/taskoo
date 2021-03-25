@@ -62,7 +62,7 @@ pub const CREATE_PRIORITY_TASK_TABLE_QUERY: &str = "
     CREATE TABLE IF NOT EXISTS priority_task (
         task_id integer not null,
         priority_id integer not null,
-        PRIMARY KEY (task_id, priority_id),
+        PRIMARY KEY (task_id),
         FOREIGN KEY (task_id) REFERENCES task(id),
         FOREIGN KEY (priority_id) REFERENCES priority(id)
     )
