@@ -103,10 +103,11 @@ impl List {
         let mut result = vec![];
         for context in context_names.iter() {
             let mut operation = GetOp::new();
-            operation.context_name = Some(context.to_string());
-            operation.tag_names = command_option.tags.clone();
-            operation.due_date = command_option.date_due;
-            operation.scheduled_at = command_option.date_scheduled;
+            operation.context = Some(context.to_string());
+            operation.tags = command_option.tags.clone();
+            operation.date_due = command_option.date_due;
+            operation.date_scheduled = command_option.date_scheduled;
+            operation.not_tags = command_option.not_tags.clone();
             result.push((context.to_string(), operation));
         }
         Ok(result)

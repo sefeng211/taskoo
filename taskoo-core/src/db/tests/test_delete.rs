@@ -22,7 +22,7 @@ fn test_delete_simple() -> Result<(), CoreError> {
     execute(&mut operation)?;
 
     let rows = database_manager
-        .get(&None, &None, &vec![], &None, &None, &Some(1))
+        .get(&None, &None, &vec![], &None, &None, &Some(1), &None)
         .unwrap();
 
     assert_eq!(rows.len(), 1);
@@ -30,7 +30,7 @@ fn test_delete_simple() -> Result<(), CoreError> {
     database_manager.delete(&vec![1]).unwrap();
 
     let rows = database_manager
-        .get(&None, &None, &vec![], &None, &None, &Some(1))
+        .get(&None, &None, &vec![], &None, &None, &Some(1), &None)
         .unwrap();
 
     assert_eq!(rows.len(), 0);
@@ -47,7 +47,7 @@ fn test_delete_multiple() -> Result<(), CoreError> {
     execute(&mut operation)?;
 
     let rows = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
         .unwrap();
 
     assert_eq!(rows.len(), 2);
@@ -55,7 +55,7 @@ fn test_delete_multiple() -> Result<(), CoreError> {
     database_manager.delete(&vec![1, 2]).unwrap();
 
     let bb = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
         .unwrap();
 
     assert_eq!(bb.len(), 0);

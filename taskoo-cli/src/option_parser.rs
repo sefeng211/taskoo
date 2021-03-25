@@ -8,6 +8,7 @@ pub struct CommandOption<'a> {
     pub reprition_due: Option<&'a str>,
     pub tags: Vec<String>,
     pub tags_to_remove: Vec<String>,
+    pub not_tags: Option<Vec<String>>,
     pub task_ids: Vec<i64>,
     pub context: Option<String>,
     pub state: Option<String>,
@@ -31,6 +32,7 @@ impl<'a> CommandOption<'a> {
             priority: None,
             tags_to_remove: vec![],
             parent_task_ids: None,
+            not_tags: None,
         };
     }
 }
@@ -51,6 +53,7 @@ pub fn parse_command_option<'a>(
         assert!(!parse_body);
     }
 
+    let mut not_tags = vec![];
     for option in options.iter() {
         if option.starts_with("s:") {
             start_parse_options = true;
@@ -103,16 +106,19 @@ pub fn parse_command_option<'a>(
             } else {
                 return Err(CommandError::InvalidContextName(option.to_string()));
             };
-        } else if option.starts_with("~+") {
+        } else if option.starts_with("~") {
             start_parse_options = true;
             if parse_tags_to_remove {
-                command_option.tags_to_remove.push(option[2 ..].to_string());
+                command_option.tags_to_remove.push(option[1 ..].to_string());
             } else {
                 return Err(CommandError::InvalidTagName(option.to_string()));
             }
         } else if option.starts_with("+") {
             start_parse_options = true;
             command_option.tags.push(option[1 ..].to_string());
+        } else if option.starts_with("^") {
+            start_parse_options = true;
+            not_tags.push(option[1 ..].to_string());
         } else if option.starts_with("@") {
             start_parse_options = true;
             if command_option.state.is_none() {
@@ -149,6 +155,10 @@ pub fn parse_command_option<'a>(
                 }
             }
         }
+    }
+
+    if !not_tags.is_empty() {
+        command_option.not_tags = Some(not_tags);
     }
 
     if parse_body {
@@ -234,7 +244,7 @@ mod tests {
 
     #[test]
     fn test_parse_tags_to_remove() {
-        let option = vec!["~+Tag1", "~+Tag2"];
+        let option = vec!["~Tag1", "~Tag2"];
         let parsed_option = parse_command_option(&option, true, true, false).unwrap();
         assert_eq!(parsed_option.tags_to_remove, vec!["Tag1", "Tag2"]);
     }
@@ -266,5 +276,12 @@ mod tests {
         let option = vec!["dep:1,2,3"];
         let parsed_option = parse_command_option(&option, false, false, true).unwrap();
         assert_eq!(parsed_option.parent_task_ids, Some(vec![1, 2, 3]));
+    }
+
+    #[test]
+    fn test_parse_not_tag_ids() {
+        let option = vec!["^tag1"];
+        let parsed_option = parse_command_option(&option, false, false, true).unwrap();
+        assert_eq!(parsed_option.not_tags, Some(vec!["tag1".to_string()]));
     }
 }

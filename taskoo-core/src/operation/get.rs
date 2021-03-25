@@ -5,11 +5,12 @@ use crate::error::*;
 
 pub struct Get<'a> {
     pub priority: Option<u8>,
-    pub context_name: Option<String>,
-    pub tag_names: Vec<String>,
-    pub due_date: Option<&'a str>,
-    pub scheduled_at: Option<&'a str>,
+    pub context: Option<String>,
+    pub tags: Vec<String>,
+    pub date_due: Option<&'a str>,
+    pub date_scheduled: Option<&'a str>,
     pub task_id: Option<i64>,
+    pub not_tags: Option<Vec<String>>, // Tags that don't exist
     database_manager: Option<TaskManager>,
     result: Vec<Task>,
 }
@@ -18,11 +19,12 @@ impl<'a> Get<'a> {
     pub fn new() -> Get<'a> {
         Get {
             priority: None,
-            context_name: None,
-            tag_names: vec![],
-            due_date: None,
-            scheduled_at: None,
+            context: None,
+            tags: vec![],
+            date_due: None,
+            date_scheduled: None,
             task_id: None,
+            not_tags: None,
             database_manager: None,
             result: vec![],
         }
@@ -39,10 +41,17 @@ impl<'a> Operation for Get<'a> {
 
     fn do_work(&mut self) -> Result<Vec<Task>, CoreError> {
         // Treat all tag names as lowercase
-        for tag in self.tag_names.iter_mut() {
+        for tag in self.tags.iter_mut() {
             *tag = tag.to_lowercase();
         }
-        self.context_name = match &self.context_name {
+
+        if let Some(tags) = &mut self.not_tags {
+            for tag in tags.iter_mut() {
+                *tag = tag.to_lowercase();
+            }
+        }
+
+        self.context = match &self.context {
             Some(name) => Some(name.to_lowercase()),
             None => None,
         };
@@ -50,11 +59,12 @@ impl<'a> Operation for Get<'a> {
         return TaskManager::get(
             self.database_manager.as_mut().unwrap(),
             &self.priority,
-            &self.context_name,
-            &self.tag_names,
-            &self.due_date,
-            &self.scheduled_at,
-            &self.task_id
+            &self.context,
+            &self.tags,
+            &self.date_due,
+            &self.date_scheduled,
+            &self.task_id,
+            &self.not_tags,
         );
     }
 

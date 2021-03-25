@@ -32,7 +32,7 @@ fn test_agenda_single_day_due() -> Result<(), CoreError> {
 
     assert_eq!(rows.len(), 1);
 
-    assert_eq!(rows[0].0, "2020-11-14".to_string());
+    assert_eq!(rows[0].0, NaiveDate::from_ymd(2020, 11, 14));
     let tasks = &rows[0].1;
     assert_eq!(tasks.len(), 1);
     assert_eq!(tasks[0].date_due, "2020-11-14 00:00:00".to_string());
@@ -59,7 +59,7 @@ fn test_agenda_single_day_due_and_overdue() -> Result<(), CoreError> {
 
     assert_eq!(rows.len(), 1);
 
-    assert_eq!(rows[0].0, "2020-11-14".to_string());
+    assert_eq!(rows[0].0, NaiveDate::from_ymd(2020, 11, 14));
     let tasks = &rows[0].1;
     assert_eq!(tasks.len(), 2);
     assert_eq!(tasks[0].date_due, "2020-11-14 00:00:00".to_string());
@@ -87,7 +87,7 @@ fn test_agenda_single_day_scheduled_and_overscheduled() -> Result<(), CoreError>
 
     assert_eq!(rows.len(), 1);
 
-    assert_eq!(rows[0].0, "2020-11-14".to_string());
+    assert_eq!(rows[0].0, NaiveDate::from_ymd(2020, 11, 14));
     let tasks = &rows[0].1;
     assert_eq!(tasks.len(), 2);
     assert_eq!(tasks[0].date_scheduled, "2020-11-14 00:00:00".to_string());
@@ -111,7 +111,7 @@ fn test_agenda_single_day_due_and_scheduled() -> Result<(), CoreError> {
 
     assert_eq!(rows.len(), 1);
 
-    assert_eq!(rows[0].0, "2020-11-15".to_string());
+    assert_eq!(rows[0].0, NaiveDate::from_ymd(2020, 11, 15));
     let tasks = &rows[0].1;
     assert_eq!(tasks.len(), 2);
     assert_eq!(tasks[0].date_due, "2020-11-15 00:00:00".to_string());
@@ -136,12 +136,12 @@ fn test_agenda_multiple_day_due_and_scheduled() -> Result<(), CoreError> {
 
     assert_eq!(rows.len(), 2);
 
-    assert_eq!(rows[0].0, "2020-11-14".to_string());
+    assert_eq!(rows[0].0, NaiveDate::from_ymd(2020, 11, 14));
     let tasks = &rows[0].1;
     assert_eq!(tasks.len(), 1);
     assert_eq!(tasks[0].date_scheduled, "2020-11-14 00:00:00".to_string());
 
-    assert_eq!(rows[1].0, "2020-11-15".to_string());
+    assert_eq!(rows[0].0, NaiveDate::from_ymd(2020, 11, 15));
     let tasks = &rows[1].1;
     assert_eq!(tasks.len(), 2);
     assert_eq!(tasks[0].date_due, "2020-11-15 00:00:00".to_string());

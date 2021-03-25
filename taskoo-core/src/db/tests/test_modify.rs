@@ -23,7 +23,7 @@ fn test_modify_single() -> Result<(), CoreError> {
     execute(&mut operation)?;
 
     let tasks = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
         .unwrap();
 
     assert_eq!(tasks.len(), 1);
@@ -52,6 +52,7 @@ fn test_modify_single() -> Result<(), CoreError> {
             &None,
             &None,
             &None,
+            &None,
         )
         .unwrap();
 
@@ -76,7 +77,7 @@ fn test_modify_single_with_tag() -> Result<(), CoreError> {
     execute(&mut operation)?;
 
     let tasks = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
         .unwrap();
 
     assert_eq!(tasks.len(), 1);
@@ -105,6 +106,7 @@ fn test_modify_single_with_tag() -> Result<(), CoreError> {
             &None,
             &None,
             &None,
+            &None,
         )
         .unwrap();
 
@@ -129,7 +131,7 @@ fn test_modify_tag_only() -> Result<(), CoreError> {
     let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
     execute(&mut operation)?;
     let tasks = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
         .unwrap();
 
     assert_eq!(tasks.len(), 1);
@@ -158,6 +160,7 @@ fn test_modify_tag_only() -> Result<(), CoreError> {
             &None,
             &None,
             &None,
+            &None
         )
         .unwrap();
 
@@ -200,7 +203,7 @@ fn test_modify_task_to_complete_should_update_dependency() -> Result<(), CoreErr
         &vec![],
     )?;
 
-    let tasks = database_manager.get(&None, &None, &vec![], &None, &None, &Some(3))?;
+    let tasks = database_manager.get(&None, &None, &vec![], &None, &None, &Some(3), &None)?;
 
     assert_eq!(tasks[0].is_blocked(), true);
 
@@ -217,7 +220,7 @@ fn test_modify_task_to_complete_should_update_dependency() -> Result<(), CoreErr
         &Some("completed"),
         &vec![],
     )?;
-    let tasks = database_manager.get(&None, &None, &vec![], &None, &None, &Some(3))?;
+    let tasks = database_manager.get(&None, &None, &vec![], &None, &None, &Some(3), &None)?;
     assert_eq!(tasks[0].is_blocked(), false);
     assert_eq!(tasks[0].is_ready(), true);
     Ok(())

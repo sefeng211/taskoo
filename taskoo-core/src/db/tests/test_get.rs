@@ -26,7 +26,7 @@ fn test_get_simple() -> Result<(), CoreError> {
 
     execute(&mut operation)?;
     let rows = database_manager
-        .get(&None, &None, &vec![], &None, &None, &Some(1))
+        .get(&None, &None, &vec![], &None, &None, &Some(1), &None)
         .unwrap();
 
     assert_eq!(rows.len(), 1);
@@ -72,6 +72,7 @@ fn test_get_all_for_context() -> Result<(), CoreError> {
             &None,
             &None,
             &None,
+            &None,
         )
         .unwrap();
 
@@ -95,7 +96,7 @@ fn test_get_with_tag_ids() -> Result<(), CoreError> {
     execute(&mut operation)?;
 
     let rows = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
         .unwrap();
 
     assert_eq!(rows.len(), 3);
@@ -108,11 +109,48 @@ fn test_get_with_tag_ids() -> Result<(), CoreError> {
             &None,
             &None,
             &None,
+            &None,
         )
         .unwrap();
 
     assert_eq!(rows.len(), 2);
     assert_eq!(rows[0].tags, vec!["blocked", "completed"]);
     assert_eq!(rows[1].tags, vec!["blocked", "completed"]);
+    Ok(())
+}
+
+#[test]
+fn test_get_with_not_tag_ids() -> Result<(), CoreError> {
+    let mut database_manager = TaskManager::new(&get_setting());
+
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    execute(&mut operation)?;
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.tags = vec!["Blocked".to_owned(), "Completed".to_owned()];
+    execute(&mut operation)?;
+
+    let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
+    operation.tags = vec!["Blocked".to_owned(), "Completed".to_owned()];
+    execute(&mut operation)?;
+
+    let rows = database_manager
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
+        .unwrap();
+
+    assert_eq!(rows.len(), 3);
+
+    let rows = database_manager
+        .get(
+            &None,
+            &None,
+            &vec!["completed".to_string()],
+            &None,
+            &None,
+            &None,
+            &Some(vec!["blocked".to_string()]),
+        )
+        .unwrap();
+
+    assert_eq!(rows.len(), 0);
     Ok(())
 }

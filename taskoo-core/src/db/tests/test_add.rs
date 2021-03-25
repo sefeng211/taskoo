@@ -27,7 +27,7 @@ fn test_add_simple() -> Result<(), CoreError> {
     execute(&mut operation)?;
 
     let mut tasks = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
         .unwrap();
 
     assert_eq!(tasks.len(), 1);
@@ -69,6 +69,7 @@ fn test_add_complex() -> Result<(), CoreError> {
             &None,
             &Some("work".to_string()),
             &vec![],
+            &None,
             &None,
             &None,
             &None,
@@ -150,6 +151,7 @@ fn test_add_scheduled_at_days() -> Result<(), CoreError> {
             &None,
             &None,
             &None,
+            &None,
         )
         .unwrap();
 
@@ -184,6 +186,7 @@ fn test_add_scheduled_at_hours() -> Result<(), CoreError> {
             &None,
             &Some("work".to_string()),
             &vec![],
+            &None,
             &None,
             &None,
             &None,
@@ -222,6 +225,7 @@ fn test_add_scheduled_at_weeks() -> Result<(), CoreError> {
             &None,
             &None,
             &None,
+            &None,
         )
         .unwrap();
 
@@ -255,6 +259,7 @@ fn test_add_scheduled_at_raw_timestamp() -> Result<(), CoreError> {
             &None,
             &None,
             &None,
+            &None,
         )
         .unwrap();
 
@@ -282,6 +287,7 @@ fn test_add_scheduled_at_tmr() -> Result<(), CoreError> {
             &None,
             &Some("work".to_string()),
             &vec![],
+            &None,
             &None,
             &None,
             &None,
@@ -319,6 +325,7 @@ fn test_add_scheduled_at_today() -> Result<(), CoreError> {
             &None,
             &None,
             &None,
+            &None,
         )
         .unwrap();
 
@@ -340,7 +347,7 @@ fn test_add_completed_task() -> Result<(), CoreError> {
     execute(&mut operation)?;
 
     let rows = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
         .unwrap();
 
     assert_eq!(rows.len(), 1);
@@ -359,7 +366,7 @@ fn test_add_repeat_scheduled_task() -> Result<(), CoreError> {
     execute(&mut operation)?;
 
     let tasks = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
         .unwrap();
 
     let expected = Local::today() + Duration::weeks(2);
@@ -387,7 +394,7 @@ fn test_add_repeat_scheduled_task() -> Result<(), CoreError> {
         .unwrap();
 
     let tasks = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
         .unwrap();
 
     let expected = Local::today() + Duration::weeks(3);
@@ -409,7 +416,7 @@ fn test_add_repeat_due_task() -> Result<(), CoreError> {
     execute(&mut operation)?;
 
     let tasks = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
         .unwrap();
 
     let expected = Local::now() + Duration::weeks(2);
@@ -440,7 +447,7 @@ fn test_add_repeat_due_task() -> Result<(), CoreError> {
         .unwrap();
 
     let tasks = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
         .unwrap();
 
     let expected = Local::now() + Duration::weeks(3);
@@ -459,7 +466,7 @@ fn test_add_annotation() -> Result<(), CoreError> {
     execute(&mut operation)?;
 
     let mut tasks = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
         .unwrap();
 
     assert_eq!(tasks.len(), 1);
@@ -471,7 +478,7 @@ fn test_add_annotation() -> Result<(), CoreError> {
         .unwrap();
 
     let mut tasks = database_manager
-        .get(&None, &None, &vec![], &None, &None, &None)
+        .get(&None, &None, &vec![], &None, &None, &None, &None)
         .unwrap();
     assert_eq!(tasks[0].annotation, String::from("This is my annotation"));
 

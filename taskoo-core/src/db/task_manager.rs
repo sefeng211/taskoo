@@ -78,7 +78,8 @@ impl TaskManager {
             None => {
                 if let Some(parent_task_ids) = parent_task_ids {
                     for id in parent_task_ids.iter() {
-                        let task = &get(&tx, &None, &None, &vec![], &None, &None, &Some(*id))?;
+                        let task =
+                            &get(&tx, &None, &None, &vec![], &None, &None, &Some(*id), &None)?;
                         if task.is_empty() {
                             return Err(CoreError::ArgumentError(String::from(
                                 "Invalid parent task is provided",
@@ -167,20 +168,21 @@ impl TaskManager {
     pub fn get(
         &mut self,
         priority: &Option<u8>,
-        context_name: &Option<String>,
-        tag_names: &Vec<String>,
-        due_date: &Option<&str>,
-        scheduled_at: &Option<&str>,
+        context: &Option<String>,
+        tags: &Vec<String>,
+        date_due: &Option<&str>,
+        date_scheduled: &Option<&str>,
         task_id: &Option<i64>,
+        not_tags: &Option<Vec<String>>,
     ) -> Result<Vec<Task>, CoreError> {
         info!(
             "Doing Get Operation with context_name {:?}, tag {:?}",
-            context_name, tag_names
+            context, tags
         );
         // Prepare the context_id, default to Inbox context
         let mut context_id: i64 = 1;
         let tx = self.conn.transaction()?;
-        match context_name {
+        match context {
             Some(name) => {
                 context_id = TaskManager::convert_context_name_to_id(&tx, &name, false)?;
             }
@@ -189,18 +191,30 @@ impl TaskManager {
 
         // Prepare the tag_ids
         let mut tag_ids: Vec<i64> = vec![];
-        for tag_name in tag_names.iter() {
+        for tag_name in tags.iter() {
             tag_ids.push(TaskManager::convert_tag_name_to_id(&tx, &tag_name)?);
         }
+
+        let not_tag_ids: Option<Vec<i64>> = match not_tags {
+            None => None,
+            Some(tags) => {
+                let mut tag_ids: Vec<i64> = vec![];
+                for tag in tags.iter() {
+                    tag_ids.push(TaskManager::convert_tag_name_to_id(&tx, &tag)?);
+                }
+                Some(tag_ids)
+            }
+        };
 
         let tasks = get(
             &tx,
             &priority,
             &Some(context_id),
             &tag_ids,
-            &due_date,
-            &scheduled_at,
+            &date_due,
+            &date_scheduled,
             &task_id,
+            &not_tag_ids,
         )?;
         tx.commit()?;
         Ok(tasks)
