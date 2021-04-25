@@ -36,6 +36,8 @@ enum DisplayColors {
     BlockedTask,
     WaitedTask,
     Tag,
+    Agenda_Context,
+    Agenda_Time,
 }
 
 // Default color codes; being used when the config
@@ -53,6 +55,8 @@ impl DisplayColors {
             DisplayColors::BlockedTask => 102,
             DisplayColors::WaitedTask => 9,
             DisplayColors::Tag => 10,
+            DisplayColors::Agenda_Context => 11,
+            DisplayColors::Agenda_Time => 12,
         }
     }
 }
@@ -300,7 +304,7 @@ enum AgendaDisplayDateType {
 }
 
 impl AgendaDisplayDateType {
-    pub fn to_string(&self, task: &Task) -> String {
+    pub fn to_string(&self, task: &Task, config: &Ini) -> String {
         match *self {
             AgendaDisplayDateType::Scheduled => {
                 let parsed_time =
@@ -315,9 +319,16 @@ impl AgendaDisplayDateType {
 
                 let mut output = String::new();
                 output.push_str(&format!("Sched x{}:", num_days.num_days()));
-                return output;
-            }
 
+                let code = match config.get_from(Some("Agenda_Time"), "color") {
+                    Some(code) => code
+                        .parse::<u8>()
+                        .unwrap_or(DisplayColors::Agenda_Time.get_color_code()),
+                    None => DisplayColors::Agenda_Time.get_color_code(),
+                };
+
+                return Paint::new(output).fg(Color::Fixed(code)).to_string();
+            }
             AgendaDisplayDateType::Deadline => {
                 let parsed_time =
                     NaiveDateTime::parse_from_str(&task.date_due, "%Y-%m-%d %H:%M:%S").expect("");
@@ -329,12 +340,21 @@ impl AgendaDisplayDateType {
                 }
                 let mut output = String::new();
                 output.push_str(&format!("Due x{}:", num_days.num_days()));
-                return output;
+
+                let code = match config.get_from(Some("Agenda_Time"), "color") {
+                    Some(code) => code
+                        .parse::<u8>()
+                        .unwrap_or(DisplayColors::Agenda_Time.get_color_code()),
+                    None => DisplayColors::Agenda_Time.get_color_code(),
+                };
+
+                return Paint::new(output).fg(Color::Fixed(code)).to_string();
             }
         }
     }
 }
 enum AgendaDisplayColumn {
+    Id,
     Context,
     Time,
     DateType,
@@ -343,53 +363,138 @@ enum AgendaDisplayColumn {
 }
 
 impl AgendaDisplayColumn {
-    pub fn get_data(&self, task: &Task) -> String {
+    pub fn get_data(&self, task: &Task, config: &Ini) -> String {
         let mut output = String::new();
         match *self {
+            AgendaDisplayColumn::Id => {
+                let code = match config.get_from(Some("Id"), "color") {
+                    Some(code) => code
+                        .parse::<u8>()
+                        .unwrap_or(DisplayColors::IdHeader.get_color_code()),
+                    None => DisplayColors::IdHeader.get_color_code(),
+                };
+                return Paint::new(task.id.to_string())
+                    .fg(Color::Fixed(code))
+                    .to_string();
+            }
             AgendaDisplayColumn::Context => {
                 output.push_str(&task.context);
                 output.push_str(":");
-                return output;
-            }
-            AgendaDisplayColumn::Time => match DisplayAgenda::get_type(&task) {
-                AgendaDisplayDateType::Deadline => {
-                    let parsed_time =
-                        NaiveDateTime::parse_from_str(&task.date_due, "%Y-%m-%d %H:%M:%S")
-                            .expect("");
 
-                    if parsed_time.date() != Local::today().naive_local() {
-                        return String::new();
+                let code = match config.get_from(Some("Agenda_Context"), "color") {
+                    Some(code) => code
+                        .parse::<u8>()
+                        .unwrap_or(DisplayColors::Agenda_Context.get_color_code()),
+                    None => DisplayColors::Agenda_Context.get_color_code(),
+                };
+
+                return Paint::new(output).fg(Color::Fixed(code)).to_string();
+            }
+            AgendaDisplayColumn::Time => {
+                match DisplayAgenda::get_type(&task) {
+                    AgendaDisplayDateType::Deadline => {
+                        let parsed_time =
+                            NaiveDateTime::parse_from_str(&task.date_due, "%Y-%m-%d %H:%M:%S")
+                                .expect("");
+                        if parsed_time.date() == Local::today().naive_local() {
+                            output = parsed_time.format("%H:%M").to_string();
+                        }
                     }
-                    return parsed_time.format("%H:%M").to_string();
-                }
-                AgendaDisplayDateType::Scheduled => {
-                    let parsed_time =
-                        NaiveDateTime::parse_from_str(&task.date_scheduled, "%Y-%m-%d %H:%M:%S")
-                            .expect("");
-                    if parsed_time.date() != Local::today().naive_local() {
-                        return String::new();
+                    AgendaDisplayDateType::Scheduled => {
+                        let parsed_time = NaiveDateTime::parse_from_str(
+                            &task.date_scheduled,
+                            "%Y-%m-%d %H:%M:%S",
+                        )
+                        .expect("");
+                        if parsed_time.date() == Local::today().naive_local() {
+                            output = parsed_time.format("%H:%M").to_string();
+                        }
                     }
-                    return parsed_time.format("%H:%M").to_string();
                 }
-            },
+
+                let code = match config.get_from(Some("Agenda_Time"), "color") {
+                    Some(code) => code
+                        .parse::<u8>()
+                        .unwrap_or(DisplayColors::Agenda_Time.get_color_code()),
+                    None => DisplayColors::Agenda_Time.get_color_code(),
+                };
+
+                return Paint::new(output).fg(Color::Fixed(code)).to_string();
+            }
             AgendaDisplayColumn::DateType => {
-                return DisplayAgenda::get_type(&task).to_string(&task);
+                return DisplayAgenda::get_type(&task).to_string(&task, config);
             }
             AgendaDisplayColumn::State => {
-                let mut formated_state = String::new();
-                formated_state.push_str("[");
-                formated_state.push_str(&to_first_letter_capitalized(&task.state));
-                formated_state.push_str("]");
-                return formated_state;
+                let mut formatted_state = String::new();
+                formatted_state.push_str("[");
+                formatted_state.push_str(&to_first_letter_capitalized(&task.state));
+                formatted_state.push_str("]");
+
+                let color_code_name = if task.is_started() {
+                    "started_task_color"
+                } else if task.is_completed() {
+                    "completed_task_color"
+                } else if task.is_blocked() {
+                    "blocked_task_color"
+                } else if task.is_ready() {
+                    "ready_task_color"
+                } else {
+                    info!("Custom state, use custom state color");
+                    // TODO: We can implement something like xxxx_task_color to allow config
+                    // custom state's color differently
+                    "custom_task_color"
+                };
+
+                let code = match config.get_from(Some("Body"), color_code_name) {
+                    Some(code) => code
+                        .parse::<u8>()
+                        .unwrap_or(DisplayColors::BodyHeader.get_color_code()),
+                    None => {
+                        info!("Unable to find color code for body");
+                        DisplayColors::BodyHeader.get_color_code()
+                    }
+                };
+
+                return Paint::new(formatted_state)
+                    .fg(Color::Fixed(code))
+                    .to_string();
             }
             AgendaDisplayColumn::Body => {
-                return task.body.clone();
+                // Figure out which color setting to use
+                let color_code_name = if task.is_started() {
+                    "started_task_color"
+                } else if task.is_completed() {
+                    "completed_task_color"
+                } else if task.is_blocked() {
+                    "blocked_task_color"
+                } else if task.is_ready() {
+                    "ready_task_color"
+                } else {
+                    info!("Custom state, use custom state color");
+                    // TODO: We can implement something like xxxx_task_color to allow config
+                    // custom state's color differently
+                    "custom_task_color"
+                };
+
+                let code = match config.get_from(Some("Body"), color_code_name) {
+                    Some(code) => code
+                        .parse::<u8>()
+                        .unwrap_or(DisplayColors::BodyHeader.get_color_code()),
+                    None => {
+                        info!("Unable to find color code for body");
+                        DisplayColors::BodyHeader.get_color_code()
+                    }
+                };
+
+                return Paint::new(task.body.clone())
+                    .fg(Color::Fixed(code))
+                    .to_string();
             }
         }
     }
 }
 impl DisplayAgenda {
-    pub fn display(tasks: &Vec<(NaiveDate, Vec<Task>)>) -> Result<String, CoreError> {
+    pub fn display(tasks: &Vec<(NaiveDate, Vec<Task>)>, config: &Ini) -> Result<String, CoreError> {
         let mut output = String::new();
         for day_tasks in tasks.iter() {
             let day = day_tasks.0;
@@ -398,6 +503,7 @@ impl DisplayAgenda {
             println!("{}", day.format("%A %d %B %Y").to_string());
 
             let columns_to_output = vec![
+                AgendaDisplayColumn::Id,
                 AgendaDisplayColumn::Context,
                 AgendaDisplayColumn::Time,
                 AgendaDisplayColumn::DateType,
@@ -411,7 +517,7 @@ impl DisplayAgenda {
                 }
                 let mut task_row = String::new();
                 for column in columns_to_output.iter() {
-                    task_row.push_str(&column.get_data(task));
+                    task_row.push_str(&column.get_data(task, config));
                     task_row.push_str("\t");
                 }
                 output.push_str(&task_row);

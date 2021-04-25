@@ -25,7 +25,7 @@ impl Agenda {
         let mut operation = AgendaOperation::new(String::from("today"), None);
         execute_agenda(&mut operation)?;
 
-        let output = DisplayAgenda::display(operation.get_result())?;
+        let output = DisplayAgenda::display(operation.get_result(), &self.config)?;
         Display::print(&output);
         Ok(())
     }
