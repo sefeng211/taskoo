@@ -38,6 +38,7 @@ enum DisplayColors {
     Tag,
     Agenda_Context,
     Agenda_Time,
+    Agenda_State,
 }
 
 // Default color codes; being used when the config
@@ -57,6 +58,7 @@ impl DisplayColors {
             DisplayColors::Tag => 10,
             DisplayColors::Agenda_Context => 11,
             DisplayColors::Agenda_Time => 12,
+            DisplayColors::Agenda_State => 13,
         }
     }
 }
@@ -175,6 +177,7 @@ impl DisplayColumn {
                         .unwrap_or(DisplayColors::Tag.get_color_code()),
                     None => DisplayColors::Tag.get_color_code(),
                 };
+
                 // Append tags to the end of task body
                 for tag_name in task.tags.iter() {
                     let mut tag_output = String::from("+");
@@ -445,13 +448,13 @@ impl AgendaDisplayColumn {
                     "custom_task_color"
                 };
 
-                let code = match config.get_from(Some("Body"), color_code_name) {
+                let code = match config.get_from(Some("Agenda_State"), color_code_name) {
                     Some(code) => code
                         .parse::<u8>()
-                        .unwrap_or(DisplayColors::BodyHeader.get_color_code()),
+                        .unwrap_or(DisplayColors::Agenda_State.get_color_code()),
                     None => {
                         info!("Unable to find color code for body");
-                        DisplayColors::BodyHeader.get_color_code()
+                        DisplayColors::Agenda_State.get_color_code()
                     }
                 };
 
