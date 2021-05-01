@@ -121,12 +121,14 @@ impl TaskManager {
             None => None,
         };
 
-        // Verify the repeat string and recurrence string are both
-        // valid.
-        let parsed_due_repeat = match repetition_due {
-            Some(period) => Some(TaskManager::parse_date_string(period)?),
-            None => None,
-        };
+        // Verify the repeat string and recurrence string are both valid.
+        if let Some(period) = repetition_due {
+            TaskManager::parse_date_string(period)?;
+        }
+
+        if let Some(period) = repetition_scheduled {
+            TaskManager::parse_date_string(period)?;
+        }
 
         let priority_id = match priority {
             Some(priority_type) => Some(TaskManager::convert_priority_type_to_id(
@@ -143,7 +145,7 @@ impl TaskManager {
             tag_ids,
             &parsed_due_date.as_deref(),
             &parse_scheduled_at.as_deref(),
-            &parsed_due_repeat.as_deref(),
+            &repetition_due.as_deref(),
             &parsed_schedued_repeat.as_deref(),
             &annotation,
             &state_id,

@@ -36,4 +36,3 @@ State: `Ready`, `Completed`, `Blocked`, `Started`
 To remove `context` or `tag`
 
 Tasks are sorted by `State: Started` -> `Priority` ->`Created At`
-

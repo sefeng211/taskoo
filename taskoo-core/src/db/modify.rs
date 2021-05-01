@@ -134,7 +134,7 @@ fn update_schedule_at_for_repeat(conn: &Transaction, task_id: &i64) -> Result<()
     let data = first_row.expect("We should always have some data");
 
     let due_repetition: String = data.get(0)?;
-    let scheduled_repeat: String = data.get(1)?;
+    let scheduled_repetition: String = data.get(1)?;
 
     if due_repetition.len() > 0 {
         debug!("Due Repetition for task {}: {}", task_id, due_repetition);
@@ -152,13 +152,13 @@ fn update_schedule_at_for_repeat(conn: &Transaction, task_id: &i64) -> Result<()
         info!("No due repetition");
     }
 
-    if scheduled_repeat.len() > 0 {
+    if scheduled_repetition.len() > 0 {
         debug!(
             "Scheduled Repetition for task {}: {}",
-            task_id, scheduled_repeat
+            task_id, scheduled_repetition
         );
 
-        let new_schedule_at = TaskManager::parse_date_string(&scheduled_repeat)?;
+        let new_schedule_at = TaskManager::parse_date_string(&scheduled_repetition)?;
         debug!("Parsed schedule at {}", new_schedule_at);
 
         let mut statement = conn

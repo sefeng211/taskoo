@@ -5,7 +5,7 @@ pub struct CommandOption<'a> {
     pub date_scheduled: Option<&'a str>,
     pub repetition_scheduled: Option<&'a str>,
     pub date_due: Option<&'a str>,
-    pub reprition_due: Option<&'a str>,
+    pub repetition_due: Option<&'a str>,
     pub tags: Vec<String>,
     pub tags_to_remove: Vec<String>,
     pub not_tags: Option<Vec<String>>,
@@ -23,7 +23,7 @@ impl<'a> CommandOption<'a> {
             date_scheduled: None,
             repetition_scheduled: None,
             date_due: None,
-            reprition_due: None,
+            repetition_due: None,
             tags: vec![],
             task_ids: vec![],
             context: None,
@@ -73,7 +73,7 @@ pub fn parse_command_option<'a>(
                 let period: Vec<&str> = option[2 ..].split("+").collect();
                 command_option.date_due = Some(&period[0]);
                 if period.len() > 1 {
-                    command_option.reprition_due = Some(&period[1]);
+                    command_option.repetition_due = Some(&period[1]);
                 }
             } else {
                 return Err(CommandError::InvalidDueDate(option.to_string()));

@@ -8,7 +8,7 @@ use dialoguer::Editor;
 use std::backtrace::Backtrace;
 
 //use crate::option_parser::parse_command_option;
-//use log::{debug, error, info, log_enabled, Level};
+use log::debug;
 pub struct Add;
 
 impl Add {
@@ -17,6 +17,7 @@ impl Add {
         if matches.is_present("arguments") {
             let config: Vec<&str> = matches.values_of("arguments").unwrap().collect();
             option = parse_command_option(&config, true, false, false).unwrap();
+            debug!("Option {:?}", option);
         }
 
         let body = option.body.ok_or(ClientError::MissingAttrError {
@@ -28,7 +29,7 @@ impl Add {
         operation.context = option.context;
         operation.tags = option.tags;
         operation.date_due = option.date_due;
-        operation.repetition_due = option.reprition_due;
+        operation.repetition_due = option.repetition_due;
         operation.date_scheduled = option.date_scheduled;
         operation.repetition_scheduled = option.repetition_scheduled;
         if option.state == Some(String::from("ready")) {

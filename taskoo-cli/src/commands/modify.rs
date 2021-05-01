@@ -22,7 +22,7 @@ impl Modify {
         operation.tag_names = option.tags;
         operation.due_date = option.date_due;
         operation.scheduled_at = option.date_scheduled;
-        operation.due_repeat = option.reprition_due;
+        operation.due_repeat = option.repetition_due;
         operation.scheduled_repeat = option.repetition_scheduled;
         operation.tags_to_remove = option.tags_to_remove;
         if option.state == Some(String::from("started")) {
