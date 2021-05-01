@@ -58,13 +58,17 @@ subcommands:
             index: 1
             required: true
             multiple: true
-  - view:
+  - agenda:
       about: View tasks
       args:
-        - args:
+        - start_day:
             index: 1
             required: true
-            multiple: true
+            multiple: false
+        - end_day:
+            index: 2
+            required: false
+            multiple: false
   - info:
       about: Show information about given task ids
       args:

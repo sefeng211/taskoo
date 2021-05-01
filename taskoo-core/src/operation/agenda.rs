@@ -22,10 +22,11 @@ impl Agenda {
         }
         Ok(())
     }
+
     pub fn new(start_day: String, end_day: Option<String>) -> Agenda {
         Agenda {
             start_day: start_day,
-            end_day: None,
+            end_day: end_day,
             database_manager: None,
             result: vec![],
         }

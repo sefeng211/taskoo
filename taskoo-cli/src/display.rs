@@ -307,14 +307,13 @@ enum AgendaDisplayDateType {
 }
 
 impl AgendaDisplayDateType {
-    pub fn to_string(&self, task: &Task, config: &Ini) -> String {
+    pub fn to_string(&self, day: &NaiveDate, task: &Task, config: &Ini) -> String {
         match *self {
             AgendaDisplayDateType::Scheduled => {
                 let parsed_time =
                     NaiveDateTime::parse_from_str(&task.date_scheduled, "%Y-%m-%d %H:%M:%S")
                         .expect("");
-                let now = Local::now().naive_local();
-                let num_days = now - parsed_time;
+                let num_days = *day - parsed_time.date();
 
                 if num_days.num_days() == 0 {
                     return "Scheduled:".to_string();
@@ -366,7 +365,7 @@ enum AgendaDisplayColumn {
 }
 
 impl AgendaDisplayColumn {
-    pub fn get_data(&self, task: &Task, config: &Ini) -> String {
+    pub fn get_data(&self, day: &NaiveDate, task: &Task, config: &Ini) -> String {
         let mut output = String::new();
         match *self {
             AgendaDisplayColumn::Id => {
@@ -425,7 +424,7 @@ impl AgendaDisplayColumn {
                 return Paint::new(output).fg(Color::Fixed(code)).to_string();
             }
             AgendaDisplayColumn::DateType => {
-                return DisplayAgenda::get_type(&task).to_string(&task, config);
+                return DisplayAgenda::get_type(&task).to_string(&day, &task, config);
             }
             AgendaDisplayColumn::State => {
                 let mut formatted_state = String::new();
@@ -497,7 +496,7 @@ impl AgendaDisplayColumn {
     }
 }
 impl DisplayAgenda {
-    pub fn display(tasks: &Vec<(NaiveDate, Vec<Task>)>, config: &Ini) -> Result<String, CoreError> {
+    pub fn display(tasks: &Vec<(NaiveDate, Vec<Task>)>, config: &Ini) -> Result<(), CoreError> {
         let mut output = String::new();
         for day_tasks in tasks.iter() {
             let day = day_tasks.0;
@@ -520,15 +519,16 @@ impl DisplayAgenda {
                 }
                 let mut task_row = String::new();
                 for column in columns_to_output.iter() {
-                    task_row.push_str(&column.get_data(task, config));
+                    task_row.push_str(&column.get_data(&day, task, config));
                     task_row.push_str("\t");
                 }
                 output.push_str(&task_row);
                 output.push_str("\n");
             }
+            Display::print(&output);
+            output.clear();
         }
-
-        Ok(output)
+        Ok(())
     }
 
     fn get_type(task: &Task) -> AgendaDisplayDateType {
