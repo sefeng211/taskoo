@@ -235,7 +235,10 @@ impl DisplayColumn {
                         .unwrap_or(DisplayColors::CreatedHeader.get_color_code()),
                     None => DisplayColors::CreatedHeader.get_color_code(),
                 };
-                return Paint::new(task.date_created.clone())
+                // 0 .. 10 strips converts the date string from something like
+                // 2021-01-01 00:00:00 to 2021-01-01
+                // TODO: Make it an NaiveDateTime object
+                return Paint::new(task.date_created[0 .. 10].to_string())
                     .fg(Color::Fixed(code))
                     .to_string();
             }
@@ -246,9 +249,14 @@ impl DisplayColumn {
                         .unwrap_or(DisplayColors::ScheduledHeader.get_color_code()),
                     None => DisplayColors::ScheduledHeader.get_color_code(),
                 };
-                return Paint::new(task.date_scheduled.clone())
-                    .fg(Color::Fixed(code))
-                    .to_string();
+                // Check above to see why 0 .. 10 was used
+                if !task.date_scheduled.is_empty() {
+                    return Paint::new(task.date_scheduled[0 .. 10].to_string())
+                        .fg(Color::Fixed(code))
+                        .to_string();
+                } else {
+                    return Paint::new(String::new()).fg(Color::Fixed(code)).to_string();
+                }
             }
             DisplayColumn::Due => {
                 let code = match config.get_from(Some("Date_Due"), "color") {
