@@ -282,12 +282,26 @@ impl TaskManager {
         }
 
         let parse_scheduled_at = match date_scheduled {
-            Some(period) => Some(TaskManager::parse_date_string(period)?),
+            Some(period) => {
+                if !period.is_empty() {
+                    Some(TaskManager::parse_date_string(period)?)
+                } else {
+                    // Empty string will clears the date string
+                    Some(String::new())
+                }
+            }
             None => None,
         };
 
         let parsed_due_date = match date_due {
-            Some(period) => Some(TaskManager::parse_date_string(period)?),
+            Some(period) => {
+                if !period.is_empty() {
+                    Some(TaskManager::parse_date_string(period)?)
+                } else {
+                    // Empty string will clears the date string
+                    Some(String::new())
+                }
+            }
             None => None,
         };
 
@@ -460,61 +474,61 @@ impl TaskManager {
         return TaskManager::create_tag(&tx, &tag_name);
     }
 
-    pub fn parse_date_string(scheduled_at: &str) -> Result<String, CoreError> {
+    pub fn parse_date_string(date_string: &str) -> Result<String, CoreError> {
         let datetime_now: DateTime<Local> = Local::now();
-        if scheduled_at == "tmr" || scheduled_at == "tomorrow" {
+        if date_string == "tmr" || date_string == "tomorrow" {
             return Ok((datetime_now + Duration::days(1))
                 .format("%Y-%m-%d %H:%M:%S")
                 .to_string());
-        } else if scheduled_at == "today" {
+        } else if date_string == "today" {
             return Ok(datetime_now.format("%Y-%m-%d %H:%M:%S").to_string());
-        } else if scheduled_at.ends_with("hours") {
-            let scheduled_at_split: Vec<&str> = scheduled_at.split("hours").collect();
+        } else if date_string.ends_with("hours") {
+            let scheduled_at_split: Vec<&str> = date_string.split("hours").collect();
             let key: i64;
             match scheduled_at_split.iter().next() {
                 Some(value) => {
                     let value_in_int = value
                         .parse::<i64>()
-                        .map_err(|_error| CoreError::DateParseError(scheduled_at.to_string()))?;
+                        .map_err(|_error| CoreError::DateParseError(date_string.to_string()))?;
                     key = value_in_int;
                 }
                 None => {
-                    return Err(CoreError::DateParseError(scheduled_at.to_string()));
+                    return Err(CoreError::DateParseError(date_string.to_string()));
                 }
             }
             // return now + x hours
             return Ok((datetime_now + Duration::hours(key))
                 .format("%Y-%m-%d %H:%M:%S")
                 .to_string());
-        } else if scheduled_at.ends_with("days") {
-            let scheduled_at_split: Vec<&str> = scheduled_at.split("days").collect();
+        } else if date_string.ends_with("days") {
+            let scheduled_at_split: Vec<&str> = date_string.split("days").collect();
             let key: i64;
             match scheduled_at_split.iter().next() {
                 Some(value) => {
                     let value_in_int = value
                         .parse::<i64>()
-                        .map_err(|_error| CoreError::DateParseError(scheduled_at.to_string()))?;
+                        .map_err(|_error| CoreError::DateParseError(date_string.to_string()))?;
                     key = value_in_int;
                 }
                 None => {
-                    return Err(CoreError::DateParseError(scheduled_at.to_string()));
+                    return Err(CoreError::DateParseError(date_string.to_string()));
                 }
             }
             // return now + x days
             return Ok((datetime_now + Duration::days(key))
                 .format("%Y-%m-%d %H:%M:%S")
                 .to_string());
-        } else if scheduled_at.ends_with("weeks") {
-            let scheduled_at_split: Vec<&str> = scheduled_at.split("weeks").collect();
+        } else if date_string.ends_with("weeks") {
+            let scheduled_at_split: Vec<&str> = date_string.split("weeks").collect();
             let key = match scheduled_at_split.iter().next() {
                 Some(value) => {
                     let value_in_int = value
                         .parse::<i64>()
-                        .map_err(|_error| CoreError::DateParseError(scheduled_at.to_string()))?;
+                        .map_err(|_error| CoreError::DateParseError(date_string.to_string()))?;
                     value_in_int
                 }
                 None => {
-                    return Err(CoreError::DateParseError(scheduled_at.to_string()));
+                    return Err(CoreError::DateParseError(date_string.to_string()));
                 }
             };
             // return now + x days
@@ -525,13 +539,15 @@ impl TaskManager {
 
         // Ensure the client passed date string is valid
         let parsed_date_string =
-            match NaiveDateTime::parse_from_str(&scheduled_at, "%Y-%m-%d %H:%M:%S") {
+            match NaiveDateTime::parse_from_str(&date_string, "%Y-%m-%d %H:%M:%S") {
                 Ok(parsed_datetime) => parsed_datetime,
                 Err(_) => {
-                    let parsed_date = NaiveDate::parse_from_str(&scheduled_at, "%Y-%m-%d")
-                        .map_err(|source| CoreError::ChronoParseError {
-                            period: scheduled_at.to_string(),
-                            source: source,
+                    let parsed_date =
+                        NaiveDate::parse_from_str(&date_string, "%Y-%m-%d").map_err(|source| {
+                            CoreError::ChronoParseError {
+                                period: date_string.to_string(),
+                                source: source,
+                            }
                         })?;
                     parsed_date.and_hms(0, 0, 0) // Fulfill the missing hms
                 }

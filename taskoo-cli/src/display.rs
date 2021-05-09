@@ -265,9 +265,13 @@ impl DisplayColumn {
                         .unwrap_or(DisplayColors::DueHeader.get_color_code()),
                     None => DisplayColors::DueHeader.get_color_code(),
                 };
-                return Paint::new(task.date_due.clone())
-                    .fg(Color::Fixed(code))
-                    .to_string();
+                if !task.date_due.is_empty() {
+                    return Paint::new(task.date_due[0 .. 10].to_string())
+                        .fg(Color::Fixed(code))
+                        .to_string();
+                } else {
+                    return Paint::new(String::new()).fg(Color::Fixed(code)).to_string();
+                }
             }
         }
     }
