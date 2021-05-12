@@ -9,11 +9,9 @@ pub fn delete(conn: &Transaction, task_ids: &Vec<i64>) -> Result<Vec<Task>, Core
 
     let mut delete_tag_state = conn.prepare("DELETE FROM task_tag where task_id = :task_id")?;
     let mut delete_priority = conn.prepare("DELETE FROM priority_task where task_id = :task_id")?;
-    let mut delete_task_state = conn.prepare(
-        "
-            DELETE FROM task where id = :task_id;
-    ",
-    )?;
+    let mut delete_dependency = conn
+        .prepare("DELETE FROM dependency where task_id = :task_id or parent_task_id =:task_id;")?;
+    let mut delete_task = conn.prepare("DELETE FROM task where id = :task_id;")?;
 
     let task_ids_str: Vec<String> = task_ids.into_iter().map(|i| i.to_string()).collect();
 
@@ -32,7 +30,10 @@ pub fn delete(conn: &Transaction, task_ids: &Vec<i64>) -> Result<Vec<Task>, Core
         delete_priority.execute_named(named_params! {
             ":task_id": task_id,
         })?;
-        delete_task_state.execute_named(named_params! {
+        delete_dependency.execute_named(named_params! {
+            ":task_id": task_id
+        })?;
+        delete_task.execute_named(named_params! {
             ":task_id": task_id,
         })?;
     }
