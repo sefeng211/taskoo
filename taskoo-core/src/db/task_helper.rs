@@ -66,13 +66,10 @@ pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
     let mut tasks: Vec<Task> = vec![];
 
     while let Some(row) = rows.next().unwrap() {
-        // TODO convert context_id to context_name
-
         let mut tag_ids: Vec<i64> = vec![];
-        match row.get(11) {
+        match row.get::<_, String>("concat_tag_ids") {
             Ok(ids) => {
-                let temp: String = ids;
-                for n in temp.split(",") {
+                for n in ids.split(",") {
                     tag_ids.push(n.parse::<i64>().unwrap());
                 }
             }
@@ -80,10 +77,9 @@ pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
         }
 
         let mut tag_names: Vec<String> = vec![];
-        match row.get(12) {
+        match row.get::<_, String>("concat_tag_names") {
             Ok(names) => {
-                let temp: String = names;
-                for n in temp.split(",") {
+                for n in names.split(",") {
                     tag_names.push(n.to_string());
                 }
             }
@@ -91,34 +87,31 @@ pub fn convert_rows_into_task(rows: &mut Rows) -> Vec<Task> {
         }
 
         let mut parent_task_ids: Vec<String> = vec![];
-        match row.get(13) {
+        match row.get::<_, String>("parent_task_ids") {
             Ok(names) => {
-                let temp: String = names;
-                for n in temp.split(",") {
+                for n in names.split(",") {
                     parent_task_ids.push(n.to_string());
                 }
             }
             Err(_) => {}
         }
 
-        let task = Task {
-            id: row.get(0).unwrap(),
-            body: row.get(1).unwrap(),
-            priority: row.get(2).unwrap_or("".to_string()),
+        tasks.push(Task {
+            id: row.get("id").unwrap(),
+            body: row.get("body").unwrap(),
+            priority: row.get("priority").unwrap_or("".to_string()),
             tags: tag_names,
             tag_ids: tag_ids,
-            date_created: row.get(3).unwrap(),
-            date_due: row.get(4).unwrap_or("".to_string()),
-            date_scheduled: row.get(5).unwrap(),
-            repetition_due: row.get(6).unwrap(),
-            repetition_scheduled: row.get(7).unwrap(),
-            context: row.get(8).unwrap(),
-            state: row.get(9).unwrap(),
-            annotation: row.get(10).unwrap_or("".to_string()),
+            date_created: row.get("created_at").unwrap(),
+            date_due: row.get("due_date").unwrap_or("".to_string()),
+            date_scheduled: row.get("scheduled_at").unwrap(),
+            repetition_due: row.get("due_repeat").unwrap(),
+            repetition_scheduled: row.get("scheduled_repeat").unwrap(),
+            context: row.get("context").unwrap(),
+            state: row.get("state").unwrap(),
+            annotation: row.get("annotation").unwrap_or("".to_string()),
             parent_task_ids: parent_task_ids,
-        };
-
-        tasks.push(task);
+        });
     }
 
     tasks
