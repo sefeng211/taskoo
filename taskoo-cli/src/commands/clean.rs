@@ -5,7 +5,7 @@ use std::backtrace::Backtrace;
 use clap::ArgMatches;
 use log::{info};
 
-use taskoo_core::command::{TagCommand, ContextCommand, SimpleCommand};
+use taskoo_core::command::{TagCommand, ContextCommand, StateCommand, SimpleCommand};
 
 use dialoguer::{theme::ColorfulTheme, Select};
 
@@ -27,6 +27,10 @@ impl Clean {
                 let command = TagCommand::new()?;
                 return Clean::process_remove_tag(command);
             }
+            "state" => {
+                let command = StateCommand::new()?;
+                return Clean::process_remove_state(command);
+            }
             &_ => {
                 return Err(ClientError::UnexpectedFailure(
                 String::from("The provided type is neither 'context' nor 'tag', so we can't process it, but how come?"), Backtrace::capture()));
@@ -39,6 +43,10 @@ impl Clean {
 
     fn process_remove_tag<'a>(command: impl SimpleCommand<'a>) -> Result<String, ClientError> {
         return Clean::process_remove(command, "tag");
+    }
+
+    fn process_remove_state<'a>(command: impl SimpleCommand<'a>) -> Result<String, ClientError> {
+        return Clean::process_remove(command, "state");
     }
 
     fn process_remove<'a>(

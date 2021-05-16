@@ -120,5 +120,5 @@ subcommands:
         - type:
             index: 1
             required: true
-            possible_values: ["context", "tag"]
+            possible_values: ["context", "tag", "state"]
 

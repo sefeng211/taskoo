@@ -1,6 +1,7 @@
 use crate::core::ConfigManager;
 use crate::db::task_manager::TaskManager;
 use crate::error::CoreError;
+use crate::db::task_helper::TASK_STATES;
 use crate::operation::{Add, execute};
 use std::collections::HashMap;
 
@@ -243,6 +244,122 @@ impl<'a> SimpleCommand<'a> for TagCommand<'a> {
     }
 }
 
+pub struct StateCommand<'a> {
+    db_manager: Option<TaskManager>,
+    db_manager_for_test: Option<&'a mut TaskManager>,
+}
+
+impl StateCommand<'_> {
+    pub fn states(&mut self) -> Result<Vec<String>, CoreError> {
+        let mut statement = match self.db_manager.as_ref() {
+            Some(manager) => manager.conn.prepare("SELECT name FROM state")?,
+            None => match self.db_manager_for_test.as_mut() {
+                Some(manager) => manager.conn.prepare("SELECT name FROM state")?,
+                None => {
+                    return Err(CoreError::UnexpetedError(String::from(
+                        "How come we don't have a task manager here?",
+                    )))
+                }
+            },
+        };
+
+        let mut result = statement.query(NO_PARAMS)?;
+
+        let mut states: Vec<String> = vec![];
+        while let Some(row) = result.next()? {
+            // Filter out built-in states
+            let name: String = row.get("name")?;
+            if !TASK_STATES.contains(&name.as_str()) {
+                states.push(name);
+            }
+        }
+
+        Ok(states)
+    }
+}
+
+impl<'a> SimpleCommand<'a> for StateCommand<'a> {
+    fn new() -> Result<StateCommand<'a>, CoreError> {
+        Ok(StateCommand {
+            db_manager: Some(TaskManager::new(
+                &ConfigManager::init_and_get_database_path()?,
+            )),
+            db_manager_for_test: None,
+        })
+    }
+
+    fn new_with_manager(db_manager: &'a mut TaskManager) -> StateCommand<'a> {
+        StateCommand {
+            db_manager: None,
+            db_manager_for_test: Some(db_manager),
+        }
+    }
+
+    // Get the number of tasks that belong to this state
+    fn get_count(&mut self, name: &str) -> Result<i64, CoreError> {
+        let mut statement = match self.db_manager.as_mut() {
+            Some(manager) => manager.conn.prepare(
+                "
+        SELECT COUNT(*) as count FROM task INNER JOIN
+            (
+            SELECT id FROM state WHERE name = :name
+            )
+            state
+        ON task.state_id = state.id group by state.id",
+            )?,
+            None => match self.db_manager_for_test.as_mut() {
+                Some(manager) => manager.conn.prepare(
+                    "
+        SELECT COUNT(*) as count FROM task INNER JOIN
+            (
+            SELECT id FROM state WHERE name = :name
+            )
+            state
+        ON task.state_id = state.id group by state.id",
+                )?,
+                None => {
+                    return Err(CoreError::UnexpetedError(String::from("How come?")));
+                }
+            },
+        };
+
+        let mut rows = statement.query_named(named_params! {":name": name})?;
+
+        if let Some(row) = rows.next()? {
+            return Ok(row.get("count")?);
+        }
+        Ok(0)
+    }
+
+    fn get_all(&mut self) -> Result<Vec<String>, CoreError> {
+        return self.states();
+    }
+
+    fn delete(&mut self, names: Vec<String>) -> Result<(), CoreError> {
+        let mut tx = match self.db_manager.as_mut() {
+            Some(manager) => manager.conn.transaction()?,
+            None => match self.db_manager_for_test.as_mut() {
+                Some(manager) => manager.conn.transaction()?,
+                None => {
+                    return Err(CoreError::UnexpetedError(String::from("How come")));
+                }
+            },
+        };
+
+        {
+            for name in names.iter() {
+                let lower_context_name = name.to_lowercase();
+                tx.execute_named(
+                    "DELETE FROM state where state.name = :name",
+                    named_params! {":name": lower_context_name},
+                )?;
+            }
+        }
+        tx.commit()?;
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -273,20 +390,36 @@ mod tests {
         operation.tags = vec!["tag1".to_owned()];
         execute(&mut operation)?;
 
-        //command.db_manager.add(
-        //"Test",
-        //&None,
-        //&None,
-        //&vec![String::from("tag1")],
-        //&None,
-        //&None,
-        //&None,
-        //&None,
-        //&None,
-        //&None,
-        //)?;
         let mut command = TagCommand::new_with_manager(&mut manager);
         assert_eq!(command.get_all()?, vec!["tag1"]);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_states() -> Result<(), CoreError> {
+        let mut manager = TaskManager::new(&get_setting());
+        {
+            let mut command = StateCommand::new_with_manager(&mut manager);
+            assert!(command.get_all()?.is_empty());
+        }
+
+        let mut operation = Add::new_with_task_manager("Task Body", &mut manager);
+        execute(&mut operation)?;
+
+        let mut command = StateCommand::new_with_manager(&mut manager);
+        // The `Task Body` task should has `ready` as the state, which
+        // has been filtered out
+        assert!(command.get_all()?.is_empty());
+
+        let mut operation = Add::new_with_task_manager("Task Body 2", &mut manager);
+        operation.set_custom_state(String::from("new_state"));
+        execute(&mut operation)?;
+
+        let mut command = StateCommand::new_with_manager(&mut manager);
+        // The `Task Body` task should has `ready` as the state, which
+        // has been filtered out
+        assert_eq!(command.get_all()?, vec!["new_state"]);
 
         Ok(())
     }
@@ -318,47 +451,21 @@ mod tests {
         let mut operation = Add::new_with_task_manager("Test Body", &mut manager);
         operation.tags = vec!["tag1".to_owned()];
         execute(&mut operation)?;
-        //command.db_manager.add(
-        //"Test",
-        //&None,
-        //&None,
-        //&vec![String::from("tag1")],
-        //&None,
-        //&None,
-        //&None,
-        //&None,
-        //&None,
-        //&None,
-        //)?;
         let mut command = TagCommand::new_with_manager(&mut manager);
         assert_eq!(command.get_count("tag1")?, 1);
         Ok(())
     }
 
     #[test]
-    fn test_delete_context_with_task_associated() -> Result<(), CoreError> {
+    fn test_get_state_task_count() -> Result<(), CoreError> {
         let mut manager = TaskManager::new(&get_setting());
-        let mut operation = Add::new_with_task_manager("Test Body", &mut manager);
-        operation.tags = vec!["tag1".to_owned()];
+
+        let mut operation = Add::new_with_task_manager("Task Body 2", &mut manager);
+        operation.set_custom_state(String::from("new_state"));
         execute(&mut operation)?;
-        //command.db_manager.add(
-        //"Test",
-        //&None,
-        //&None,
-        //&vec![String::from("tag1")],
-        //&None,
-        //&None,
-        //&None,
-        //&None,
-        //&None,
-        //&None,
-        //)?;
 
-        let mut command = ContextCommand::new_with_manager(&mut manager);
-        assert_eq!(command.get_all()?, vec!["inbox"]);
-
-        let result = command.delete(vec![String::from("inbox")]);
-        assert!(result.is_err());
+        let mut command = StateCommand::new_with_manager(&mut manager);
+        assert_eq!(command.get_count("new_state")?, 1);
         Ok(())
     }
 
@@ -371,6 +478,21 @@ mod tests {
 
         command.delete(vec![String::from("inbox")])?;
         assert!(command.get_all()?.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn test_delete_context_with_task_associated() -> Result<(), CoreError> {
+        let mut manager = TaskManager::new(&get_setting());
+        let mut operation = Add::new_with_task_manager("Test Body", &mut manager);
+        operation.tags = vec!["tag1".to_owned()];
+        execute(&mut operation)?;
+
+        let mut command = ContextCommand::new_with_manager(&mut manager);
+        assert_eq!(command.get_all()?, vec!["inbox"]);
+
+        let result = command.delete(vec![String::from("inbox")]);
+        assert!(result.is_err());
         Ok(())
     }
 
@@ -409,6 +531,39 @@ mod tests {
         command.delete(vec![String::from("tag1")])?;
         assert!(command.get_all()?.is_empty());
 
+        Ok(())
+    }
+
+    #[test]
+    fn test_delete_state_with_task_associated() -> Result<(), CoreError> {
+        let mut manager = TaskManager::new(&get_setting());
+        let mut operation = Add::new_with_task_manager("Test Body", &mut manager);
+        operation.set_custom_state(String::from("new_state"));
+        execute(&mut operation)?;
+
+        let mut command = StateCommand::new_with_manager(&mut manager);
+
+        let result = command.delete(vec![String::from("new_state")]);
+        assert!(result.is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn test_delete_state() -> Result<(), CoreError> {
+        let mut manager = TaskManager::new(&get_setting());
+        let mut operation = Add::new_with_task_manager("Test Body", &mut manager);
+        operation.set_custom_state(String::from("new_state"));
+        execute(&mut operation)?;
+
+        let mut command = StateCommand::new_with_manager(&mut manager);
+        command
+            .db_manager_for_test
+            .as_mut()
+            .unwrap()
+            .delete(&vec![1])?;
+
+        command.delete(vec![String::from("new_state")])?;
+        assert!(command.get_all()?.is_empty());
         Ok(())
     }
 }
