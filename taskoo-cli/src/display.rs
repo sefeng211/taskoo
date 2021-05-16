@@ -16,7 +16,7 @@ const TASK_PRIORITY_ORDER: &'static [&'static str] = &["l", "m", "h"];
 pub struct Display;
 pub struct DisplayAgenda;
 
-enum DisplayColumn {
+pub enum DisplayColumn {
     Id,
     Body,
     Priority,
@@ -277,7 +277,7 @@ impl DisplayColumn {
     }
 }
 
-fn get_output_columns() -> Vec<DisplayColumn> {
+pub fn get_output_columns() -> Vec<DisplayColumn> {
     let size = terminal_size();
     return if let Some((Width(w), Height(h))) = size {
         info!("Your terminal is {} cols wide and {} lines tall", w, h);
@@ -610,7 +610,10 @@ impl Display {
         Ok(final_tabbed_string)
     }
 
-    fn get_formatted_row_for_header(columns_to_output: Vec<DisplayColumn>, config: &Ini) -> String {
+    pub fn get_formatted_row_for_header(
+        columns_to_output: Vec<DisplayColumn>,
+        config: &Ini,
+    ) -> String {
         let mut output = String::new();
         for column in columns_to_output.iter() {
             let data = column.get_header(&config);
@@ -695,7 +698,13 @@ impl Display {
             },
         );
 
-        for task in &result {
+        tabbed_output = Display::get_tabbed_output_for_tasks(&result, &config);
+        Ok((tabbed_output, result.len()))
+    }
+
+    pub fn get_tabbed_output_for_tasks(tasks: &Vec<&Task>, config: &Ini) -> String {
+        let mut tabbed_output = String::new();
+        for task in tasks {
             let mut formated_body = String::clone(&task.body);
 
             for tag_name in task.tags.iter() {
@@ -721,7 +730,8 @@ impl Display {
                 &config,
             ));
         }
-        Ok((tabbed_output, result.len()))
+
+        tabbed_output
     }
 
     pub fn print(data: &String) {

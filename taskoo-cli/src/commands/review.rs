@@ -6,6 +6,7 @@ use taskoo_core::operation::{execute, Get as GetOperation, ModifyOperation, Dele
 use crate::List;
 use crate::error::ClientError;
 use crate::option_parser::{CommandOption, parse_command_option};
+use crate::display::{Display, get_output_columns};
 
 use ini::Ini;
 use clap::ArgMatches;
@@ -51,10 +52,11 @@ impl Review {
         let mut operations_tuple = List::get_operations(option, Some(vec![context_name]))?;
         assert_eq!(operations_tuple.len(), 1);
         let mut op_tuple = &mut operations_tuple[0];
-        return Review::process_operation(&op_tuple.0, &mut op_tuple.1);
+        return self.process_operation(&op_tuple.0, &mut op_tuple.1);
     }
 
     fn process_operation(
+        &self,
         context_name: &String,
         operation: &mut GetOperation,
     ) -> Result<(), ClientError> {
@@ -69,23 +71,21 @@ impl Review {
         for task in need_review_tasks.iter() {
             // No need to review completed tasks
             if !task.is_completed() {
-                Review::review_task(&task)?;
+                self.review_task(&task)?;
             }
         }
         Ok(())
     }
 
-    fn review_task(task: &Task) -> Result<(), ClientError> {
+    fn review_task(&self, task: &Task) -> Result<(), ClientError> {
         // Display Info
-        println!("");
-        println!(
-            "{} {} \n",
-            Paint::new("Task:").fg(Color::Magenta).bold().to_string(),
-            Paint::new(task.body.clone())
-                .fg(Color::Yellow)
-                .bold()
-                .to_string()
-        );
+        let output = Display::get_tabbed_output_for_tasks(&vec![&task], &self.config);
+        let mut final_tabbed_string = String::from(&Display::get_formatted_row_for_header(
+            get_output_columns(),
+            &self.config,
+        ));
+        final_tabbed_string.push_str(&output);
+        Display::print(&final_tabbed_string);
         let tt = Confirm::with_theme(&ColorfulTheme::default())
             .with_prompt(format!(
                 "{}: {} this task, {}: start to {}, {}: {} the task",
