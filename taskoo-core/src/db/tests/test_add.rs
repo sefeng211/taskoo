@@ -171,7 +171,7 @@ fn test_add_scheduled_at_days() -> Result<(), CoreError> {
 fn test_add_scheduled_at_hours() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
-    let start = Local::today() + Duration::hours(11);
+    let start = (Local::now() + Duration::hours(11)).format("%Y-%m-%d %H:%M:%S").to_string();
 
     let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
     operation.priority = Some(String::from("H"));
@@ -180,7 +180,7 @@ fn test_add_scheduled_at_hours() -> Result<(), CoreError> {
     operation.date_scheduled = Some("11hours");
     execute(&mut operation)?;
 
-    let end = Local::today() + Duration::hours(11);
+    let end = (Local::now() + Duration::hours(11)).format("%Y-%m-%d %H:%M:%S").to_string();
     let mut tasks = database_manager
         .get(
             &None,
@@ -197,10 +197,10 @@ fn test_add_scheduled_at_hours() -> Result<(), CoreError> {
 
     // Scheduled_at should be in between start and end;
     let scheduled_at_parsed =
-        NaiveDate::parse_from_str(&tasks[0].date_scheduled, "%Y-%m-%d %H:%M:%S").expect("");
+        NaiveDateTime::parse_from_str(&tasks[0].date_scheduled, "%Y-%m-%d %H:%M:%S").expect("");
 
-    assert_ge!(scheduled_at_parsed, start.naive_local());
-    assert_le!(scheduled_at_parsed, end.naive_local());
+    assert_ge!(tasks[0].date_scheduled, start);
+    assert_le!(tasks[0].date_scheduled, end);
     Ok(())
 }
 
