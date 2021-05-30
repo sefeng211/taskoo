@@ -97,28 +97,25 @@ impl<'a> SimpleCommand<'a> for ContextCommand<'a> {
     // Get the number of tasks that belong to this context
     fn get_count(&mut self, name: &str) -> Result<i64, CoreError> {
         let mut statement;
+        let statement_query = "
+        SELECT COUNT(*) FROM task_context INNER JOIN
+            (
+            SELECT id FROM context WHERE name = :name
+            )
+            context
+        ON task_context.context_id = context.id group by context.id";
+
         match self.db_manager.as_ref() {
             Some(manager) => {
-                statement = manager.conn.prepare(
-                    "
-        SELECT COUNT(*) FROM task INNER JOIN
-            (
-            SELECT id FROM context WHERE name = :name
-            )
-            context
-        ON task.context_id = context.id group by context.id",
-                )?;
+                statement = manager.conn.prepare(statement_query)?;
             }
             None => {
-                statement = self.db_manager_for_test.as_ref().unwrap().conn.prepare(
-                    "
-        SELECT COUNT(*) FROM task INNER JOIN
-            (
-            SELECT id FROM context WHERE name = :name
-            )
-            context
-        ON task.context_id = context.id group by context.id",
-                )?;
+                statement = self
+                    .db_manager_for_test
+                    .as_ref()
+                    .unwrap()
+                    .conn
+                    .prepare(statement_query)?;
             }
         }
 
@@ -297,26 +294,18 @@ impl<'a> SimpleCommand<'a> for StateCommand<'a> {
 
     // Get the number of tasks that belong to this state
     fn get_count(&mut self, name: &str) -> Result<i64, CoreError> {
+        let statement_query = "
+        SELECT COUNT(*) as count FROM task_state INNER JOIN
+            (
+            SELECT id FROM state WHERE name = :name
+            )
+            state
+        ON task_state.state_id = state.id group by state.id";
+
         let mut statement = match self.db_manager.as_mut() {
-            Some(manager) => manager.conn.prepare(
-                "
-        SELECT COUNT(*) as count FROM task INNER JOIN
-            (
-            SELECT id FROM state WHERE name = :name
-            )
-            state
-        ON task.state_id = state.id group by state.id",
-            )?,
+            Some(manager) => manager.conn.prepare(statement_query)?,
             None => match self.db_manager_for_test.as_mut() {
-                Some(manager) => manager.conn.prepare(
-                    "
-        SELECT COUNT(*) as count FROM task INNER JOIN
-            (
-            SELECT id FROM state WHERE name = :name
-            )
-            state
-        ON task.state_id = state.id group by state.id",
-                )?,
+                Some(manager) => manager.conn.prepare(statement_query)?,
                 None => {
                     return Err(CoreError::UnexpetedError(String::from("How come?")));
                 }

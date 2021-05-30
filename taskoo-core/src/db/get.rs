@@ -39,10 +39,6 @@ pub fn get(
         None => generate_get_condition(&None, context_id, date_due, date_scheduled),
     };
 
-    assert!(!conditions.is_empty());
-
-    rusqlite::vtab::array::load_module(&conn)?;
-
     let mut tasks = get_base(&conn, &conditions.join(" and "))?;
 
     // Filter the tags that we'd like to get
@@ -52,6 +48,7 @@ pub fn get(
             .filter(|task| task_matches_tag_ids(task, &tag_ids))
             .collect();
     }
+
 
     if let Some(not_tag_ids) = not_tag_ids {
         tasks = tasks

@@ -1,6 +1,7 @@
 use crate::db::task_helper::Task;
 use crate::error::CoreError;
 use rusqlite::{named_params, Result, Transaction};
+use rusqlite::Statement;
 
 pub fn delete(conn: &Transaction, task_ids: &Vec<i64>) -> Result<Vec<Task>, CoreError> {
     if task_ids.is_empty() {
@@ -9,9 +10,22 @@ pub fn delete(conn: &Transaction, task_ids: &Vec<i64>) -> Result<Vec<Task>, Core
 
     let mut delete_tag_state = conn.prepare("DELETE FROM task_tag where task_id = :task_id")?;
     let mut delete_priority = conn.prepare("DELETE FROM priority_task where task_id = :task_id")?;
+    let mut delete_from_task_context =
+        conn.prepare("DELETE FROM task_context where task_id = :task_id")?;
+    let mut delete_from_task_state =
+        conn.prepare("DELETE FROM task_state where task_id = :task_id")?;
     let mut delete_dependency = conn
         .prepare("DELETE FROM dependency where task_id = :task_id or parent_task_id =:task_id;")?;
     let mut delete_task = conn.prepare("DELETE FROM task where id = :task_id;")?;
+
+    let delete_stmt_to_run: &mut [Statement; 6] = &mut [
+        delete_tag_state,
+        delete_priority,
+        delete_from_task_state,
+        delete_from_task_context,
+        delete_dependency,
+        delete_task,
+    ];
 
     let task_ids_str: Vec<String> = task_ids.into_iter().map(|i| i.to_string()).collect();
 
@@ -24,18 +38,11 @@ pub fn delete(conn: &Transaction, task_ids: &Vec<i64>) -> Result<Vec<Task>, Core
     // the task ids to that table and then do a delete query based on
     // that temporary table.
     for task_id in task_ids_str.iter() {
-        delete_tag_state.execute_named(named_params! {
-            ":task_id": task_id,
-        })?;
-        delete_priority.execute_named(named_params! {
-            ":task_id": task_id,
-        })?;
-        delete_dependency.execute_named(named_params! {
-            ":task_id": task_id
-        })?;
-        delete_task.execute_named(named_params! {
-            ":task_id": task_id,
-        })?;
+        for stmt in delete_stmt_to_run.into_iter() {
+            stmt.execute_named(named_params! {
+                ":task_id": task_id,
+            })?;
+        }
     }
 
     Ok(vec![])
