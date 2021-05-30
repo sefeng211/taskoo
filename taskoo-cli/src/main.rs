@@ -48,163 +48,78 @@ fn get_config() -> Ini {
     return Ini::new();
 }
 
+fn handle_result(result: Result<String, anyhow::Error>) {
+    match result {
+        Err(e) => {
+            eprintln!("{:?}", e);
+        }
+        Ok(message) => {
+            println!("{}", message);
+        }
+    }
+}
+
 fn main() -> Result<(), ClientError> {
     env_logger::init();
     let yaml = load_yaml!("../config/cli.yml");
     let matches = App::from(yaml).get_matches();
 
-    if matches.is_present("add") {
-        match Add::add(&matches.subcommand_matches("add").unwrap()).context("Add command") {
-            Err(e) => {
-                eprintln!("{:?}", e);
-            }
-            Ok(message) => {
-                println!("{}", message);
-            }
-        }
-    } else if matches.is_present("list") {
+    if let Some(add_args) = matches.subcommand_matches("add") {
+        handle_result(Add::add(add_args).context("Add command"));
+    } else if let Some(list_args) = matches.subcommand_matches("list") {
         let list_command = List::new(get_config());
-        match list_command
-            .list(&matches.subcommand_matches("list").unwrap())
-            .context("List command failed")
-        {
-            Err(e) => {
-                eprintln!("{:?}", e);
-            }
-            Ok(()) => {}
-        }
-    } else if matches.is_present("delete") {
-        match Delete::delete(&matches.subcommand_matches("delete").unwrap())
-            .context("Delete command failed")
-        {
-            Err(e) => {
-                eprintln!("{:?}", e);
-            }
-            Ok(()) => {
-                println!("Tasks deleted!");
-            }
-        }
-    } else if matches.is_present("review") {
+        handle_result(list_command.list(list_args).context("List command failed"));
+    } else if let Some(delete_args) = matches.subcommand_matches("delete") {
+        handle_result(Delete::delete(delete_args).context("Delete command failed"));
+    } else if let Some(review_args) = matches.subcommand_matches("review") {
         let review_command = Review::new(get_config());
-        match review_command
-            .review(&matches.subcommand_matches("review").unwrap())
-            .context("Review command failed")
-        {
-            Err(e) => {
-                eprintln!("{:?}", e);
-            }
-            Ok(()) => {}
-        }
-    } else if matches.is_present("modify") {
-        match Modify::modify(&matches.subcommand_matches("modify").unwrap())
-            .context("Modify command failed")
-        {
-            Err(e) => {
-                eprintln!("{:?}", e);
-            }
-            Ok(()) => {
-                println!("Tasks modified!");
-            }
-        }
-    } else if matches.is_present("agenda") {
+        handle_result(
+            review_command
+                .review(review_args)
+                .context("Review command failed"),
+        );
+    } else if let Some(modify_args) = matches.subcommand_matches("modify") {
+        handle_result(Modify::modify(modify_args).context("Modify command failed"));
+    } else if let Some(agenda_args) = matches.subcommand_matches("agenda") {
         let agenda = Agenda::new(get_config());
-        match agenda
-            .agenda(&matches.subcommand_matches("agenda").unwrap())
-            .context("Agenda command failed")
-        {
-            Err(e) => {
-                eprintln!("{:?}", e);
-            }
-            Ok(()) => {}
-        }
-    } else if matches.is_present("done") {
-        // TODO: Task state should not be hard-coded
+        handle_result(agenda.agenda(agenda_args).context("Agenda command failed"));
+    } else if let Some(done_args) = matches.subcommand_matches("done") {
         let state_changer = StateChanger::to_completed();
-        match state_changer
-            .run(&matches.subcommand_matches("done").unwrap())
-            .context("Failed to complete a task")
-        {
-            Err(e) => {
-                eprintln!("{:?}", e);
-            }
-            Ok(message) => {
-                println!("{}, state has changed to {}", message, "done")
-            }
-        }
-    } else if matches.is_present("ready") {
-        // TODO: Task state should not be hard-coded
+        handle_result(
+            state_changer
+                .run(done_args)
+                .context("Failed to complete a task"),
+        );
+    } else if let Some(ready_args) = matches.subcommand_matches("ready") {
         let state_changer = StateChanger::to_ready();
-        match state_changer
-            .run(&matches.subcommand_matches("ready").unwrap())
-            .context("Failed to complete a task")
-        {
-            Err(e) => {
-                eprintln!("{:?}", e);
-            }
-            Ok(message) => {
-                println!("Tasks: {}, state changed to {}", message, "ready")
-            }
-        }
-    } else if matches.is_present("block") {
-        // TODO: Task state should not be hard-coded
+        handle_result(
+            state_changer
+                .run(ready_args)
+                .context("Failed to change the state to ready"),
+        );
+    } else if let Some(block_args) = matches.subcommand_matches("block") {
         let state_changer = StateChanger::to_blocked();
-        match state_changer
-            .run(&matches.subcommand_matches("block").unwrap())
-            .context("Failed to complete a task")
-        {
-            Err(e) => {
-                eprintln!("{:?}", e);
-            }
-            Ok(message) => {
-                println!("Tasks: {}, state changed to {}", message, "block")
-            }
-        }
-    } else if matches.is_present("info") {
+        handle_result(
+            state_changer
+                .run(block_args)
+                .context("Failed to change the state to block"),
+        );
+    } else if let Some(info_args) = matches.subcommand_matches("info") {
         let info = Info::new();
-        match info
-            .run(&matches.subcommand_matches("info").unwrap())
-            .context("Failed to run <info> command")
-        {
-            Err(e) => {
-                eprintln!("{:?}", e);
-            }
-            Ok(()) => {}
-        }
-    } else if matches.is_present("start") {
+        handle_result(info.run(info_args).context("Failed to run <info> command"));
+    } else if let Some(start_args) = matches.subcommand_matches("start") {
         let state_changer = StateChanger::to_started();
-        match state_changer
-            .run(&matches.subcommand_matches("start").unwrap())
-            .context("Failed to run start command")
-        {
-            Err(e) => {
-                eprintln!("{:?}", e);
-            }
-            Ok(message) => {
-                println!("Tasks: {}, state changed to {}", message, "start")
-            }
-        }
-    } else if matches.is_present("annotate") {
-        match Add::add_annoation(&matches.subcommand_matches("annotate").unwrap())
-            .context("Failed to run <annotate> command")
-        {
-            Err(e) => {
-                eprintln!("{:?}", e);
-            }
-            Ok(message) => {
-                println!("{}", message);
-            }
-        }
-    } else if matches.is_present("clean") {
-        match Clean::clean(&matches.subcommand_matches("clean").unwrap())
-            .context("Failed to run <clean> command")
-        {
-            Err(e) => {
-                eprintln!("{:?}", e);
-            }
-            Ok(message) => {
-                println!("{}", message);
-            }
-        }
+        handle_result(
+            state_changer
+                .run(start_args)
+                .context("Failed to change the state to start"),
+        );
+    } else if let Some(annotate_args) = matches.subcommand_matches("annotate") {
+        handle_result(
+            Add::add_annoation(annotate_args).context("Failed to run <annotate> command"),
+        );
+    } else if let Some(clean_args) = matches.subcommand_matches("clean") {
+        handle_result(Clean::clean(clean_args).context("Failed to run <clean> command"));
     }
     Ok(())
 }

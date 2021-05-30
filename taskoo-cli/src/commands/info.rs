@@ -15,7 +15,7 @@ impl Info {
         Info
     }
 
-    pub fn run(&self, matches: &ArgMatches) -> Result<(), ClientError> {
+    pub fn run(&self, matches: &ArgMatches) -> Result<String, ClientError> {
         info!("Running info command");
         let task_id = match matches.value_of("task_id") {
             Some(raw_task_id) => raw_task_id.parse::<i64>().map_err(|_error| {
@@ -49,6 +49,6 @@ impl Info {
         } else {
             println!("{:?}", tasks[0]);
         }
-        Ok(())
+        Ok(String::new())
     }
 }

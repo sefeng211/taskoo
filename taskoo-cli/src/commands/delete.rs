@@ -9,7 +9,7 @@ pub struct Delete;
 // taskoo delete 1
 // taskoo delete 1..4
 impl Delete {
-    pub fn delete(matches: &ArgMatches) -> Result<(), CoreError> {
+    pub fn delete(matches: &ArgMatches) -> Result<String, CoreError> {
         info!("Process delete command!");
         let delete_config: Vec<_> = matches.values_of("task_ids").unwrap().collect();
 
@@ -45,6 +45,6 @@ impl Delete {
         };
 
         execute(&mut operation)?;
-        Ok(())
+        Ok(String::new())
     }
 }

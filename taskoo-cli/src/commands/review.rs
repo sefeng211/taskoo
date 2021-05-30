@@ -26,7 +26,7 @@ impl Review {
         Review { config: config }
     }
 
-    pub fn review(&self, matches: &ArgMatches) -> Result<(), ClientError> {
+    pub fn review(&self, matches: &ArgMatches) -> Result<String, ClientError> {
         ctrlc::set_handler(move || {
             // If the user C-c'ed while running dialoguer, the
             // cursor will be gone. So here we reset terminal
@@ -52,7 +52,14 @@ impl Review {
         let mut operations_tuple = List::get_operations(option, Some(vec![context_name]))?;
         assert_eq!(operations_tuple.len(), 1);
         let mut op_tuple = &mut operations_tuple[0];
-        return self.process_operation(&op_tuple.0, &mut op_tuple.1);
+        match self.process_operation(&op_tuple.0, &mut op_tuple.1) {
+            Ok(()) => {
+                return Ok(String::new());
+            }
+            Err(e) => {
+                return Err(e);
+            }
+        }
     }
 
     fn process_operation(

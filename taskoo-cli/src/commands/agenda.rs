@@ -16,7 +16,7 @@ impl Agenda {
         Agenda { config: config }
     }
 
-    pub fn agenda(&self, matches: &ArgMatches) -> Result<()> {
+    pub fn agenda(&self, matches: &ArgMatches) -> Result<String> {
         let start_day: &str = matches.value_of("start_day").unwrap();
         let end_day = if matches.is_present("end_day") {
             Some(matches.value_of("end_day").unwrap().to_string())
@@ -33,6 +33,6 @@ impl Agenda {
         execute_agenda(&mut operation)?;
 
         DisplayAgenda::display(operation.get_result(), &self.config)?;
-        Ok(())
+        Ok(String::new())
     }
 }

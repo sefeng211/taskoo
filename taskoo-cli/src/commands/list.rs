@@ -18,7 +18,7 @@ impl List {
         List { config: config }
     }
 
-    pub fn list(&self, matches: &ArgMatches) -> Result<(), CoreError> {
+    pub fn list(&self, matches: &ArgMatches) -> Result<String, CoreError> {
         // TODO Read context from the configuration file
         match matches.values_of("arguments") {
             Some(arguments) => {
@@ -39,7 +39,7 @@ impl List {
                             matches.is_present("all"),
                         )?);
                         Display::print(&tabbed_string);
-                        Ok(())
+                        Ok(String::new())
                     }
                     None => {
                         // Apply the filter to all context
@@ -55,7 +55,7 @@ impl List {
                                 Display::print(&final_tabbed_string);
                             }
                         }
-                        Ok(())
+                        Ok(String::new())
                     }
                 }
             }
@@ -72,7 +72,7 @@ impl List {
                         Display::print(&final_tabbed_string);
                     }
                 }
-                Ok(())
+                Ok(String::new())
             }
         }
     }

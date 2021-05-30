@@ -7,7 +7,7 @@ use log::{debug, info};
 pub struct Modify;
 
 impl Modify {
-    pub fn modify(matches: &ArgMatches) -> Result<()> {
+    pub fn modify(matches: &ArgMatches) -> Result<String> {
         info!("Processing Modify Task");
 
         let mut option = CommandOption::new();
@@ -40,6 +40,6 @@ impl Modify {
 
         debug!("Executing ModifyOperation {:?}", operation);
         execute(&mut operation)?;
-        Ok(())
+        Ok(String::new())
     }
 }
