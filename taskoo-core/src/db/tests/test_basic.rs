@@ -38,7 +38,9 @@ fn test_create_table_if_needed() -> Result<(), DbError> {
             "task_tag",
             "dependency",
             "context",
+            "task_context",
             "state",
+            "task_state",
             "priority",
             "priority_task"
         ]

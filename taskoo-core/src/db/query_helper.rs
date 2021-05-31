@@ -3,17 +3,32 @@ pub const CREATE_TASK_TABLE_QUERY: &str = "
     create table if not exists task (
         id integer primary key,
         body text not null,
-        context_id INTEGER not null,
         created_at Text DEFAULT CURRENT_TIMESTAMP,
         due_date TEXT nullable,
         scheduled_at Text nullable,
         due_repeat TEXT nullable,
         scheduled_repeat TEXT nullable,
-        state_id INTEGER nullable,
-        annotation TEXT nullabe,
-        FOREIGN KEY(context_id) REFERENCES context(id),
-        FOREIGN KEY(state_id) REFERENCES state(id)
+        annotation TEXT nullabe
     )";
+
+pub const CREATE_TASK_CONTEXT_TABLE_QUERY: &str = "
+    create table if not exists task_context (
+        task_id integer not null,
+        context_id integer not null,
+        PRIMARY KEY (task_id),
+        FOREIGN KEY (task_id) REFERENCES task(id),
+        FOREIGN KEY (context_id) REFERENCES context(id)
+    )";
+
+pub const CREATE_TASK_STATE_TABLE_QUERY: &str = "
+    create table if not exists task_state (
+        task_id integer not null,
+        state_id integer not null,
+        PRIMARY KEY (task_id),
+        FOREIGN KEY (task_id) REFERENCES task(id),
+        FOREIGN KEY (state_id) REFERENCES state(id)
+    )";
+
 
 pub const CREATE_TAG_TABLE_QUERY: &str = "
     create table if not exists tag (
@@ -141,7 +156,7 @@ pub fn generate_get_condition(
     due_date: &Option<&str>,
     scheduled_at: &Option<&str>,
 ) -> Vec<String> {
-    return generate_condition(
+    let mut default_conditions = generate_condition(
         body,
         context_id,
         due_date,
@@ -150,6 +165,16 @@ pub fn generate_get_condition(
         &None,
         &None,
     );
+
+    if context_id.is_some() {
+        default_conditions.push(
+            format!("task_context.context_id = {}", context_id.unwrap())
+                .as_str()
+                .to_string(),
+        );
+    }
+
+    return default_conditions;
 }
 
 pub fn generate_condition(
@@ -164,14 +189,6 @@ pub fn generate_condition(
     let mut conditions: Vec<String> = vec![];
     if body.is_some() {
         conditions.push(format!("body = '{}'", body.unwrap()).as_str().to_string());
-    }
-
-    if context_id.is_some() {
-        conditions.push(
-            format!("context_id = {}", context_id.unwrap())
-                .as_str()
-                .to_string(),
-        );
     }
 
     if due_date.is_some() {
@@ -206,13 +223,13 @@ pub fn generate_condition(
         );
     }
 
-    if state_id.is_some() {
-        conditions.push(
-            format!("state_id = {}", state_id.unwrap())
-                .as_str()
-                .to_string(),
-        );
-    }
+    // if state_id.is_some() {
+    //     conditions.push(
+    //         format!("state_id = {}", state_id.unwrap())
+    //             .as_str()
+    //             .to_string(),
+    //     );
+    // }
 
     return conditions;
 }

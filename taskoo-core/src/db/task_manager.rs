@@ -6,7 +6,8 @@ use crate::db::agenda::{agenda};
 use crate::db::query_helper::{
     CREATE_CONTEXT_TABLE_QUERY, CREATE_DEPENDENCY_TABLE_QUERY, CREATE_STATE_TABLE_QUERY,
     CREATE_TAG_TABLE_QUERY, CREATE_TASK_TABLE_QUERY, CREATE_TASK_TAG_TABLE_QUERY,
-    CREATE_PRIORITY_TABLE_QUERY, CREATE_PRIORITY_TASK_TABLE_QUERY,
+    CREATE_PRIORITY_TABLE_QUERY, CREATE_PRIORITY_TASK_TABLE_QUERY, CREATE_TASK_CONTEXT_TABLE_QUERY,
+    CREATE_TASK_STATE_TABLE_QUERY,
 };
 use crate::db::task_helper::{Task, DEFAULT_CONTEXT, TASK_STATES, PRIORITIES};
 use crate::db::view::view;
@@ -562,7 +563,11 @@ impl TaskManager {
         self.conn
             .execute(CREATE_DEPENDENCY_TABLE_QUERY, NO_PARAMS)?;
         self.conn.execute(CREATE_CONTEXT_TABLE_QUERY, NO_PARAMS)?;
+        self.conn
+            .execute(CREATE_TASK_CONTEXT_TABLE_QUERY, NO_PARAMS)?;
         self.conn.execute(CREATE_STATE_TABLE_QUERY, NO_PARAMS)?;
+        self.conn
+            .execute(CREATE_TASK_STATE_TABLE_QUERY, NO_PARAMS)?;
         self.conn.execute(CREATE_PRIORITY_TABLE_QUERY, NO_PARAMS)?;
         self.conn
             .execute(CREATE_PRIORITY_TASK_TABLE_QUERY, NO_PARAMS)?;

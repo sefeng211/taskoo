@@ -7,6 +7,46 @@ use log::debug;
 use log::info;
 use rusqlite::{named_params, Result, Transaction, NO_PARAMS};
 
+fn update_state(
+    conn: &Transaction,
+    task_ids: &Vec<i64>,
+    state_id: &Option<i64>,
+) -> Result<(), CoreError> {
+    info!("Updating state");
+    if let Some(state_id) = state_id {
+        let mut statement = conn
+            .prepare("Update task_state SET state_id = :state_id WHERE task_id = :task_id")
+            .expect("Failed to prepare the Update task_state query");
+
+        for task_id in task_ids.iter() {
+            statement.execute_named(named_params! {
+            ":task_id": task_id,
+            ":state_id": state_id})?;
+        }
+    }
+    Ok(())
+}
+
+fn update_context(
+    conn: &Transaction,
+    task_ids: &Vec<i64>,
+    context_id: &Option<i64>,
+) -> Result<(), CoreError> {
+    info!("Updating context");
+    if let Some(context_id) = context_id {
+        let mut statement = conn
+            .prepare("Update task_context SET context_id = :context_id WHERE task_id = :task_id")
+            .expect("Failed to prepare the Update task_context query");
+
+        for task_id in task_ids.iter() {
+            statement.execute_named(named_params! {
+            ":task_id": task_id,
+            ":context_id": context_id})?;
+        }
+    }
+    Ok(())
+}
+
 // XXX Why task_ids is reference?
 fn add_tag(conn: &Transaction, task_ids: &Vec<i64>, tag_ids: Vec<i64>) -> Result<(), CoreError> {
     let mut statement = conn
@@ -87,7 +127,7 @@ fn update_dependency(conn: &Transaction, task_id: &i64) -> Result<(), CoreError>
         while let Some(parent_row) = parent_rows.next()? {
             let parent_id: i64 = parent_row.get(0)?;
             let mut get_parent_state =
-                conn.prepare("SELECT state_id FROM task where id = :parent_id")?;
+                conn.prepare("SELECT state_id FROM task_state where task_id = :parent_id")?;
             let mut parent_state_rows = get_parent_state.query_named(named_params! {
                 ":parent_id": parent_id
             })?;
@@ -112,7 +152,7 @@ fn update_dependency(conn: &Transaction, task_id: &i64) -> Result<(), CoreError>
         // Change the state to ready
         if are_all_parents_completed {
             let mut update_to_ready_statement =
-                conn.prepare("Update task SET state_id = 1 WHERE id = :child_id")?;
+                conn.prepare("Update task_state SET state_id = 1 WHERE task_id = :child_id")?;
             update_to_ready_statement.execute_named(named_params! {
                 ":child_id": child_id
             })?;
@@ -142,10 +182,15 @@ fn update_schedule_at_for_repeat(conn: &Transaction, task_id: &i64) -> Result<()
         let new_due_date = TaskManager::parse_date_string(&due_repetition)?;
         debug!("Parsed schedule at {}", new_due_date);
 
-        let mut statement =
-            conn.prepare("Update task SET due_date = :due_date, state_id = 1 WHERE id = :id")?;
-        statement.execute_named(named_params! {
+        let mut update_task_stmt =
+            conn.prepare("Update task SET due_date = :due_date WHERE id = :id")?;
+        let mut update_state_stmt =
+            conn.prepare("Update task_state SET state_id = 1 WHERE task_id = :id")?;
+        update_task_stmt.execute_named(named_params! {
             ":due_date": new_due_date,
+            ":id": task_id
+        })?;
+        update_state_stmt.execute_named(named_params! {
             ":id": task_id
         })?;
     } else {
@@ -161,10 +206,15 @@ fn update_schedule_at_for_repeat(conn: &Transaction, task_id: &i64) -> Result<()
         let new_schedule_at = TaskManager::parse_date_string(&scheduled_repetition)?;
         debug!("Parsed schedule at {}", new_schedule_at);
 
-        let mut statement = conn
-            .prepare("Update task SET scheduled_at = :scheduled_at, state_id = 1 WHERE id = :id")?;
-        statement.execute_named(named_params! {
+        let mut update_task_stmt =
+            conn.prepare("Update task SET scheduled_at = :scheduled_at WHERE id = :id")?;
+        let mut update_state_stmt =
+            conn.prepare("Update task_state SET state_id = 1 WHERE task_id = :id")?;
+        update_task_stmt.execute_named(named_params! {
             ":scheduled_at": new_schedule_at,
+            ":id": task_id
+        })?;
+        update_state_stmt.execute_named(named_params! {
             ":id": task_id
         })?;
     } else {
@@ -202,9 +252,15 @@ pub fn modify(
     if conditions.is_empty()
         && tag_ids.is_empty()
         && tag_ids_to_remove.is_empty()
+        && state_id.is_none()
+        && context_id.is_none()
         && priority.is_none()
     {
-        info!("Conditions and tag_ids are both empty, nothing is going to be modified");
+        info!(
+            "
+            conditions, tag_ids, tag_ids_to_remove,
+            state_id and context_id and priority are all empty, nothing is going to be modified"
+        );
         return Ok(vec![]);
     }
 
@@ -225,6 +281,10 @@ pub fn modify(
 
     add_tag(&tx, &task_ids, tag_ids)?;
     remove_tag(&tx, &task_ids, tag_ids_to_remove)?;
+
+    update_context(&tx, &task_ids, context_id);
+    update_state(&tx, &task_ids, state_id);
+
     if let Some(priority_id) = priority {
         insert_or_replace_priority(&tx, &task_ids, &priority_id)?;
     }
