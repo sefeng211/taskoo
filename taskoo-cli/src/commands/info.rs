@@ -15,23 +15,31 @@ impl Info {
         Info
     }
 
-    pub fn run(&self, matches: &ArgMatches) -> Result<String, ClientError> {
+    pub fn run(&self, task_id: &u64, attribute: &Option<String>) -> Result<String, ClientError> {
         info!("Running info command");
-        let task_id = match matches.value_of("task_id") {
-            Some(raw_task_id) => raw_task_id.parse::<i64>().map_err(|_error| {
-                ClientError::ParseError(String::from(raw_task_id), String::from("i64"))
-            })?,
-            None => {
-                return Err(ClientError::MissingAttrError {
-                    attr: String::from("task_id"),
-                    backtrace: Backtrace::capture(),
-                });
-            }
-        };
+        // let task_id = match matches.value_of("task_id") {
+        //     Some(raw_task_id) => raw_task_id.parse::<i64>().map_err(|_error| {
+        //         ClientError::ParseError(String::from(raw_task_id), String::from("i64"))
+        //     })?,
+        //     None => {
+        //         return Err(ClientError::MissingAttrError {
+        //             attr: String::from("task_id"),
+        //             backtrace: Backtrace::capture(),
+        //         });
+        //     }
+        // };
 
+        let id: i64 = if *task_id > std::i64::MAX as u64 {
+            return Err(ClientError::MissingAttrError {
+                attr: String::from(""),
+                backtrace: Backtrace::capture(),
+            });
+        } else {
+            *task_id as i64
+        };
         info!("Task id: {:?}", task_id);
         let mut operation = GetOp::new();
-        operation.task_id = Some(task_id);
+        operation.task_id = Some(id);
         execute(&mut operation)?;
 
         let tasks = &operation.get_result();
@@ -44,7 +52,7 @@ impl Info {
 
         assert_eq!(tasks.len(), 1);
 
-        if let Some(attr) = matches.value_of("attribute") {
+        if let Some(attr) = attribute {
             println!("{}", tasks[0].get_property_value(attr)?);
         } else {
             println!("{:?}", tasks[0]);

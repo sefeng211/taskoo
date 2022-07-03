@@ -26,7 +26,7 @@ impl Review {
         Review { config: config }
     }
 
-    pub fn review(&self, matches: &ArgMatches) -> Result<String, ClientError> {
+    pub fn review(&self, matches: &Vec<String>) -> Result<String, ClientError> {
         ctrlc::set_handler(move || {
             // If the user C-c'ed while running dialoguer, the
             // cursor will be gone. So here we reset terminal
@@ -36,18 +36,18 @@ impl Review {
         })
         .expect("Unable to set Ctrl-C handler");
 
-        let (option, context_name) = match matches.values_of("arguments") {
-            Some(arguments) => {
-                let option = parse_command_option(&arguments.collect(), false, false, false)?;
-                match option.context {
-                    Some(ref context) => {
-                        let cloned_context = context.clone();
-                        (option, cloned_context)
-                    }
-                    None => (option, String::from("inbox")),
+        let (option, context_name) = if !matches.is_empty() {
+            let v2: Vec<&str> = matches.iter().map(|s| &**s).collect();
+            let option = parse_command_option(&v2, false, false, false)?;
+            match option.context {
+                Some(ref context) => {
+                    let cloned_context = context.clone();
+                    (option, cloned_context)
                 }
+                None => (option, String::from("inbox")),
             }
-            None => (CommandOption::new(), String::from("inbox")),
+        } else {
+            (CommandOption::new(), String::from("inbox"))
         };
         let mut operations_tuple = List::get_operations(option, Some(vec![context_name]))?;
         assert_eq!(operations_tuple.len(), 1);

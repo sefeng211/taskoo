@@ -9,10 +9,8 @@ pub struct Delete;
 // taskoo delete 1
 // taskoo delete 1..4
 impl Delete {
-    pub fn delete(matches: &ArgMatches) -> Result<String, CoreError> {
+    pub fn delete(delete_config: &Vec<String>) -> Result<String, CoreError> {
         info!("Process delete command!");
-        let delete_config: Vec<_> = matches.values_of("task_ids").unwrap().collect();
-
         let mut task_ids: Vec<i64> = vec![];
 
         if delete_config.len() == 1 {

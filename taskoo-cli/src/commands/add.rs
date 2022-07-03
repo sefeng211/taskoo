@@ -12,11 +12,11 @@ use log::debug;
 pub struct Add;
 
 impl Add {
-    pub fn add(matches: &ArgMatches) -> Result<String, ClientError> {
+    pub fn add(add_annotation: &bool, arguments: &Vec<String>) -> Result<String, ClientError> {
         let mut option = CommandOption::new();
-        if matches.is_present("arguments") {
-            let config: Vec<&str> = matches.values_of("arguments").unwrap().collect();
-            option = parse_command_option(&config, true, false, false).unwrap();
+        if !arguments.is_empty() {
+            let v2: Vec<&str> = arguments.iter().map(|s| &**s).collect();
+            option = parse_command_option(&v2, true, false, false).unwrap();
             debug!("Option {:?}", option);
         }
 
@@ -47,7 +47,7 @@ impl Add {
         operation.priority = option.priority;
         operation.parent_task_ids = option.parent_task_ids;
 
-        let annotation = if matches.is_present("annotation") {
+        let annotation = if *add_annotation {
             if let Some(rv) = Editor::new().edit("").unwrap() {
                 Some(rv.clone())
             } else {

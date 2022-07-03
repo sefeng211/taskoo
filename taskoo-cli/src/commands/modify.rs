@@ -7,15 +7,13 @@ use log::{debug, info};
 pub struct Modify;
 
 impl Modify {
-    pub fn modify(matches: &ArgMatches) -> Result<String> {
+    pub fn modify(matches: &Vec<String>) -> Result<String> {
         info!("Processing Modify Task");
 
         let mut option = CommandOption::new();
-        if matches.is_present("args") {
-            let config: Vec<&str> = matches.values_of("args").unwrap().collect();
-            option = parse_command_option(&config, false, true, true)
-                .context("Unable to parse the provided option for modify")?;
-        }
+        let v2: Vec<&str> = matches.iter().map(|s| &**s).collect();
+        option = parse_command_option(&v2, false, true, true)
+            .context("Unable to parse the provided option for modify")?;
 
         let mut operation = ModifyOperation::new(option.task_ids);
         operation.context_name = option.context;

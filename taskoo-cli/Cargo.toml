@@ -5,7 +5,7 @@ authors = ["Sean Feng <sean@seanfeng.dev>"]
 edition = "2018"
 
 [dependencies]
-clap = { version = "3.0.0-beta.2", features = ["yaml"] }
+clap = { version = "3.1.8", features = ["derive"] }
 
 taskoo-core = { path = "../taskoo-core" }
 yansi = "0.5.0"

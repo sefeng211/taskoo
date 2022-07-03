@@ -16,20 +16,15 @@ impl Agenda {
         Agenda { config: config }
     }
 
-    pub fn agenda(&self, matches: &ArgMatches) -> Result<String> {
-        let start_day: &str = matches.value_of("start_day").unwrap();
-        let end_day = if matches.is_present("end_day") {
-            Some(matches.value_of("end_day").unwrap().to_string())
-        } else {
-            None
-        };
+    pub fn agenda(&self, start_day: &String, end_day: &Option<String>) -> Result<String> {
         info!(
             "!Processing Agenda Task with start_day={}, end_day={:?}",
             start_day, end_day
         );
         debug!("Parsed Option {:?}", start_day);
 
-        let mut operation = AgendaOperation::new(start_day.to_string(), end_day);
+        let mut operation = AgendaOperation::new(
+            start_day.to_string(), end_day.to_owned());
         execute_agenda(&mut operation)?;
 
         DisplayAgenda::display(operation.get_result(), &self.config)?;
