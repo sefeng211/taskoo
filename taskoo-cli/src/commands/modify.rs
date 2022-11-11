@@ -1,18 +1,17 @@
 use anyhow::{Context, Result};
-use clap::ArgMatches;
-use taskoo_core::operation::{execute, ModifyOperation};
 
-use crate::option_parser::{parse_command_option, CommandOption};
+use taskoo_core::operation::{execute, ModifyOperation};
+use crate::option_parser::parse_command_option;
 use log::{debug, info};
+
 pub struct Modify;
 
 impl Modify {
     pub fn modify(matches: &Vec<String>) -> Result<String> {
-        info!("Processing Modify Task");
+        info!("Modifying Task");
 
-        let mut option = CommandOption::new();
         let v2: Vec<&str> = matches.iter().map(|s| &**s).collect();
-        option = parse_command_option(&v2, false, true, true)
+        let option = parse_command_option(&v2, false, true, true)
             .context("Unable to parse the provided option for modify")?;
 
         let mut operation = ModifyOperation::new(option.task_ids);

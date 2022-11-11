@@ -136,9 +136,8 @@ fn main() -> Result<(), ClientError> {
             handle_result(Add::add(annotation, arguments).context("Add command"));
         }
         Commands::List { all, arguments } => {
-            let list_command = List::new(get_config());
             handle_result(
-                list_command
+                List::new(get_config())
                     .list(all.to_owned(), arguments)
                     .context("List command failed"),
             );
@@ -151,18 +150,17 @@ fn main() -> Result<(), ClientError> {
                     .context("Review command failed"),
             );
         }
-        Commands::Modify { arguments } => {}
+        Commands::Modify { arguments } => {
+            handle_result(Modify::modify(arguments).context("Modify command failed"))
+        }
         Commands::Delete { arguments } => {
             handle_result(Delete::delete(arguments).context("Delete command failed"));
         }
-        Commands::Agenda { start_day, end_day } => {
-            let agenda = Agenda::new(get_config());
-            handle_result(
-                agenda
-                    .agenda(&start_day, &end_day)
-                    .context("Agenda command failed"),
-            );
-        }
+        Commands::Agenda { start_day, end_day } => handle_result(
+            Agenda::new(get_config())
+                .agenda(&start_day, &end_day)
+                .context("Agenda command failed"),
+        ),
         Commands::Info { task_id, attribute } => {
             let info = Info::new();
             handle_result(
@@ -170,69 +168,26 @@ fn main() -> Result<(), ClientError> {
                     .context("Failed to run <info> command"),
             );
         }
-        Commands::Start { task_ids } => {}
-        Commands::Done { task_ids } => {
-            let state_changer = StateChanger::to_completed();
-            handle_result(
-                state_changer
-                    .run(task_ids)
-                    .context("Failed to complete a task"),
-            )
-        }
-        Commands::Ready { task_ids } => {}
-        Commands::Block { task_ids } => {}
+        Commands::Start { task_ids } => handle_result(
+            StateChanger::to_started()
+                .run(task_ids)
+                .context("Failed to complete a task"),
+        ),
+        Commands::Done { task_ids } => handle_result(
+            StateChanger::to_completed()
+                .run(task_ids)
+                .context("Failed to complete a task"),
+        ),
+        Commands::Ready { task_ids } => handle_result(
+            StateChanger::to_ready()
+                .run(task_ids)
+                .context("Failed to complete a task"),
+        ),
+        Commands::Block { task_ids } => handle_result(
+            StateChanger::to_blocked()
+                .run(task_ids)
+                .context("Failed to block the task"),
+        ),
     }
-    //let yaml = load_yaml!("../config/cli.yml");
-    //let matches = App::from(yaml).get_matches();
-
-    // if let Some(add_args) = matches.subcommand_matches("add") {
-    // } else if let Some(list_args) = matches.subcommand_matches("list") {
-    //     let list_command = List::new(get_config());
-    //     handle_result(list_command.list(list_args).context("List command failed"));
-    // } else if let Some(delete_args) = matches.subcommand_matches("delete") {
-    // } else if let Some(review_args) = matches.subcommand_matches("review") {
-    // } else if let Some(modify_args) = matches.subcommand_matches("modify") {
-    //     handle_result(Modify::modify(modify_args).context("Modify command failed"));
-    // } else if let Some(agenda_args) = matches.subcommand_matches("agenda") {
-    //     let agenda = Agenda::new(get_config());
-    //     handle_result(agenda.agenda(agenda_args).context("Agenda command failed"));
-    // } else if let Some(done_args) = matches.subcommand_matches("done") {
-    //     let state_changer = StateChanger::to_completed();
-    //     handle_result(
-    //         state_changer
-    //             .run(done_args)
-    //             .context("Failed to complete a task"),
-    //     );
-    // } else if let Some(ready_args) = matches.subcommand_matches("ready") {
-    //     let state_changer = StateChanger::to_ready();
-    //     handle_result(
-    //         state_changer
-    //             .run(ready_args)
-    //             .context("Failed to change the state to ready"),
-    //     );
-    // } else if let Some(block_args) = matches.subcommand_matches("block") {
-    //     let state_changer = StateChanger::to_blocked();
-    //     handle_result(
-    //         state_changer
-    //             .run(block_args)
-    //             .context("Failed to change the state to block"),
-    //     );
-    // } else if let Some(info_args) = matches.subcommand_matches("info") {
-    //     let info = Info::new();
-    //     handle_result(info.run(info_args).context("Failed to run <info> command"));
-    // } else if let Some(start_args) = matches.subcommand_matches("start") {
-    //     let state_changer = StateChanger::to_started();
-    //     handle_result(
-    //         state_changer
-    //             .run(start_args)
-    //             .context("Failed to change the state to start"),
-    //     );
-    // } else if let Some(annotate_args) = matches.subcommand_matches("annotate") {
-    //     handle_result(
-    //         Add::add_annoation(annotate_args).context("Failed to run <annotate> command"),
-    //     );
-    // } else if let Some(clean_args) = matches.subcommand_matches("clean") {
-    //     handle_result(Clean::clean(clean_args).context("Failed to run <clean> command"));
-    // }
     Ok(())
 }

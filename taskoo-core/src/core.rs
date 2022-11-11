@@ -17,13 +17,20 @@ use crate::util::create_default_init;
 pub struct ConfigManager;
 impl ConfigManager {
     pub fn init_and_get_database_path() -> Result<HashMap<String, String>, InitialError> {
+        println!("Start  1 !!!");
         let config = &ConfigManager::get_config()?;
+        println!("Start  2 !!!");
         let general_section = config.general_section();
+        println!("Start  3 !!!");
         let database_path = general_section
             .get("db_path")
             .expect("Failed to get the location of the database file");
-        let expanded_db_path: &str = &shellexpand::tilde(database_path);
+        println!("Start  4 !!!");
+        // let expanded_db_path: &str = &shellexpand::tilde(database_path);
+        let expanded_db_path: &str = "/home/sefeng/.config/taskoo/tasks.db";
         debug!("Expanded Database Path: {} \n", &expanded_db_path);
+        println!("Expanded Database Path: {} \n", &expanded_db_path);
+        println!("Start  5 !!!");
         ConfigManager::ensure_db_file_exists(&expanded_db_path)
             .expect("Unable to create the database file");
 
@@ -33,19 +40,25 @@ impl ConfigManager {
     }
 
     fn get_config() -> Result<Ini, InitialError> {
-        let mut config_dir_path = match config_dir() {
-            Some(path) => path,
-            None => {
-                return Err(InitialError::DirError());
-            }
-        };
+        println!("config  1 !!!");
+        // let mut config_dir_path = match config_dir() {
+        //     Some(path) => path,
+        //     None => {
+        //         return Err(InitialError::DirError());
+        //     }
+        // };
+        let mut config_dir_path = std::path::PathBuf::new();
+        config_dir_path.push("/home/sefeng/.config");
+        println!("config  2 !!!");
         config_dir_path.push("taskoo");
 
         let mut config_file_path = config_dir_path.clone();
         config_file_path.push("config");
         // If not user defined config file is found, a default
         // config file will be created at $HOME/.config/taskoo/config
+        println!("config  2 !!!");
         if !config_file_path.exists() {
+            println!("config  3 !!!");
             let mut db_path = config_dir_path.clone();
             db_path.push("tasks.db");
             match ConfigManager::create_config_file(&mut config_dir_path) {
@@ -54,6 +67,7 @@ impl ConfigManager {
             }
 
             debug!("Create default config file at {:?}", &config_file_path);
+            println!("config  4 !!!");
             create_default_init(&db_path)
                 .write_to_file(&config_file_path)
                 .map_err(|error| InitialError::IoError {
@@ -92,3 +106,4 @@ pub trait Operation {
     fn set_result(&mut self, result: Vec<Task>);
     fn get_result(&mut self) -> &Vec<Task>;
 }
+

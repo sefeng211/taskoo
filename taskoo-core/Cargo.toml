@@ -6,19 +6,32 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[lib]
+crate-type= ['cdylib', 'lib']
+
 [dependencies]
 # rusqlite = "0.24.1"
 rust-ini = "0.16.0"
 dirs = "3.0"
-chrono = "0.4.19"
+chrono = { version = "0.4.19", features = ["serde"] }
 thiserror = "1.0.22"
 more-asserts = "0.2.1"
 log = "0.4.0"
 env_logger = "0.8.2"
 anyhow = "1.0.37"
 shellexpand = "2.1.0"
+serde = {version= "1.0.145", features = ["derive"]}
+serde_json = "1.0.86"
+
+# [dependencies.rusqlite]
+# version = "0.24.1"
+# default-features = false
+# features = ["bundled", "array"]
 
 [dependencies.rusqlite]
-version = "0.24.1"
-default-features = false
-features = ["bundled", "array"]
+path = "/home/sefeng/.local/workspace/repos/rusqlite"
+version = "0.26.3"
+features = [
+    "bundled",
+    "wasm32-wasi-vfs"
+]
