@@ -1,0 +1,21 @@
+<html>
+  <head>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="consts.mjs"></script>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+  <body>
+    <main>
+      <h1>Taskoo</h1>
+      <input placeholder="GetTask" autofocus/>
+      <button onclick="sendGetTaskQuery()">Run</button>
+      <template id="my-tasks">
+        <ul id="list"></ul>
+      </template>
+      <my-tasks></my-tasks>
+      <script type="module" src="utils.js"></script>
+    </main>
+  </body>
+</html>

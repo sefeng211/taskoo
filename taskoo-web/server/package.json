@@ -1,0 +1,20 @@
+{
+  "name": "taskoo-web",
+  "version": "0.1.0",
+  "description": "Web Interface for Taskoo",
+  "main": "server.js",
+  "scripts": {
+    "start": "npx nodemon --experimental-wasi-unstable-preview1 server.js"
+  },
+  "type": "module",
+  "author": "Sean Feng",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.16.3",
+    "pug": "^2.0.3",
+    "cors": "2.8.5"
+  },
+  "devDependencies": {
+    "nodemon": "^1.19.0"
+  }
+}
