@@ -2,8 +2,8 @@ use crate::core::ConfigManager;
 use crate::db::task_manager::TaskManager;
 use crate::error::CoreError;
 use crate::db::task_helper::TASK_STATES;
-use crate::operation::{Add, execute};
-use std::collections::HashMap;
+
+
 
 use rusqlite::{Result, NO_PARAMS, named_params};
 
@@ -48,7 +48,7 @@ impl ContextCommand<'_> {
         Ok(context_names)
     }
     fn delete_context_base(&mut self, names: Vec<String>) -> Result<(), CoreError> {
-        let mut tx = match self.db_manager.as_mut() {
+        let tx = match self.db_manager.as_mut() {
             Some(manager) => manager.conn.transaction()?,
             None => self
                 .db_manager_for_test
@@ -217,7 +217,7 @@ impl<'a> SimpleCommand<'a> for TagCommand<'a> {
     }
 
     fn delete(&mut self, names: Vec<String>) -> Result<(), CoreError> {
-        let mut tx = match self.db_manager.as_mut() {
+        let tx = match self.db_manager.as_mut() {
             Some(manager) => manager.conn.transaction()?,
             None => match self.db_manager_for_test.as_mut() {
                 Some(manager) => manager.conn.transaction()?,
@@ -325,7 +325,7 @@ impl<'a> SimpleCommand<'a> for StateCommand<'a> {
     }
 
     fn delete(&mut self, names: Vec<String>) -> Result<(), CoreError> {
-        let mut tx = match self.db_manager.as_mut() {
+        let tx = match self.db_manager.as_mut() {
             Some(manager) => manager.conn.transaction()?,
             None => match self.db_manager_for_test.as_mut() {
                 Some(manager) => manager.conn.transaction()?,

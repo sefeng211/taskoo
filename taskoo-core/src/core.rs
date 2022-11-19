@@ -1,7 +1,7 @@
 use crate::db::task_helper::Task;
 use crate::error::{InitialError, CoreError};
-use shellexpand;
-use dirs::config_dir;
+
+
 use ini::Ini;
 use log::debug;
 use std::collections::HashMap;
@@ -22,7 +22,7 @@ impl ConfigManager {
         println!("Start  2 !!!");
         let general_section = config.general_section();
         println!("Start  3 !!!");
-        let database_path = general_section
+        let _database_path = general_section
             .get("db_path")
             .expect("Failed to get the location of the database file");
         println!("Start  4 !!!");

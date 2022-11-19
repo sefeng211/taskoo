@@ -1,4 +1,4 @@
-use crate::db::task_helper::{Task, convert_rows_into_task};
+use crate::db::task_helper::{Task};
 use crate::error::CoreError;
 use super::get_base::get_base;
 use log::debug;

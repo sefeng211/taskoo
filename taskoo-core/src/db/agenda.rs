@@ -1,12 +1,12 @@
 use chrono::{NaiveDate, Duration};
 use super::query_helper::generate_agenda_condition;
 use log::info;
-use crate::db::task_helper::{convert_rows_into_task, Task};
+use crate::db::task_helper::{Task};
 use crate::error::CoreError;
 use super::get_base::get_base;
 
-use rusqlite::{Transaction, Result, NO_PARAMS};
-use std::collections::HashMap;
+use rusqlite::{Transaction, Result};
+
 
 pub fn agenda(
     conn: &Transaction,

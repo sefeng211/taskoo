@@ -1,5 +1,5 @@
 use chrono::{NaiveDate};
-use crate::core::{ConfigManager, Operation};
+use crate::core::{ConfigManager};
 use crate::db::task_helper::Task;
 use crate::db::task_manager::TaskManager;
 use crate::error::*;

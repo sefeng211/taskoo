@@ -4,7 +4,7 @@ use std::ffi::CString;
 use std::os::raw::c_char;
 
 use crate::operation;
-use crate::wasm::helpers;
+
 
 
 static HELLO: &'static str = "Hello, WASM!";

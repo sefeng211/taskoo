@@ -1,10 +1,10 @@
 use super::query_helper::generate_view_condition;
 use log::info;
-use crate::db::task_helper::{convert_rows_into_task, Task};
+use crate::db::task_helper::{Task};
 use crate::error::CoreError;
 use super::get_base::get_base;
-use log::debug;
-use rusqlite::{Transaction, Result, NO_PARAMS};
+
+use rusqlite::{Transaction, Result};
 
 pub fn view(
     conn: &Transaction,

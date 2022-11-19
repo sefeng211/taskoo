@@ -1,7 +1,7 @@
 use crate::error::CoreError;
 use crate::db::task_helper::{convert_rows_into_task, Task};
 use log::debug;
-use rusqlite::{Result, Transaction, NO_PARAMS, Rows};
+use rusqlite::{Result, Transaction, NO_PARAMS};
 
 pub fn get_base(tx: &Transaction, conditions: &str) -> Result<Vec<Task>, CoreError> {
     let mut query = String::from("

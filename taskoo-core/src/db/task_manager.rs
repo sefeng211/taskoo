@@ -12,7 +12,7 @@ use crate::db::query_helper::{
 use crate::db::task_helper::{Task, DEFAULT_CONTEXT, TASK_STATES, PRIORITIES};
 use crate::db::view::view;
 use crate::error::{CoreError, ArgumentError};
-use chrono::{Date, DateTime, Duration, Local, NaiveDate, Utc, NaiveDateTime};
+use chrono::{DateTime, Duration, Local, NaiveDate, NaiveDateTime};
 use log::{info, debug};
 use rusqlite::{named_params, Connection, Result, Transaction, NO_PARAMS};
 use std::collections::HashMap;
@@ -329,7 +329,7 @@ impl TaskManager {
         start_day: String,
         end_day: Option<String>,
     ) -> Result<Vec<(NaiveDate, Vec<Task>)>, CoreError> {
-        let mut tx = self.conn.transaction()?;
+        let tx = self.conn.transaction()?;
         let start_day_in_date = NaiveDateTime::parse_from_str(
             &TaskManager::parse_date_string(&start_day)?,
             "%Y-%m-%d %H:%M:%S",
