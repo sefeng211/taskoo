@@ -2,3 +2,20 @@ main {
    margin: auto;
    width: 70%;
 }
+
+.search-bar {
+    width: fit-content;
+    margin: auto;
+}
+
+.search-input {
+    display: inline;
+}
+
+.search-button {
+    padding: 2px;
+}
+
+.search-dropdown {
+    display: inline;
+}

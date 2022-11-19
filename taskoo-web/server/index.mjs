@@ -10,7 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const CONFIG_DIR = "/home/sefeng/.config";
 const TASKOO_CONFIG_DIR = "/home/sefeng/.config/taskoo";
-const WASM_PATH = "./taskoo_core_check.wasm";
+const WASM_PATH = "./taskoo_core.wasm";
 
 const wasi = new WASI({
   // Same as --mapdir of wasmtime, map virtual filesystem to host filesystem

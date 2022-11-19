@@ -1,6 +1,7 @@
 <html>
   <head>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/mvp.css@1.12/mvp.css">
     <script type="module" src="consts.mjs"></script>
 
     <meta charset="utf-8">
@@ -9,11 +10,15 @@
   <body>
     <main>
       <h1>Taskoo</h1>
-      <input placeholder="GetTask" autofocus/>
-      <button onclick="sendGetTaskQuery()">Run</button>
-      <template id="my-tasks">
-        <ul id="list"></ul>
-      </template>
+      <div class="search-bar">
+        <select class="search-dropdown">
+          <option>add</option>
+          <option>list</option>
+          <option>agenda</option>
+        </select>
+        <input class="search-input" placeholder="GetTask" autofocus/>
+        <button class="search-button">Execute</button>
+      </div>
       <my-tasks></my-tasks>
       <script type="module" src="utils.js"></script>
     </main>

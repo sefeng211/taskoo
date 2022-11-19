@@ -1,6 +1,9 @@
 # Requirement
 * Sqlite >= 3.6.19 (Foreign_key support)
 
+# Installation
+`rustup target add wasm32-wasi`
+
 ## WebAssembly Support
 In theory, we can compile this library to WASM to make it usable in browser,
 such that browsers can be clients as well. However, there's a blocking issue
