@@ -1,7 +1,6 @@
 use crate::db::task_helper::Task;
 use crate::error::{InitialError, CoreError};
 
-
 use ini::Ini;
 use log::debug;
 use std::collections::HashMap;
@@ -17,20 +16,14 @@ use crate::util::create_default_init;
 pub struct ConfigManager;
 impl ConfigManager {
     pub fn init_and_get_database_path() -> Result<HashMap<String, String>, InitialError> {
-        println!("Start  1 !!!");
         let config = &ConfigManager::get_config()?;
-        println!("Start  2 !!!");
         let general_section = config.general_section();
-        println!("Start  3 !!!");
-        let _database_path = general_section
+        let database_path = general_section
             .get("db_path")
             .expect("Failed to get the location of the database file");
-        println!("Start  4 !!!");
-        // let expanded_db_path: &str = &shellexpand::tilde(database_path);
-        let expanded_db_path: &str = "/home/sefeng/.config/taskoo/tasks.db";
+        let expanded_db_path: &str = &shellexpand::tilde(database_path);
+        // let expanded_db_path: &str = "/home/sefeng/.config/taskoo/tasks.db";
         debug!("Expanded Database Path: {} \n", &expanded_db_path);
-        println!("Expanded Database Path: {} \n", &expanded_db_path);
-        println!("Start  5 !!!");
         ConfigManager::ensure_db_file_exists(&expanded_db_path)
             .expect("Unable to create the database file");
 
@@ -40,25 +33,26 @@ impl ConfigManager {
     }
 
     fn get_config() -> Result<Ini, InitialError> {
-        println!("config  1 !!!");
-        // let mut config_dir_path = match config_dir() {
-        //     Some(path) => path,
-        //     None => {
-        //         return Err(InitialError::DirError());
-        //     }
-        // };
-        let mut config_dir_path = std::path::PathBuf::new();
-        config_dir_path.push("/home/sefeng/.config");
-        println!("config  2 !!!");
+        let home = match std::env::var("HOME") {
+            Ok(dir) => {
+                debug!("Successfully read $HOME");
+                dir
+            }
+            Err(_) => {
+                debug!("Failed to read $HOME");
+                return Err(InitialError::DirError());
+            }
+        };
+
+        let mut config_dir_path = std::path::PathBuf::from(home);
+        config_dir_path.push(".config");
         config_dir_path.push("taskoo");
 
         let mut config_file_path = config_dir_path.clone();
         config_file_path.push("config");
-        // If not user defined config file is found, a default
+        // If no user defined config file is found, a default
         // config file will be created at $HOME/.config/taskoo/config
-        println!("config  2 !!!");
         if !config_file_path.exists() {
-            println!("config  3 !!!");
             let mut db_path = config_dir_path.clone();
             db_path.push("tasks.db");
             match ConfigManager::create_config_file(&mut config_dir_path) {
@@ -67,13 +61,14 @@ impl ConfigManager {
             }
 
             debug!("Create default config file at {:?}", &config_file_path);
-            println!("config  4 !!!");
             create_default_init(&db_path)
                 .write_to_file(&config_file_path)
                 .map_err(|error| InitialError::IoError {
                     path: config_file_path.to_str().unwrap().to_string(),
                     source: error,
                 })?;
+        } else {
+            debug!("Found existing config directory {:?}", &config_file_path);
         }
         debug!("Load config from file {:?}", &config_file_path);
         return Ok(Ini::load_from_file(config_file_path)?);
@@ -107,3 +102,6 @@ pub trait Operation {
     fn get_result(&mut self) -> &Vec<Task>;
 }
 
+pub trait Command {
+    fn run(&mut self);
+}

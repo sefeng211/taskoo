@@ -1,4 +1,4 @@
-import { run, passStringToWASM } from "./index.mjs";
+import { run, passStringToWASM, listEndpoint, addEndPoint, agendaEndpoint} from "./index.mjs";
 import express from "express";
 import cors from "cors";
 
@@ -18,11 +18,25 @@ app.get('/today', (req, res) => {
 });
 
 app.post('/list', (req, res) => {
-  console.log("list endpoint");
+  const data = listEndpoint(req.body.data);
+  let ret;
+  try {
+    ret = JSON.parse(data);
+  } catch(e) {
+    ret = {"error": data};
+  }
+  res.send(ret);
 });
 
 app.post('/agenda', (req, res) => {
-  console.log("agenda endpoint");
+  const data = agendaEndpoint(req.body.data);
+  let ret;
+  try {
+    ret = JSON.parse(data);
+  } catch(e) {
+    ret = {"error": data};
+  }
+  res.send(ret);
 });
 
 const createPost = (req, res, next) => {
@@ -33,4 +47,9 @@ const createPost = (req, res, next) => {
 app.post('/run', createPost, (req, res) => {
   console.log(req.body.data);
   passStringToWASM(req.body.data);
+});
+
+app.post('/add', createPost, (req, res) => {
+  console.log("add endpoint");
+  addEndPoint(req.body.data);
 });

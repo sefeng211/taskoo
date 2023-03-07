@@ -1,11 +1,12 @@
-use crate::core::{ConfigManager, Operation};
+use crate::core::{ConfigManager, Operation, Command};
 use crate::db::task_helper::{Task, TASK_STATES};
 use crate::db::task_manager::TaskManager;
 use crate::error::*;
+use crate::option_parser::{parse_command_option, CommandError};
 use log::debug;
 
 pub struct Add<'a> {
-    pub body: &'a str,
+    pub body: String,
     pub priority: Option<String>,
     pub context: Option<String>,
     state: Option<String>,
@@ -29,28 +30,48 @@ pub struct AddAnnotation {
 }
 
 impl Add<'_> {
-    pub fn new(body: &str) -> Add {
-        Add {
-            body: body,
-            priority: None,
-            context: None,
-            state: None,
-            tags: vec![],
-            date_due: None,
-            date_scheduled: None,
-            repetition_due: None,
-            repetition_scheduled: None,
+    pub fn new(data: &Vec<String>) -> Result<Add, CoreError> {
+        let option =
+            parse_command_option(&data.iter().map(|s| &**s).collect(), true, false, false)?;
+        let body = option
+            .body
+            .ok_or(CommandError::InvalidBodyError(String::from(
+                "<Body> of the task",
+            )))?;
+
+        let mut s: Option<String> = None;
+        if option.state == Some(String::from("ready")) {
+            s = Some(String::from(TASK_STATES[0]));
+        } else if option.state == Some(String::from("completed")) {
+            s = Some(String::from(TASK_STATES[1]));
+        } else if option.state == Some(String::from("blocked")) {
+            s = Some(String::from(TASK_STATES[2]));
+        } else if option.state == Some(String::from("started")) {
+            s = Some(String::from(TASK_STATES[3]));
+        } else if option.state.is_some() {
+            s = Some(option.state.unwrap());
+        }
+        Ok(Add {
+            body: String::from(body),
+            priority: option.priority,
+            context: option.context,
+            state: s,
+            tags: option.tags,
+            date_due: option.date_due,
+            date_scheduled: option.date_scheduled,
+            repetition_due: option.repetition_due,
+            repetition_scheduled: option.repetition_scheduled,
             annotation: None,
-            parent_task_ids: None,
+            parent_task_ids: option.parent_task_ids,
             task_manager: None,
             task_manager_for_test: None,
             result: None,
-        }
+        })
     }
 
     pub fn new_with_task_manager<'a>(body: &'a str, task_manager: &'a mut TaskManager) -> Add<'a> {
         Add {
-            body: body,
+            body: body.to_string(),
             priority: None,
             context: None,
             state: None,
@@ -97,6 +118,9 @@ impl AddAnnotation {
         }
     }
 }
+
+struct AddCommand;
+impl AddCommand {}
 
 impl Operation for Add<'_> {
     fn init(&mut self) -> Result<(), InitialError> {
@@ -194,4 +218,8 @@ impl Operation for AddAnnotation {
     fn get_result(&mut self) -> &Vec<Task> {
         return &self.result.as_ref().unwrap();
     }
+}
+
+impl Command for AddCommand {
+    fn run(&mut self) {}
 }

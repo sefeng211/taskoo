@@ -13,6 +13,7 @@ crate-type= ['cdylib', 'lib']
 # rusqlite = "0.24.1"
 rust-ini = "0.16.0"
 dirs = "3.0"
+directories = "4.0"
 chrono = { version = "0.4.19", features = ["serde"] }
 thiserror = "1.0.22"
 more-asserts = "0.2.1"

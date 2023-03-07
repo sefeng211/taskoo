@@ -14,7 +14,7 @@ fn add_context(conn: &Transaction, task_id: &i64, context_id: i64) -> Result<(),
         (task_id, context_id)
         VALUES (:task_id, :context_id)",
     )?;
-    statement.execute_named(named_params! {
+    statement.execute(named_params! {
     ":task_id": task_id,
     ":context_id": context_id})?;
     Ok(())
@@ -30,7 +30,7 @@ fn add_state(conn: &Transaction, task_id: &i64, state_id: &Option<i64>) -> Resul
         (task_id, state_id)
         VALUES (:task_id, :state_id)",
     )?;
-    statement.execute_named(named_params! {
+    statement.execute(named_params! {
     ":task_id": task_id,
     ":state_id": state_id.unwrap_or(1)})?;
     Ok(())
@@ -44,7 +44,7 @@ fn add_tag(conn: &Transaction, task_id: &i64, tag_ids: Vec<i64>) -> Result<(), C
         VALUES (:task_id, :tag_id)",
     )?;
     for id in tag_ids.iter() {
-        statement.execute_named(named_params! {
+        statement.execute(named_params! {
         ":task_id": task_id,
         ":tag_id": id})?;
     }
@@ -58,7 +58,7 @@ fn add_priority(conn: &Transaction, task_id: &i64, priority_id: &i64) -> Result<
         VALUES (:task_id, :priority_id)",
     )?;
 
-    statement.execute_named(named_params! {
+    statement.execute(named_params! {
         ":task_id": task_id,
         ":priority_id": priority_id
     })?;
@@ -77,7 +77,7 @@ fn add_dependency(
         VALUES (:task_id, :parent_task_id)",
     )?;
 
-    statement.execute_named(named_params! {
+    statement.execute(named_params! {
         ":task_id": task_id,
         ":parent_task_id": parent_task_id
     })?;
@@ -99,6 +99,7 @@ pub fn add(
     state_id: &Option<i64>,
     parent_task_ids: &Option<Vec<i64>>,
 ) -> Result<Vec<Task>, CoreError> {
+    println!("adddddddd ");
     debug!("  parent_task_ids: {:?}", parent_task_ids);
     debug!("  state_id: {:?}", state_id);
     let mut statement = tx.prepare(
@@ -108,7 +109,7 @@ pub fn add(
     (:body, :due_date, :scheduled_at, :due_repeat, :scheduled_repeat, :annotation)",
     )?;
 
-    statement.execute_named(named_params! {
+    statement.execute(named_params! {
         ":body": body,
         ":due_date": due_date.unwrap_or(""),
         ":scheduled_at": scheduled_at.unwrap_or(""),
@@ -148,7 +149,7 @@ pub fn add_annotation(
         ",
     )?;
 
-    statement.execute_named(named_params! {
+    statement.execute(named_params! {
         ":annotation": annotation,
         ":task_id": task_id
     })?;

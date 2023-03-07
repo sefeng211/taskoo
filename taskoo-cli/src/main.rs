@@ -1,3 +1,5 @@
+#![feature(provide_any)]
+#![feature(error_generic_member_access)]
 #![feature(backtrace)]
 
 use anyhow::{Context, Result};
@@ -23,8 +25,6 @@ use commands::clean::Clean;
 mod commands;
 mod display;
 mod error;
-mod extra;
-mod option_parser;
 
 use crate::error::ClientError;
 
@@ -34,7 +34,7 @@ fn get_config() -> Ini {
             let mut dir_path = dir.config_dir().to_path_buf();
             dir_path.push("cli-conf.ini");
             if !dir_path.exists() {
-                debug!("Unable to find the cli-confi.ini file");
+                debug!("Unable to find the cli-confi.ini file from {:?}", dir_path);
                 return Ini::new();
             }
             debug!("Successfully loaded the config file");

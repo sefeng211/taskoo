@@ -1,6 +1,6 @@
 main {
    margin: auto;
-   width: 70%;
+   width: 90%;
 }
 
 .search-bar {
@@ -12,10 +12,21 @@ main {
     display: inline;
 }
 
-.search-button {
+.operation-button {
     padding: 2px;
 }
 
 .search-dropdown {
     display: inline;
+}
+
+.error-message {
+    color:red;
+}
+
+
+/* Bootstrap overwrites */
+
+.taskoo-list-group-item {
+    border-radius:unset !important;
 }

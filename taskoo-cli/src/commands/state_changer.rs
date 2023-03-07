@@ -5,7 +5,7 @@ use anyhow::{Result, Context};
 use taskoo_core::operation::{execute, ModifyOperation};
 use taskoo_core::core::Operation;
 
-use crate::option_parser::{parse_command_option, CommandOption};
+use taskoo_core::option_parser::{parse_command_option, CommandOption};
 
 pub struct StateChanger<'a> {
     custom_state: Option<&'a str>,

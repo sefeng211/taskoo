@@ -12,8 +12,7 @@ pub fn delete(conn: &Transaction, task_ids: &Vec<i64>) -> Result<Vec<Task>, Core
     let delete_priority = conn.prepare("DELETE FROM priority_task where task_id = :task_id")?;
     let delete_from_task_context =
         conn.prepare("DELETE FROM task_context where task_id = :task_id")?;
-    let delete_from_task_state =
-        conn.prepare("DELETE FROM task_state where task_id = :task_id")?;
+    let delete_from_task_state = conn.prepare("DELETE FROM task_state where task_id = :task_id")?;
     let delete_dependency = conn
         .prepare("DELETE FROM dependency where task_id = :task_id or parent_task_id =:task_id;")?;
     let delete_task = conn.prepare("DELETE FROM task where id = :task_id;")?;
@@ -39,7 +38,7 @@ pub fn delete(conn: &Transaction, task_ids: &Vec<i64>) -> Result<Vec<Task>, Core
     // that temporary table.
     for task_id in task_ids_str.iter() {
         for stmt in delete_stmt_to_run.into_iter() {
-            stmt.execute_named(named_params! {
+            stmt.execute(named_params! {
                 ":task_id": task_id,
             })?;
         }

@@ -31,7 +31,6 @@ pub fn execute2(op: &mut impl Operation) -> Result<&Task, CoreError> {
     })?;
 
     let tasks = op.get_result();
-    println!("{:?}", tasks[0]);
     Ok(&tasks[0])
 }
 

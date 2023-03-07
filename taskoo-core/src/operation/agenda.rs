@@ -23,6 +23,22 @@ impl Agenda {
         Ok(())
     }
 
+    pub fn new2(data: &Vec<String>) -> Result<Agenda, CoreError> {
+        if data.is_empty() {
+            // TODO return
+            return Err(CoreError::ArgumentError(
+                "Empty argument is not allowed for agenda".to_string(),
+            ));
+        }
+
+        Ok(Agenda {
+            start_day: String::from("today"),
+            end_day: None,
+            database_manager: None,
+            result: vec![],
+        })
+    }
+
     pub fn new(start_day: String, end_day: Option<String>) -> Agenda {
         Agenda {
             start_day: start_day,

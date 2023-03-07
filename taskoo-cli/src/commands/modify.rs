@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 
 use taskoo_core::operation::{execute, ModifyOperation};
-use crate::option_parser::parse_command_option;
+use taskoo_core::option_parser::parse_command_option;
 use log::{debug, info};
 
 pub struct Modify;

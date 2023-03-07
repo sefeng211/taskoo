@@ -3,7 +3,7 @@ use std::backtrace::Backtrace;
 
 use taskoo_core::error::{CoreError, ArgumentError};
 
-use crate::extra::CommandError;
+use taskoo_core::option_parser::CommandError;
 
 #[derive(Error, Debug)]
 pub enum ClientError {

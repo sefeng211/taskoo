@@ -2,10 +2,7 @@ use crate::core::ConfigManager;
 use crate::db::task_manager::TaskManager;
 use crate::error::CoreError;
 use crate::db::task_helper::TASK_STATES;
-
-
-
-use rusqlite::{Result, NO_PARAMS, named_params};
+use rusqlite::{Result, named_params};
 
 pub trait SimpleCommand<'a> {
     fn new() -> Result<Self, CoreError>
@@ -39,7 +36,7 @@ impl ContextCommand<'_> {
             }
         }
 
-        let mut result = statement.query(NO_PARAMS)?;
+        let mut result = statement.query([])?;
 
         let mut context_names: Vec<String> = vec![];
         while let Some(row) = result.next()? {
@@ -47,6 +44,7 @@ impl ContextCommand<'_> {
         }
         Ok(context_names)
     }
+
     fn delete_context_base(&mut self, names: Vec<String>) -> Result<(), CoreError> {
         let tx = match self.db_manager.as_mut() {
             Some(manager) => manager.conn.transaction()?,
@@ -60,7 +58,7 @@ impl ContextCommand<'_> {
 
         for context_name in names.iter() {
             let lower_context_name = context_name.to_lowercase();
-            tx.execute_named(
+            tx.execute(
                 "DELETE FROM context where name = :name",
                 named_params! {":name": lower_context_name},
             )?;
@@ -119,7 +117,7 @@ impl<'a> SimpleCommand<'a> for ContextCommand<'a> {
             }
         }
 
-        let mut rows = statement.query_named(named_params! {":name": name})?;
+        let mut rows = statement.query(named_params! {":name": name})?;
 
         if let Some(row) = rows.next()? {
             return Ok(row.get(0)?);
@@ -150,7 +148,7 @@ impl TagCommand<'_> {
             },
         };
 
-        let mut result = statement.query(NO_PARAMS)?;
+        let mut result = statement.query([])?;
 
         let mut tag_names: Vec<String> = vec![];
         while let Some(row) = result.next()? {
@@ -204,7 +202,7 @@ impl<'a> SimpleCommand<'a> for TagCommand<'a> {
                 }
             },
         };
-        let mut rows = statement.query_named(named_params! {":name": name})?;
+        let mut rows = statement.query(named_params! {":name": name})?;
 
         if let Some(row) = rows.next()? {
             return Ok(row.get(0)?);
@@ -230,7 +228,7 @@ impl<'a> SimpleCommand<'a> for TagCommand<'a> {
         {
             for name in names.iter() {
                 let lower_context_name = name.to_lowercase();
-                tx.execute_named(
+                tx.execute(
                     "DELETE FROM tag where tag.name = :name",
                     named_params! {":name": lower_context_name},
                 )?;
@@ -260,7 +258,7 @@ impl StateCommand<'_> {
             },
         };
 
-        let mut result = statement.query(NO_PARAMS)?;
+        let mut result = statement.query([])?;
 
         let mut states: Vec<String> = vec![];
         while let Some(row) = result.next()? {
@@ -312,7 +310,7 @@ impl<'a> SimpleCommand<'a> for StateCommand<'a> {
             },
         };
 
-        let mut rows = statement.query_named(named_params! {":name": name})?;
+        let mut rows = statement.query(named_params! {":name": name})?;
 
         if let Some(row) = rows.next()? {
             return Ok(row.get("count")?);
@@ -338,7 +336,7 @@ impl<'a> SimpleCommand<'a> for StateCommand<'a> {
         {
             for name in names.iter() {
                 let lower_context_name = name.to_lowercase();
-                tx.execute_named(
+                tx.execute(
                     "DELETE FROM state where state.name = :name",
                     named_params! {":name": lower_context_name},
                 )?;
@@ -352,6 +350,10 @@ impl<'a> SimpleCommand<'a> for StateCommand<'a> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
+    use crate::operation::Add;
+    use crate::operation::execute;
+
     fn get_setting() -> HashMap<String, String> {
         let mut setting = HashMap::new();
         setting.insert("db_path".to_owned(), ":memory:".to_owned());

@@ -3,6 +3,7 @@ use ini::Error as IniParseError;
 use rusqlite::Error as SqlError;
 use std::io::Error as IoError;
 use thiserror::Error;
+use crate::option_parser::CommandError;
 
 #[derive(Error, Debug)]
 pub enum InitialError {
@@ -47,6 +48,8 @@ pub enum CoreError {
     ArgumentError(String),
     #[error("UnexpetedError: {0}")]
     UnexpetedError(String),
+    #[error("CoreError: {0}")]
+    CommandError(String),
 }
 
 impl From<ArgumentError> for CoreError {
@@ -55,3 +58,8 @@ impl From<ArgumentError> for CoreError {
     }
 }
 
+impl From<CommandError> for CoreError {
+    fn from(err: CommandError) -> Self {
+        CoreError::CommandError(format!("{}", err))
+    }
+}

@@ -5,9 +5,9 @@ use taskoo_core::command::ContextCommand;
 use taskoo_core::command::SimpleCommand;
 use taskoo_core::error::CoreError;
 use taskoo_core::operation::{Get as GetOp};
+use taskoo_core::option_parser::{CommandOption, parse_command_option};
 
 use crate::display::Display;
-use crate::option_parser::{CommandOption, parse_command_option};
 
 pub struct List {
     config: Ini,
@@ -19,58 +19,19 @@ impl List {
     }
 
     pub fn list(&self, all: bool, matches: &Vec<String>) -> Result<String, CoreError> {
-        // TODO Read context from the configuration file
-        if matches.is_empty() {
-            let mut operation_tuples = List::get_operations(CommandOption::new(), None)?;
-            for operation_tuple in operation_tuples.iter_mut() {
-                let final_tabbed_string = String::from(&self.process_operation(
-                    &operation_tuple.0,
-                    &mut operation_tuple.1,
-                    all,
-                )?);
-                // Skip the contexts that doesn't have tasks
-                if !final_tabbed_string.is_empty() {
-                    Display::print(&final_tabbed_string);
-                }
-            }
-            Ok(String::new())
-        } else {
-            let v2: Vec<&str> = matches.iter().map(|s| &**s).collect();
-            let option = parse_command_option(&v2, false, false, false).unwrap();
-            match option.context {
-                Some(ref context) => {
-                    let context_name = context.clone();
-                    let mut operations_tuple =
-                        List::get_operations(option, Some(vec![context_name.to_string()]))?;
-
-                    assert_eq!(operations_tuple.len(), 1);
-                    let operation_tuple = &mut operations_tuple[0];
-                    let tabbed_string = String::from(&self.process_operation(
-                        &operation_tuple.0,
-                        &mut operation_tuple.1,
-                        all,
-                    )?);
-                    Display::print(&tabbed_string);
-                    Ok(String::new())
-                }
-                None => {
-                    // Apply the filter to all context
-                    let mut operations_tuple = List::get_operations(option, None)?;
-                    for operation_tuple in operations_tuple.iter_mut() {
-                        let final_tabbed_string = String::from(&self.process_operation(
-                            &operation_tuple.0,
-                            &mut operation_tuple.1,
-                            all,
-                        )?);
-                        // Skip the contexts that doesn't have tasks
-                        if !final_tabbed_string.is_empty() {
-                            Display::print(&final_tabbed_string);
-                        }
-                    }
-                    Ok(String::new())
-                }
+        let mut operations = GetOp::new2(&matches)?;
+        for operation_tuple in operations.iter_mut() {
+            let final_tabbed_string = String::from(&self.process_operation(
+                &operation_tuple.0,
+                &mut operation_tuple.1,
+                all,
+            )?);
+            // Skip the contexts that doesn't have tasks
+            if !final_tabbed_string.is_empty() {
+                Display::print(&final_tabbed_string);
             }
         }
+        Ok(String::new())
     }
 
     fn process_operation(
