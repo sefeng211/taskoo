@@ -1,5 +1,9 @@
+`taskoo-cli` is command line interface for `taskoo`. It's fast and easy
+to use.
+
 # Requirement
 * A terminal supports 256 colors
+
 
 # Commands
 ## Add
@@ -35,4 +39,4 @@ State: `Ready`, `Completed`, `Blocked`, `Started`
 ## Clean
 To remove `context` or `tag`
 
-Tasks are sorted by `State: Started` -> `Priority` ->`Created At`
+Tasks to use. are sorted by `State: Started` -> `Priority` ->`Created At`

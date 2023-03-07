@@ -1,0 +1,32 @@
+main {
+   margin: auto;
+   width: 90%;
+}
+
+.search-bar {
+    width: fit-content;
+    margin: auto;
+}
+
+.search-input {
+    display: inline;
+}
+
+.operation-button {
+    padding: 2px;
+}
+
+.search-dropdown {
+    display: inline;
+}
+
+.error-message {
+    color:red;
+}
+
+
+/* Bootstrap overwrites */
+
+.taskoo-list-group-item {
+    border-radius:unset !important;
+}

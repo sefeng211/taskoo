@@ -1,3 +1,5 @@
+use serde::{Serialize, Deserialize};
+
 use rusqlite::Rows;
 use crate::error::ArgumentError;
 
@@ -7,7 +9,7 @@ pub const DEFAULT_CONTEXT: [&'static str; 1] = ["inbox"];
 
 pub const PRIORITIES: [&'static str; 3] = ["H", "M", "L"];
 
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Task {
     pub id: i64,
     pub body: String,

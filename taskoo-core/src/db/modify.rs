@@ -5,7 +5,7 @@ use crate::db::task_manager::TaskManager;
 use crate::error::CoreError;
 use log::debug;
 use log::info;
-use rusqlite::{named_params, Result, Transaction, NO_PARAMS};
+use rusqlite::{named_params, Result, Transaction};
 
 fn update_state(
     conn: &Transaction,
@@ -19,7 +19,7 @@ fn update_state(
             .expect("Failed to prepare the Update task_state query");
 
         for task_id in task_ids.iter() {
-            statement.execute_named(named_params! {
+            statement.execute(named_params! {
             ":task_id": task_id,
             ":state_id": state_id})?;
         }
@@ -39,7 +39,7 @@ fn update_context(
             .expect("Failed to prepare the Update task_context query");
 
         for task_id in task_ids.iter() {
-            statement.execute_named(named_params! {
+            statement.execute(named_params! {
             ":task_id": task_id,
             ":context_id": context_id})?;
         }
@@ -58,7 +58,7 @@ fn add_tag(conn: &Transaction, task_ids: &Vec<i64>, tag_ids: Vec<i64>) -> Result
         .expect("Failed to prepare the INSERT INTO task_tag query");
     for task_id in task_ids.iter() {
         for tag_id in tag_ids.iter() {
-            statement.execute_named(named_params! {
+            statement.execute(named_params! {
             ":task_id": task_id,
             ":tag_id": tag_id})?;
         }
@@ -78,7 +78,7 @@ fn remove_tag(conn: &Transaction, task_ids: &Vec<i64>, tag_ids: Vec<i64>) -> Res
     for task_id in task_ids.iter() {
         for tag_id in tag_ids.iter() {
             debug!("Removing tag_id: {} from task_id {}", tag_id, task_id);
-            statement.execute_named(named_params! {
+            statement.execute(named_params! {
             ":task_id": task_id,
             ":tag_id": tag_id})?;
         }
@@ -100,7 +100,7 @@ fn insert_or_replace_priority(
     )?;
 
     for task_id in task_ids.iter() {
-        statement.execute_named(named_params! {
+        statement.execute(named_params! {
         ":task_id": task_id,
         ":priority_id": priority_id})?;
     }
@@ -112,7 +112,7 @@ fn insert_or_replace_priority(
 fn update_dependency(conn: &Transaction, task_id: &i64) -> Result<(), CoreError> {
     let mut get_child_tasks_statement =
         conn.prepare("SELECT task_id FROM dependency WHERE parent_task_id = :parent_task_id")?;
-    let mut child_tasks_rows = get_child_tasks_statement.query_named(named_params! {
+    let mut child_tasks_rows = get_child_tasks_statement.query(named_params! {
         ":parent_task_id": task_id
     })?;
 
@@ -121,14 +121,14 @@ fn update_dependency(conn: &Transaction, task_id: &i64) -> Result<(), CoreError>
         let mut get_parent_for_this_child =
             conn.prepare("SELECT parent_task_id FROM dependency WHERE task_id = :child_id")?;
         let mut parent_rows =
-            get_parent_for_this_child.query_named(named_params! {":child_id": child_id})?;
+            get_parent_for_this_child.query(named_params! {":child_id": child_id})?;
 
         let mut are_all_parents_completed = true;
         while let Some(parent_row) = parent_rows.next()? {
             let parent_id: i64 = parent_row.get(0)?;
             let mut get_parent_state =
                 conn.prepare("SELECT state_id FROM task_state where task_id = :parent_id")?;
-            let mut parent_state_rows = get_parent_state.query_named(named_params! {
+            let mut parent_state_rows = get_parent_state.query(named_params! {
                 ":parent_id": parent_id
             })?;
 
@@ -138,7 +138,7 @@ fn update_dependency(conn: &Transaction, task_id: &i64) -> Result<(), CoreError>
 
             let mut convert_state_to_id =
                 conn.prepare("SELECT name FROM state where id = :state_id")?;
-            let mut state_to_id_rows = convert_state_to_id.query_named(named_params! {
+            let mut state_to_id_rows = convert_state_to_id.query(named_params! {
                 ":state_id": parent_state_id
             })?;
 
@@ -153,7 +153,7 @@ fn update_dependency(conn: &Transaction, task_id: &i64) -> Result<(), CoreError>
         if are_all_parents_completed {
             let mut update_to_ready_statement =
                 conn.prepare("Update task_state SET state_id = 1 WHERE task_id = :child_id")?;
-            update_to_ready_statement.execute_named(named_params! {
+            update_to_ready_statement.execute(named_params! {
                 ":child_id": child_id
             })?;
         }
@@ -167,7 +167,7 @@ fn update_schedule_at_for_repeat(conn: &Transaction, task_id: &i64) -> Result<()
         task_id
     );
     let mut statement = conn.prepare(&get_task_repetition_query)?;
-    let mut rows = statement.query(NO_PARAMS)?;
+    let mut rows = statement.query([])?;
 
     let first_row = rows.next().expect("We should always have a row");
 
@@ -186,11 +186,11 @@ fn update_schedule_at_for_repeat(conn: &Transaction, task_id: &i64) -> Result<()
             conn.prepare("Update task SET due_date = :due_date WHERE id = :id")?;
         let mut update_state_stmt =
             conn.prepare("Update task_state SET state_id = 1 WHERE task_id = :id")?;
-        update_task_stmt.execute_named(named_params! {
+        update_task_stmt.execute(named_params! {
             ":due_date": new_due_date,
             ":id": task_id
         })?;
-        update_state_stmt.execute_named(named_params! {
+        update_state_stmt.execute(named_params! {
             ":id": task_id
         })?;
     } else {
@@ -210,11 +210,11 @@ fn update_schedule_at_for_repeat(conn: &Transaction, task_id: &i64) -> Result<()
             conn.prepare("Update task SET scheduled_at = :scheduled_at WHERE id = :id")?;
         let mut update_state_stmt =
             conn.prepare("Update task_state SET state_id = 1 WHERE task_id = :id")?;
-        update_task_stmt.execute_named(named_params! {
+        update_task_stmt.execute(named_params! {
             ":scheduled_at": new_schedule_at,
             ":id": task_id
         })?;
-        update_state_stmt.execute_named(named_params! {
+        update_state_stmt.execute(named_params! {
             ":id": task_id
         })?;
     } else {
@@ -273,7 +273,7 @@ pub fn modify(
         debug!("Running modify with query \n {}", final_argument);
         let mut statement = tx.prepare(&final_argument)?;
         for task_id in task_ids.iter() {
-            statement.execute_named(named_params! {
+            statement.execute(named_params! {
                 ":task_id": task_id
             })?;
         }

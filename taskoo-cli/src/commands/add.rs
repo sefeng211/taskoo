@@ -1,7 +1,7 @@
 use clap::ArgMatches;
 use taskoo_core::operation::{Add as AddOp, AddAnnotation, Get as GetOp, execute};
 
-use crate::option_parser::{CommandOption, parse_command_option};
+use taskoo_core::option_parser::{CommandOption, parse_command_option};
 use crate::error::ClientError;
 use taskoo_core::core::Operation;
 use dialoguer::Editor;
@@ -13,39 +13,7 @@ pub struct Add;
 
 impl Add {
     pub fn add(add_annotation: &bool, arguments: &Vec<String>) -> Result<String, ClientError> {
-        let mut option = CommandOption::new();
-        if !arguments.is_empty() {
-            let v2: Vec<&str> = arguments.iter().map(|s| &**s).collect();
-            option = parse_command_option(&v2, true, false, false).unwrap();
-            debug!("Option {:?}", option);
-        }
-
-        let body = option.body.ok_or(ClientError::MissingAttrError {
-            attr: String::from("<Body> of the task"),
-            backtrace: Backtrace::capture(),
-        })?;
-
-        let mut operation = AddOp::new(&body);
-        operation.context = option.context;
-        operation.tags = option.tags;
-        operation.date_due = option.date_due;
-        operation.repetition_due = option.repetition_due;
-        operation.date_scheduled = option.date_scheduled;
-        operation.repetition_scheduled = option.repetition_scheduled;
-        if option.state == Some(String::from("ready")) {
-            operation.set_state_to_ready();
-        } else if option.state == Some(String::from("completed")) {
-            operation.set_state_to_completed();
-        } else if option.state == Some(String::from("blocked")) {
-            operation.set_state_to_blocked();
-        } else if option.state == Some(String::from("started")) {
-            operation.set_state_to_started();
-        } else if option.state.is_some() {
-            operation.set_custom_state(option.state.unwrap());
-        }
-
-        operation.priority = option.priority;
-        operation.parent_task_ids = option.parent_task_ids;
+        let mut operation = AddOp::new(&arguments)?;
 
         let annotation = if *add_annotation {
             if let Some(rv) = Editor::new().edit("").unwrap() {

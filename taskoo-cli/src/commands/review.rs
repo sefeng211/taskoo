@@ -1,11 +1,10 @@
 use taskoo_core::core::Operation;
 use taskoo_core::command::{ContextCommand, TagCommand, SimpleCommand};
-use taskoo_core::operation::Task;
-use taskoo_core::operation::{execute, Get as GetOperation, ModifyOperation, DeleteOperation};
+use taskoo_core::operation::{Task, execute, Get as GetOperation, ModifyOperation, DeleteOperation};
+use taskoo_core::option_parser::{CommandOption, parse_command_option};
 
 use crate::List;
 use crate::error::ClientError;
-use crate::option_parser::{CommandOption, parse_command_option};
 use crate::display::{Display, get_output_columns};
 
 use ini::Ini;
@@ -14,7 +13,7 @@ use log::{info};
 use std::io;
 use std::io::Write;
 use yansi::{Color, Paint};
-use dialoguer::{theme::ColorfulTheme, Confirm, Input, MultiSelect, Select};
+use dialoguer::{theme::ColorfulTheme, Confirm, Input, MultiSelect, Select, FuzzySelect};
 use dialoguer::console::Term;
 use ctrlc;
 
@@ -49,6 +48,7 @@ impl Review {
         } else {
             (CommandOption::new(), String::from("inbox"))
         };
+
         let mut operations_tuple = List::get_operations(option, Some(vec![context_name]))?;
         assert_eq!(operations_tuple.len(), 1);
         let mut op_tuple = &mut operations_tuple[0];
@@ -87,10 +87,12 @@ impl Review {
     fn review_task(&self, task: &Task) -> Result<(), ClientError> {
         // Display Info
         let output = Display::get_tabbed_output_for_tasks(&vec![&task], &self.config);
+
         let mut final_tabbed_string = String::from(&Display::get_formatted_row_for_header(
             get_output_columns(),
             &self.config,
         ));
+
         final_tabbed_string.push_str(&output);
         Display::print(&final_tabbed_string);
         let tt = Confirm::with_theme(&ColorfulTheme::default())
@@ -130,7 +132,7 @@ impl Review {
         let mut context_command = ContextCommand::new()?;
         let context_names = context_command.get_all()?;
 
-        let selection = Select::with_theme(&ColorfulTheme::default())
+        let selection = FuzzySelect::with_theme(&ColorfulTheme::default())
             .with_prompt("Select a context (Press 'q' or 'Esc' to enter a new context)")
             .default(0)
             .items(&context_names)
@@ -150,7 +152,7 @@ impl Review {
             defaults.push(false);
         }
         let tag_selection = MultiSelect::with_theme(&ColorfulTheme::default())
-            .with_prompt("Select a tag ")
+            .with_prompt("Select tags")
             .items(&tags)
             .defaults(&defaults)
             .interact()

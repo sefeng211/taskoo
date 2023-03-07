@@ -1,10 +1,10 @@
 use super::query_helper::generate_get_condition;
 use super::get_base::get_base;
 
-use crate::db::task_helper::{convert_rows_into_task, Task};
+use crate::db::task_helper::{Task};
 use crate::error::CoreError;
-use log::debug;
-use rusqlite::{Result, Transaction, NO_PARAMS};
+
+use rusqlite::{Result, Transaction};
 
 fn task_matches_tag_ids(task: &Task, tag_ids: &Vec<i64>) -> bool {
     for tag_id in tag_ids.iter() {
@@ -26,7 +26,7 @@ fn task_not_matches_tag_ids(task: &Task, not_tag_ids: &Vec<i64>) -> bool {
 
 pub fn get(
     conn: &Transaction,
-    priority: &Option<u8>,
+    _priority: &Option<u8>,
     context_id: &Option<i64>,
     tag_ids: &Vec<i64>,
     date_due: &Option<&str>,

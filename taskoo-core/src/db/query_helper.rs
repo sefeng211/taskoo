@@ -179,12 +179,12 @@ pub fn generate_get_condition(
 
 pub fn generate_condition(
     body: &Option<&str>,
-    context_id: &Option<i64>,
+    _context_id: &Option<i64>,
     due_date: &Option<&str>,
     scheduled_at: &Option<&str>,
     due_repeat: &Option<&str>,
     scheduled_repeat: &Option<&str>,
-    state_id: &Option<i64>,
+    _state_id: &Option<i64>,
 ) -> Vec<String> {
     let mut conditions: Vec<String> = vec![];
     if body.is_some() {

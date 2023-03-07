@@ -2,7 +2,7 @@ use crate::db::add::{add, add_annotation};
 use crate::db::delete::delete;
 use crate::db::get::get;
 use crate::db::modify::modify;
-use crate::db::agenda::{agenda};
+use crate::db::agenda::agenda;
 use crate::db::query_helper::{
     CREATE_CONTEXT_TABLE_QUERY, CREATE_DEPENDENCY_TABLE_QUERY, CREATE_STATE_TABLE_QUERY,
     CREATE_TAG_TABLE_QUERY, CREATE_TASK_TABLE_QUERY, CREATE_TASK_TAG_TABLE_QUERY,
@@ -12,9 +12,9 @@ use crate::db::query_helper::{
 use crate::db::task_helper::{Task, DEFAULT_CONTEXT, TASK_STATES, PRIORITIES};
 use crate::db::view::view;
 use crate::error::{CoreError, ArgumentError};
-use chrono::{Date, DateTime, Duration, Local, NaiveDate, Utc, NaiveDateTime};
+use chrono::{DateTime, Duration, Local, NaiveDate, NaiveDateTime};
 use log::{info, debug};
-use rusqlite::{named_params, Connection, Result, Transaction, NO_PARAMS};
+use rusqlite::{named_params, Connection, Result, Transaction};
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -26,9 +26,10 @@ pub struct TaskManager {
 impl TaskManager {
     // ensure the database is created
     pub fn new(setting: &HashMap<String, String>) -> TaskManager {
-        if env_logger::try_init().is_err() {
-            info!("Unable to init the logger, it's okay");
-        }
+        // We don't handle the Result here, because it's okay
+        // to ignore errors.
+        //
+        env_logger::try_init().ok();
         let conn = Connection::open(setting.get("db_path").unwrap()).unwrap();
         let mut manager = TaskManager {
             conn: conn,
@@ -185,6 +186,7 @@ impl TaskManager {
         // Prepare the context_id, default to Inbox context
         let mut context_id: i64 = 1;
         let tx = self.conn.transaction()?;
+
         match context {
             Some(name) => {
                 context_id = TaskManager::convert_context_name_to_id(&tx, &name, false)?;
@@ -220,6 +222,7 @@ impl TaskManager {
             &not_tag_ids,
         )?;
         tx.commit()?;
+        info!("Got {} of tasks", tasks.len());
         Ok(tasks)
     }
 
@@ -329,7 +332,7 @@ impl TaskManager {
         start_day: String,
         end_day: Option<String>,
     ) -> Result<Vec<(NaiveDate, Vec<Task>)>, CoreError> {
-        let mut tx = self.conn.transaction()?;
+        let tx = self.conn.transaction()?;
         let start_day_in_date = NaiveDateTime::parse_from_str(
             &TaskManager::parse_date_string(&start_day)?,
             "%Y-%m-%d %H:%M:%S",
@@ -419,7 +422,7 @@ impl TaskManager {
             .expect("");
 
         let mut result = statement
-            .query_named(named_params! {":context_name": context_name})
+            .query(named_params! {":context_name": context_name})
             .expect("");
 
         while let Some(row) = result.next().expect("") {
@@ -429,12 +432,13 @@ impl TaskManager {
         if create_if_not_exists {
             return TaskManager::create_context(tx, &context_name);
         }
+
         return Err(ArgumentError::InvalidContext(context_name.clone()))?;
     }
 
     fn convert_state_name_to_id(tx: &Transaction, state_name: &String) -> Result<i64, CoreError> {
         let mut statement = tx.prepare("SELECT id FROM state WHERE name=(:state_name)")?;
-        let mut result = statement.query_named(named_params! {":state_name": state_name})?;
+        let mut result = statement.query(named_params! {":state_name": state_name})?;
 
         while let Some(row) = result.next()? {
             return Ok(row.get(0)?);
@@ -448,12 +452,11 @@ impl TaskManager {
     ) -> Result<i64, CoreError> {
         let lower_priority_type = priority_type.clone().to_lowercase();
         let mut statement = tx.prepare("SELECT id FROM priority WHERE name=(:priority_type)")?;
-        let mut result =
-            statement.query_named(named_params! {":priority_type": lower_priority_type})?;
+        let mut result = statement.query(named_params! {":priority_type": lower_priority_type})?;
         while let Some(row) = result.next()? {
             return Ok(row.get(0)?);
         }
-        println!("2");
+
         Err(ArgumentError::InvalidOption(String::from(format!(
             "Invalid priority {} is provided",
             priority_type
@@ -465,7 +468,7 @@ impl TaskManager {
             .expect("");
 
         let mut result = statement
-            .query_named(named_params! {":tag_name": tag_name})
+            .query(named_params! {":tag_name": tag_name})
             .expect("");
 
         while let Some(row) = result.next().expect("") {
@@ -550,27 +553,25 @@ impl TaskManager {
                                 source: source,
                             }
                         })?;
-                    parsed_date.and_hms(0, 0, 0) // Fulfill the missing hms
+                    parsed_date
+                        .and_hms_opt(0, 0, 0)
+                        .expect("Getting the current datetime should work") // Fulfill the missing hms
                 }
             };
         Ok(parsed_date_string.format("%Y-%m-%d %H:%M:%S").to_string())
     }
 
     fn create_table_if_needed(&mut self, context: [&'static str; 1]) -> Result<(), CoreError> {
-        self.conn.execute(CREATE_TASK_TABLE_QUERY, NO_PARAMS)?;
-        self.conn.execute(CREATE_TAG_TABLE_QUERY, NO_PARAMS)?;
-        self.conn.execute(CREATE_TASK_TAG_TABLE_QUERY, NO_PARAMS)?;
-        self.conn
-            .execute(CREATE_DEPENDENCY_TABLE_QUERY, NO_PARAMS)?;
-        self.conn.execute(CREATE_CONTEXT_TABLE_QUERY, NO_PARAMS)?;
-        self.conn
-            .execute(CREATE_TASK_CONTEXT_TABLE_QUERY, NO_PARAMS)?;
-        self.conn.execute(CREATE_STATE_TABLE_QUERY, NO_PARAMS)?;
-        self.conn
-            .execute(CREATE_TASK_STATE_TABLE_QUERY, NO_PARAMS)?;
-        self.conn.execute(CREATE_PRIORITY_TABLE_QUERY, NO_PARAMS)?;
-        self.conn
-            .execute(CREATE_PRIORITY_TASK_TABLE_QUERY, NO_PARAMS)?;
+        self.conn.execute(CREATE_TASK_TABLE_QUERY, [])?;
+        self.conn.execute(CREATE_TAG_TABLE_QUERY, [])?;
+        self.conn.execute(CREATE_TASK_TAG_TABLE_QUERY, [])?;
+        self.conn.execute(CREATE_DEPENDENCY_TABLE_QUERY, [])?;
+        self.conn.execute(CREATE_CONTEXT_TABLE_QUERY, [])?;
+        self.conn.execute(CREATE_TASK_CONTEXT_TABLE_QUERY, [])?;
+        self.conn.execute(CREATE_STATE_TABLE_QUERY, [])?;
+        self.conn.execute(CREATE_TASK_STATE_TABLE_QUERY, [])?;
+        self.conn.execute(CREATE_PRIORITY_TABLE_QUERY, [])?;
+        self.conn.execute(CREATE_PRIORITY_TASK_TABLE_QUERY, [])?;
 
         let tx = self.conn.transaction()?;
         {
@@ -599,14 +600,14 @@ impl TaskManager {
     fn create_context(tx: &Transaction, context_name: &String) -> Result<i64, CoreError> {
         let mut insert_into_context =
             tx.prepare("INSERT OR IGNORE INTO context (name) VALUES (:name)")?;
-        insert_into_context.execute_named(named_params! {":name": context_name.trim()})?;
+        insert_into_context.execute(named_params! {":name": context_name.trim()})?;
         info!("Created context {}", context_name);
         Ok(tx.last_insert_rowid())
     }
 
     fn create_tag(tx: &Transaction, tag_name: &String) -> Result<i64, CoreError> {
         let mut insert_into_tag = tx.prepare("INSERT OR IGNORE INTO tag (name) VALUES (:name)")?;
-        insert_into_tag.execute_named(named_params! {":name": tag_name.trim()})?;
+        insert_into_tag.execute(named_params! {":name": tag_name.trim()})?;
         info!("Added a new tag: {}", tag_name);
         Ok(tx.last_insert_rowid())
     }
@@ -614,16 +615,14 @@ impl TaskManager {
     fn create_state(tx: &Transaction, state_name: &String) -> Result<i64, CoreError> {
         let mut insert_into_state =
             tx.prepare("INSERT OR IGNORE INTO state (name) VALUES (:name)")?;
-        insert_into_state
-            .execute_named(named_params! {":name": state_name.trim().to_lowercase()})?;
+        insert_into_state.execute(named_params! {":name": state_name.trim().to_lowercase()})?;
         Ok(tx.last_insert_rowid())
     }
 
     fn create_priority(tx: &Transaction, priority_name: &String) -> Result<i64, CoreError> {
         let mut insert_into_state =
             tx.prepare("INSERT OR IGNORE INTO priority (name) VALUES (:name)")?;
-        insert_into_state
-            .execute_named(named_params! {":name": priority_name.trim().to_lowercase()})?;
+        insert_into_state.execute(named_params! {":name": priority_name.trim().to_lowercase()})?;
         Ok(tx.last_insert_rowid())
     }
 }

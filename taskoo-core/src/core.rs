@@ -1,7 +1,6 @@
 use crate::db::task_helper::Task;
 use crate::error::{InitialError, CoreError};
-use shellexpand;
-use dirs::config_dir;
+
 use ini::Ini;
 use log::debug;
 use std::collections::HashMap;
@@ -23,6 +22,7 @@ impl ConfigManager {
             .get("db_path")
             .expect("Failed to get the location of the database file");
         let expanded_db_path: &str = &shellexpand::tilde(database_path);
+        // let expanded_db_path: &str = "/home/sefeng/.config/taskoo/tasks.db";
         debug!("Expanded Database Path: {} \n", &expanded_db_path);
         ConfigManager::ensure_db_file_exists(&expanded_db_path)
             .expect("Unable to create the database file");
@@ -33,17 +33,24 @@ impl ConfigManager {
     }
 
     fn get_config() -> Result<Ini, InitialError> {
-        let mut config_dir_path = match config_dir() {
-            Some(path) => path,
-            None => {
+        let home = match std::env::var("HOME") {
+            Ok(dir) => {
+                debug!("Successfully read $HOME");
+                dir
+            }
+            Err(_) => {
+                debug!("Failed to read $HOME");
                 return Err(InitialError::DirError());
             }
         };
+
+        let mut config_dir_path = std::path::PathBuf::from(home);
+        config_dir_path.push(".config");
         config_dir_path.push("taskoo");
 
         let mut config_file_path = config_dir_path.clone();
         config_file_path.push("config");
-        // If not user defined config file is found, a default
+        // If no user defined config file is found, a default
         // config file will be created at $HOME/.config/taskoo/config
         if !config_file_path.exists() {
             let mut db_path = config_dir_path.clone();
@@ -60,6 +67,8 @@ impl ConfigManager {
                     path: config_file_path.to_str().unwrap().to_string(),
                     source: error,
                 })?;
+        } else {
+            debug!("Found existing config directory {:?}", &config_file_path);
         }
         debug!("Load config from file {:?}", &config_file_path);
         return Ok(Ini::load_from_file(config_file_path)?);
@@ -91,4 +100,8 @@ pub trait Operation {
     fn do_work(&mut self) -> Result<Vec<Task>, CoreError>;
     fn set_result(&mut self, result: Vec<Task>);
     fn get_result(&mut self) -> &Vec<Task>;
+}
+
+pub trait Command {
+    fn run(&mut self);
 }

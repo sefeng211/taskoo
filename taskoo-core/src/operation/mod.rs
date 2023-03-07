@@ -24,6 +24,16 @@ pub fn execute(op: &mut impl Operation) -> Result<(), CoreError> {
     Ok(())
 }
 
+pub fn execute2(op: &mut impl Operation) -> Result<&Task, CoreError> {
+    op.init()?;
+    op.do_work().map(|tasks| {
+        op.set_result(tasks);
+    })?;
+
+    let tasks = op.get_result();
+    Ok(&tasks[0])
+}
+
 // TODO: This needs to be handled better
 pub fn execute_agenda(op: &mut Agenda) -> Result<(), CoreError> {
     op.init()?;

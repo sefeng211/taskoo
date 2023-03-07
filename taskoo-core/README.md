@@ -1,11 +1,25 @@
-# Requirement
-* Sqlite >= 3.6.19 (Foreign_key support)
+# Taskoo Core
+This directory contains the Taskoo source files that performs the actual
+functionalities. All frontends rely on them.
 
-## WebAssembly Support
-In theory, we can compile this library to WASM to make it usable in browser,
-such that browsers can be clients as well. However, there's a blocking issue
-(https://github.com/rusqlite/rusqlite/issues/873).
+## Compilation
+`taskoo-core` can be compiled standalone (though you need to use either
+`taskoo-web` or `taskoo-cli` to use it).
+
+To compile it for `taskoo-cli`, run
+```
+cargo build
+```
+
+To compile it for `taskoo-web`, run
+```
+./build_wasm.sh
+```
+
+##
+# Installation
+`rustup target add wasm32-wasi`
 
 ## Core
-### Task 
+### Task
 
