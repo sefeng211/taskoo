@@ -77,27 +77,30 @@ function allocateInput(input) {
   return {ptr: ptr, bytes: bytes};
 }
 
-export function listEndpoint(input) {
-  let allocated = allocateInput(input);
-  const offset = instance.exports.list(allocated.ptr, allocated.bytes.length);
-  const len = instance.exports.get_shared_buffer_size();
-  const buffer = new Uint8Array(instance.exports.memory.buffer, offset, len);
-  const hello = buffer.reduce((str, cur) => str + String.fromCharCode(cur), '');
-  instance.exports.free_shared_buffer(offset);
-  return hello;
-}
+export class Endpoints {
+  static List(input) {
+    const allocated = allocateInput(input);
+    const offset = instance.exports.list(allocated.ptr, allocated.bytes.length);
+    const len = instance.exports.get_shared_buffer_size();
+    const buffer = new Uint8Array(instance.exports.memory.buffer, offset, len);
+    const data = new TextDecoder().decode(buffer);
+    instance.exports.free_shared_buffer(offset);
+    return data;
+  }
 
-export function agendaEndpoint(input) {
-  let allocated = allocateInput(input);
-  const offset = instance.exports.agenda(allocated.ptr, allocated.bytes.length);
-  const len = instance.exports.get_shared_buffer_size();
-  const buffer = new Uint8Array(instance.exports.memory.buffer, offset, len);
-  const hello = buffer.reduce((str, cur) => str + String.fromCharCode(cur), '');
-  instance.exports.free_shared_buffer(offset);
-  return hello;
-}
+  static Agenda(input) {
+    const allocated = allocateInput(input);
+    const offset = instance.exports.agenda(allocated.ptr, allocated.bytes.length);
+    const len = instance.exports.get_shared_buffer_size();
+    const buffer = new Uint8Array(instance.exports.memory.buffer, offset, len);
+    const data = new TextDecoder().decode(buffer);
+    instance.exports.free_shared_buffer(offset);
+    return data;
+  }
 
-export function addEndPoint(input) {
-  let allocated = allocateInput(input);
-  instance.exports.add(allocated.ptr, allocated.bytes.length);
-}
+  static Add(input) {
+    const allocated = allocateInput(input);
+    instance.exports.add(allocated.ptr, allocated.bytes.length);
+  }
+};
+

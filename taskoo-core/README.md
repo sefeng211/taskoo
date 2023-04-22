@@ -16,7 +16,6 @@ To compile it for `taskoo-web`, run
 ./build_wasm.sh
 ```
 
-##
 # Installation
 `rustup target add wasm32-wasi`
 

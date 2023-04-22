@@ -1,0 +1,18 @@
+body {
+    font-family: 'Noto Sans';font-size: 22px;
+}
+
+p {
+}
+
+body {
+    margin-left: 10%;
+    margin-right: 10%;
+    width: auto;
+}
+
+@media only screen and (hover: none) and (pointer: coarse){
+    body {
+        margin: auto;
+    }
+}

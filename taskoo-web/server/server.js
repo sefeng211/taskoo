@@ -1,4 +1,5 @@
-import { run, passStringToWASM, listEndpoint, addEndPoint, agendaEndpoint} from "./index.mjs";
+import { run, passStringToWASM, Endpoints} from "./index.mjs";
+
 import express from "express";
 import cors from "cors";
 
@@ -8,6 +9,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
+const ENDPOINTS = {};
 const server = app.listen(7000, () => {
   console.log(`Express running → PORT ${server.address().port}`);
 });
@@ -18,7 +20,7 @@ app.get('/today', (req, res) => {
 });
 
 app.post('/list', (req, res) => {
-  const data = listEndpoint(req.body.data);
+  const data = Endpoints.List(req.body.data);
   let ret;
   try {
     ret = JSON.parse(data);
@@ -29,7 +31,7 @@ app.post('/list', (req, res) => {
 });
 
 app.post('/agenda', (req, res) => {
-  const data = agendaEndpoint(req.body.data);
+  const data = Endpoints.Agenda(req.body.data);
   let ret;
   try {
     ret = JSON.parse(data);
@@ -51,5 +53,5 @@ app.post('/run', createPost, (req, res) => {
 
 app.post('/add', createPost, (req, res) => {
   console.log("add endpoint");
-  addEndPoint(req.body.data);
+  Endpoints.Add(req.body.data);
 });
