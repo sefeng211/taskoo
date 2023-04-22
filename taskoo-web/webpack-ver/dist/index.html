@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+  <head>
+     <link href='https://fonts.googleapis.com/css?family=Noto Sans' rel='stylesheet'>
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/yegor256/tacit@gh-pages/tacit-css-1.5.5.min.css"/>
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+     <meta name="viewport" content="width=device-width, initial-scale=1" charset="utf-8">
+  </head>
+  <body>
+      <div class="tabs is-centered">
+        <ul>
+          <li class="tab-saved"><a>Saved</a></li>
+          <li class="is-active tab-today"><a>Today's Tasks</a></li>
+          <li class="tab-inbox"><a>Inbox</a></li>
+        </ul>
+      </div>
+
+      <main>
+      </main>
+
+      <div>
+        <button class="button is-info" style="width:30%; float:left;">List</button>
+        <button class="button is-primary" id="add-button" style="min-width: 40%">+</button>
+        <button class="button is-info" style="width:30%; float:right;">Right</button>
+      </div>
+
+      <template id="add-modal-template">
+        <dialog id="add-dialog" style="margin:auto; padding: 5px;">
+          <h4 class="title is-4">Add New Task</h4>
+          <input id="input-body" placeholder="Body" style="display:block; margin-left: auto; margin-right: auto; margin-top: 5px; margin-bottom: 5px;">
+          <button class="button is-primary" type="submit" id="submit-button">Submit</button>
+        </dialog>
+      </template>
+
+      <template id="task-card-footer">
+          <footer class="card-footer p-0" >
+            <div class="card-footer-item">
+              <a href="#" style="padding-right: 5px;" class="">Done</a>
+              <a href="#" style="padding-right: 5px" class="">Start</a>
+              <a href="#" style="" class="">Ready</a>
+            </div>
+            <a href="#" class="card-footer-item">Edit</a>
+            <a href="#" class="card-footer-item">Delete</a>
+          </footer>
+      </template>
+
+    <script src="main.js"></script>
+  </body>
+</html>
