@@ -1,16 +1,11 @@
 #![feature(provide_any)]
 #![feature(error_generic_member_access)]
-#![feature(backtrace)]
 
 use anyhow::{Context, Result};
-use clap::{App, Subcommand};
-use dirs::config_dir;
+use clap::{Subcommand};
 use ini::Ini;
 use log::{info, debug};
-use std::fs::create_dir_all;
-use std::fs::OpenOptions;
 use directories::ProjectDirs;
-use std::backtrace::Backtrace;
 
 use commands::add::Add;
 use commands::delete::Delete;
@@ -44,7 +39,7 @@ fn get_config() -> Ini {
             debug!("Unable to find the directory pat");
         }
     }
-    debug!("Unable to loaded the config file, use a empty object");
+    debug!("Unable to load the config file, use a empty object");
     return Ini::new();
 }
 
@@ -64,11 +59,10 @@ use clap::Parser;
 #[derive(Parser)]
 #[clap(name = "Taskoo")]
 #[clap(author = "Sean Feng. <sean@seanfeng.dev>")]
-#[clap(version = "1.0")]
+#[clap(version = "0.1")]
 #[clap(
     about = "
-    A CLI task management app written in Rust,
-    with GTD in mind.",
+    The CLI interface of Taskoo, written in Rust.",
     long_about = ""
 )]
 struct Cli {
@@ -114,10 +108,14 @@ enum Commands {
         task_id: u64,
         attribute: Option<String>,
     },
+    /// Clean context, tag or state
+    Clean {
+        provided_type: String
+    },
     /// Change the state of the given tasks to 'start'
     Start { task_ids: Vec<u64> },
-    /// Change the state of the given tasks to 'done'
-    Done { task_ids: Vec<u64> },
+    /// Change the state of the given tasks to 'complete'
+    Complete { task_ids: Vec<u64> },
     /// Change the state of the given tasks to 'ready'
     Ready { task_ids: Vec<u64> },
     /// Change the state of the given tasks to 'block'
@@ -133,13 +131,13 @@ fn main() -> Result<(), ClientError> {
             annotation,
             arguments,
         } => {
-            handle_result(Add::add(annotation, arguments).context("Add command"));
+            handle_result(Add::add(annotation, arguments).context("add command failed to operate"));
         }
         Commands::List { all, arguments } => {
             handle_result(
                 List::new(get_config())
                     .list(all.to_owned(), arguments)
-                    .context("List command failed"),
+                    .context("list command failed to operate"),
             );
         }
         Commands::Review { arguments } => {
@@ -147,46 +145,52 @@ fn main() -> Result<(), ClientError> {
             handle_result(
                 review_command
                     .review(arguments)
-                    .context("Review command failed"),
+                    .context("review command failed to operate"),
             );
         }
         Commands::Modify { arguments } => {
-            handle_result(Modify::modify(arguments).context("Modify command failed"))
+            handle_result(Modify::modify(arguments).context("modify command failed to operate"))
         }
         Commands::Delete { arguments } => {
-            handle_result(Delete::delete(arguments).context("Delete command failed"));
+            handle_result(Delete::delete(arguments).context("delete command failed to operate"));
         }
         Commands::Agenda { start_day, end_day } => handle_result(
             Agenda::new(get_config())
                 .agenda(&start_day, &end_day)
-                .context("Agenda command failed"),
+                .context("agenda command failed to operate"),
         ),
         Commands::Info { task_id, attribute } => {
             let info = Info::new();
             handle_result(
                 info.run(task_id, attribute)
-                    .context("Failed to run <info> command"),
+                    .context("info command failed to operate"),
+            );
+        },
+        Commands::Clean { provided_type } => {
+            handle_result(
+                Clean::run(provided_type)
+                    .context("clean command failed to operate"),
             );
         }
         Commands::Start { task_ids } => handle_result(
             StateChanger::to_started()
                 .run(task_ids)
-                .context("Failed to complete a task"),
+                .context("start command failed to operate"),
         ),
-        Commands::Done { task_ids } => handle_result(
+        Commands::Complete { task_ids } => handle_result(
             StateChanger::to_completed()
                 .run(task_ids)
-                .context("Failed to complete a task"),
+                .context("complete command failed to operate"),
         ),
         Commands::Ready { task_ids } => handle_result(
             StateChanger::to_ready()
                 .run(task_ids)
-                .context("Failed to complete a task"),
+                .context("ready command failed to operate"),
         ),
         Commands::Block { task_ids } => handle_result(
             StateChanger::to_blocked()
                 .run(task_ids)
-                .context("Failed to block the task"),
+                .context("block command failed to operate"),
         ),
     }
     Ok(())

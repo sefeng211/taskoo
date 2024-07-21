@@ -9,41 +9,7 @@ use crate::wasm::helpers::read_data_from_js;
 
 pub use crate::db::task_helper::Task;
 
-static HELLO: &'static str = "Hello, WASM!";
 static mut LENGTH: usize = 123;
-#[no_mangle]
-pub extern "C" fn print_today_js() -> *mut c_char {
-    println!("Start!!!");
-    let mut operation1 = operation::Get::new();
-    operation1.task_id = Some(1);
-
-    let mut operation = operation::Agenda::new(String::from("today"), Some(String::from("today")));
-
-    match operation::execute_agenda(&mut operation) {
-        Ok(()) => {
-            let results = operation.get_result();
-            let serded_string: String = serde_json::to_string(&results).unwrap();
-            unsafe { LENGTH = serded_string.len() }
-            let s = CString::new(serded_string).unwrap();
-            return s.into_raw();
-        }
-        Err(error) => println!("{:?}", error),
-    }
-    match operation::execute2(&mut operation1) {
-        Ok(result) => {
-            println!("returned 1!!");
-
-            let serded_string: String = serde_json::to_string(&result).unwrap();
-            unsafe { LENGTH = serded_string.len() }
-            let s = CString::new(serded_string).unwrap();
-            return s.into_raw();
-        }
-        Err(error) => println!("{:?}", error),
-    };
-    println!("returned 2!!");
-    let s = CString::new(HELLO).unwrap();
-    return s.into_raw();
-}
 
 #[no_mangle]
 pub extern "C" fn allocate(size: usize) -> *mut c_char {
@@ -119,9 +85,7 @@ pub unsafe fn list(ptr: *mut u8, len: usize) -> *mut c_char {
 
         ret.push((operation_tuple.0.to_owned(), serded_string));
     }
-
     let serded_ret: String = serde_json::to_string(&ret).unwrap();
-
     unsafe { LENGTH = serded_ret.len() }
     let s = CString::new(serded_ret).unwrap();
     return s.into_raw();
@@ -145,6 +109,23 @@ pub unsafe fn agenda(ptr: *mut u8, len: usize) -> *mut c_char {
         operation::Agenda::new2(&data).expect("Failed to create the agenda operation");
 
     let serded_string: String = match operation::execute_agenda(&mut operation) {
+        Ok(_) => serde_json::to_string(&operation.get_result()).unwrap(),
+        Err(e) => e.to_string(),
+    };
+
+    unsafe { LENGTH = serded_string.len() }
+    let s = CString::new(serded_string).unwrap();
+    return s.into_raw();
+}
+
+// State Changing Operation
+#[no_mangle]
+pub unsafe fn state_change(ptr: *mut u8, len: usize) -> *mut c_char {
+    let data = read_data_from_js(ptr, len);
+    let mut operation = operation::ModifyOperation::new2(&data)
+        .expect("Failed to create the ModifyOperation for state changing");
+
+    let serded_string: String = match operation::execute(&mut operation) {
         Ok(_) => serde_json::to_string(&operation.get_result()).unwrap(),
         Err(e) => e.to_string(),
     };

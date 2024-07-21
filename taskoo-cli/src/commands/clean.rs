@@ -12,13 +12,10 @@ use dialoguer::{theme::ColorfulTheme, Select};
 pub struct Clean;
 
 impl Clean {
-    pub fn clean(matches: &ArgMatches) -> Result<String, ClientError> {
-        info!("Processing Remove Task");
+    pub fn run(provided_type: &String) -> Result<String, ClientError> {
+        info!("Processing clean task");
 
-        let provided_type: &str = matches
-            .value_of("type")
-            .expect("How come? Type argument should be provided already");
-        match provided_type {
+        match provided_type.as_str() {
             "context" => {
                 let command = ContextCommand::new()?;
                 return Clean::process_remove_context(command);
@@ -77,6 +74,6 @@ impl Clean {
             .map_err(|error| ClientError::TerminalError { source: error })?;
 
         command.delete(vec![possible_options[selection].clone()])?;
-        Ok("HH".to_string())
+        Ok("clean command run successfully".to_string())
     }
 }

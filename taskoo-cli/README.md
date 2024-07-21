@@ -1,36 +1,42 @@
-`taskoo-cli` is command line interface for `taskoo`. It's fast and easy
-to use.
+# Taskoo CLI
+The commandline interface for [Taskoo](https://github.com/sefeng211/taskoo) written in Rust and support
+all Taskoo functionalities.
 
-# Requirement
-* A terminal supports 256 colors
+# Installation
+## Release Binary
+TODO
+## Local Compile
 
-
-# Commands
+# Usage
 ## Add
-`taskoo add I am a body` <- Goes to Inbox context by default
-`taskoo add I am a body c:Someday` <- Goes to Someday context by default
-`taskoo add I am a body c:Someday` +Work <- This is work related
-`taskoo add I am a body c:Someday` @Started +Work
-`taskoo add I am a body c:Someday` p:taskoo @Started +Work
 
-# Task Attributes
- - Id (Unique)
- - Body
- - Created At
- - Due Date
- - Priority
- - Tags
- - Context (Built-In: Inbox, Someday, Tickler, Gtd)
- - Project
- - State (Not customizable)
+To create a task:
+`taskoo add I am a body`
 
-State: `Ready`, `Completed`, `Blocked`, `Started`
+Many other options can be provided
+`taskoo add "I am a body" c:<context>`: To change the context
+`taskoo add "I am a body" +tag1 +tag2`: To add the tags
+`taskoo add "I am a body" -a`: To provide an annotation
+
+Pro tip: Always use the [info](#Info) command to show the detailed information
+about tasks.
 
 ## List
-`task list`: List all tasks.
-`task list c:Work`: List all tasks in `Work` context.
-`task list c:Work +tag1 +tag2`: List all tasks in `Work` context with `tag1` and `tag2` tags.
-`task list c:Work +tag1 ^tag2`: List all tasks in `Work` context with `tag1`, but not `tag2` tags.
+
+To list all tasks
+`taskoo list -a`
+
+To list all (except completed) tasks
+`taskoo list`
+
+To list all (except completed) tasks in work context
+`taskoo list c:work`
+
+To list all (except completed) tasks in work context with tag1 and tag2
+`taskoo list c:work +tag1 +tag2`
+
+To list all (except completed) tasks in work context with tag1 and not tag2
+`task list c:Work +tag1 ^tag2`
 
 ## Modify
 
@@ -40,3 +46,15 @@ State: `Ready`, `Completed`, `Blocked`, `Started`
 To remove `context` or `tag`
 
 Tasks to use. are sorted by `State: Started` -> `Priority` ->`Created At`
+
+## Block
+## Complete
+## Start
+## Ready
+
+## Delete
+
+## Info
+
+## Review
+## Clean

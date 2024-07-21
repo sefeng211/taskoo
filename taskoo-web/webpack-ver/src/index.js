@@ -1,23 +1,7 @@
 import _ from 'lodash';
 import './style.css';
 import {handleOperation, createTaskCard, OPERATION_TYPES} from './task_helpers.js';
-import {
-  SERVER_ENDPOINT_RUN,
-  SERVER_ENDPOINT_TODAY,
-  SERVER_ENDPOINT_MAPPING} from './consts.mjs';
-
-
-function component() {
-  const element = document.createElement('p');
-
- // Lodash, now imported by this script
-  element.innerHTML = _.join(['Hello', 'webpack'], ' ');
-  element.classList.add('hello');
-
-  return element;
-}
-
-// document.body.appendChild(component());
+import {SERVER_ENDPOINT_MAPPING} from './consts.mjs';
 
 
 // Initialize tabs
@@ -73,7 +57,6 @@ function SwtichTab(newTab) {
         const inbox_data = [r[0][0], JSON.parse(r[0][1])];
         const parsed_data = [inbox_data];
         console.log(parsed_data);
-        // console.log(JSON.parse(r[0]));
         handleOperation(OPERATION_TYPES.AGENDA, parsed_data);
       });
     });
@@ -94,7 +77,6 @@ window.onload = function() {
       const body = document.querySelector("#input-body").value;
       if (body) {
         console.log(body);
-
         const endpoint = SERVER_ENDPOINT_MAPPING["add"];
         let result = fetch(endpoint, {
           method: "POST",
@@ -111,5 +93,4 @@ window.onload = function() {
       }
     })
   });
-
 }

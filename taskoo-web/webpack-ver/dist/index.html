@@ -18,32 +18,31 @@
       <main>
       </main>
 
-      <div>
-        <button class="button is-info" style="width:30%; float:left;">List</button>
-        <button class="button is-primary" id="add-button" style="min-width: 40%">+</button>
-        <button class="button is-info" style="width:30%; float:right;">Right</button>
+      <div id="control-buttons">
+        <figure id="" class="task-button image is-48x48">
+          <img src="images/search-button.png">
+        </figure>
+        <figure id="add-button" class="task-button image is-48x48">
+          <img class="is-rounded" src="images/add-button.png">
+        </figure>
       </div>
 
       <template id="add-modal-template">
         <dialog id="add-dialog" style="margin:auto; padding: 5px;">
           <h4 class="title is-4">Add New Task</h4>
-          <input id="input-body" placeholder="Body" style="display:block; margin-left: auto; margin-right: auto; margin-top: 5px; margin-bottom: 5px;">
+          <input id="input-body" placeholder="Task Body" style="display:block; margin-left: auto; margin-right: auto; margin-top: 5px; margin-bottom: 5px;">
           <button class="button is-primary" type="submit" id="submit-button">Submit</button>
         </dialog>
       </template>
 
-      <template id="task-card-footer">
-          <footer class="card-footer p-0" >
-            <div class="card-footer-item">
-              <a href="#" style="padding-right: 5px;" class="">Done</a>
-              <a href="#" style="padding-right: 5px" class="">Start</a>
-              <a href="#" style="" class="">Ready</a>
-            </div>
-            <a href="#" class="card-footer-item">Edit</a>
-            <a href="#" class="card-footer-item">Delete</a>
-          </footer>
+      <template id="card-tools">
+        <div class="card-tools-container">
+          <img class="card-tools-complete-button card-tools-button" src="images/check-mark.png">
+          <img class="card-tools-button" src="images/delete-button.png">
+        </div>
       </template>
-
     <script src="main.js"></script>
+    <!--<a href="https://www.flaticon.com/free-icons/delete" title="delete icons">Delete icons created by Kiranshastry - Flaticon</a>-->
+    <!--<a href="https://www.flaticon.com/free-icons/correct" title="correct icons">Correct icons created by Freepik - Flaticon</a>-->
   </body>
 </html>

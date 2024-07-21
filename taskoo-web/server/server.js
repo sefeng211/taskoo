@@ -10,7 +10,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
 const ENDPOINTS = {};
-const server = app.listen(7000, () => {
+const server = app.listen(7001, () => {
   console.log(`Express running → PORT ${server.address().port}`);
 });
 
@@ -31,6 +31,7 @@ app.post('/list', (req, res) => {
 });
 
 app.post('/agenda', (req, res) => {
+  console.log("Taskoo server: agenda endpoint");
   const data = Endpoints.Agenda(req.body.data);
   let ret;
   try {
@@ -47,11 +48,16 @@ const createPost = (req, res, next) => {
 }
 
 app.post('/run', createPost, (req, res) => {
-  console.log(req.body.data);
+  console.log("/run endpoint");
   passStringToWASM(req.body.data);
 });
 
 app.post('/add', createPost, (req, res) => {
   console.log("add endpoint");
   Endpoints.Add(req.body.data);
+});
+
+app.post('/state_change', createPost, (req, res) => {
+  console.log("state_change endpoint");
+  Endpoints.StateChange(req.body.data);
 });

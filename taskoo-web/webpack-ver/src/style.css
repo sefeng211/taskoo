@@ -11,6 +11,66 @@ body {
     width: auto;
 }
 
+.card {
+    margin-bottom: 5px;
+    transition: all .2s ease-in-out;
+}
+
+.card:hover {
+    transform: scale(1.05);
+}
+
+.card-body {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    font-weight:bold;
+    display: inline-block;
+}
+
+.card-footer-divider {
+  border-left: 2px solid blue;
+  height: 100%;
+  left: 50%;
+}
+
+.card-footer-item {
+    padding: 0px;
+}
+
+.card-tools-container {
+    width: fit-content;
+    margin: auto;
+}
+
+.card-tools-button {
+    width: 24px;
+    height:24px;
+    margin-right: 0px;
+    transition: all .2s ease-in-out;
+    margin-right: 10px;
+}
+.card-tools-button:hover {
+    cursor:pointer;
+    transform: scale(1.2);
+}
+
+.image {
+    display: inline-block;
+}
+
+#control-buttons {
+    margin: auto;
+    width: fit-content;
+}
+
+.task-button {
+    transition: all .2s ease-in-out;
+    margin-right: 20px;
+}
+.task-button:hover {
+    cursor: pointer;
+    transform: scale(1.2);
+}
 @media only screen and (hover: none) and (pointer: coarse){
     body {
         margin: auto;
