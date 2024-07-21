@@ -2,6 +2,7 @@ use crate::core::{ConfigManager, Operation};
 use crate::db::task_helper::Task;
 use crate::db::task_manager::TaskManager;
 use crate::error::*;
+use crate::option_parser::parse_command_option;
 
 #[derive(Debug)]
 pub struct ModifyOperation<'a> {
@@ -21,6 +22,39 @@ pub struct ModifyOperation<'a> {
 }
 
 impl<'a> ModifyOperation<'a> {
+    pub fn new2(data: &Vec<String>) -> Result<ModifyOperation<'a>, CoreError> {
+        // Sample data:
+        //   1 2 3 @start
+        //   1 2 3 @complete
+        //   1 2 3 @blocked
+        //   1 2 3 @custom_state
+        if data.is_empty() {
+            return Err(CoreError::DateParseError(String::from(
+                "Empty data provided for modify",
+            )));
+        }
+
+        let option =
+            parse_command_option(&data.iter().map(|s| &**s).collect(), false, false, true)
+                .unwrap();
+
+        Ok(ModifyOperation {
+            database_manager: None,
+            result: vec![],
+            task_ids: option.task_ids,
+            body: None,
+            priority: None,
+            context_name: None,
+            tag_names: vec![],
+            due_date: None,
+            scheduled_at: None,
+            due_repeat: None,
+            scheduled_repeat: None,
+            state: option.state,
+            tags_to_remove: vec![],
+        })
+
+    }
     pub fn new(task_ids: Vec<i64>) -> ModifyOperation<'a> {
         ModifyOperation {
             database_manager: None,

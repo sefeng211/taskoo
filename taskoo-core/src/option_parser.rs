@@ -66,11 +66,7 @@ pub fn parse_command_option<'a>(
     let mut start_parse_options = false;
     let mut body: String = String::from("");
 
-    if parse_body {
-        assert!(!parse_task_ids);
-    } else if parse_task_ids {
-        assert!(!parse_body);
-    }
+    assert!(!(parse_task_ids && parse_body));
 
     let mut not_tags = vec![];
     for option in options.iter() {

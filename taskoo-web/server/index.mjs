@@ -102,5 +102,17 @@ export class Endpoints {
     const allocated = allocateInput(input);
     instance.exports.add(allocated.ptr, allocated.bytes.length);
   }
+
+  static StateChange(input) {
+    const allocated = allocateInput(input);
+
+    const result = instance.exports.state_change(allocated.ptr, allocated.bytes.length);
+    const len = instance.exports.get_shared_buffer_size();
+    const buffer = new Uint8Array(instance.exports.memory.buffer, result, len);
+
+    const data = new TextDecoder().decode(buffer);
+    instance.exports.free_shared_buffer(result);
+    return data;
+  }
 };
 

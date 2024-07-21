@@ -1,3 +1,5 @@
+import {SERVER_ENDPOINT_MAPPING} from './consts.mjs';
+
 export const OPERATION_TYPES = { AGENDA : "AGENDA", LIST: "LIST" };
 
 export function createTaskCard(taskBody) {
@@ -12,16 +14,28 @@ export function createTaskCard(taskBody) {
   task.appendChild(contentContainer);
 
   const content = document.createElement("div");
-  content.classList.add("content");
+  content.classList.add("card-body");
   content.classList.add("is-size-6");
 
   content.innerHTML = taskBody;
 
   contentContainer.appendChild(content);
 
-  // Card footer
-  const footer = document.getElementById("task-card-footer").content.cloneNode(true);
-  contentContainer.appendChild(footer);
+  const tools = document.getElementById("card-tools").content.cloneNode(true);
+  contentContainer.appendChild(tools);
+
+  // Add event handlers to those card-tools-button
+  contentContainer.querySelector(".card-tools-complete-button").addEventListener("click", function() {
+    const endpoint = SERVER_ENDPOINT_MAPPING["state_change"];
+    let result = fetch(endpoint, {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ "data": "316 @complete" })
+    });
+
+  });
   task.appendChild(contentContainer);
   return task;
 }

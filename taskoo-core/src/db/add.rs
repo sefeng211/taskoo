@@ -99,7 +99,6 @@ pub fn add(
     state_id: &Option<i64>,
     parent_task_ids: &Option<Vec<i64>>,
 ) -> Result<Vec<Task>, CoreError> {
-    println!("adddddddd ");
     debug!("  parent_task_ids: {:?}", parent_task_ids);
     debug!("  state_id: {:?}", state_id);
     let mut statement = tx.prepare(

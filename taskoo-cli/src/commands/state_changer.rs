@@ -67,17 +67,11 @@ impl<'a> StateChanger<'a> {
     }
 
     pub fn run(&self, task_ids: &Vec<u64>) -> Result<String> {
-        info!("Running state_changer command");
-
         let v2: Vec<String> = task_ids.iter().map(|s| s.to_string()).collect();
         let v3: Vec<&str> = v2.iter().map(|s| &**s).collect();
 
         let option = parse_command_option(&v3, false, true, true)
             .context("Unable to parse the provided option for modify")?;
-
-        //if matches.is_present("task_ids") {
-        //    let config: Vec<&str> = matches.values_of("task_ids").unwrap().collect();
-        //}
 
         debug!("Running state_changer with {:?}", option.task_ids);
 

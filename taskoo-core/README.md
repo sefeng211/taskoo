@@ -1,6 +1,6 @@
 # Taskoo Core
 This directory contains the Taskoo source files that performs the actual
-functionalities. All frontends rely on them.
+operations.
 
 ## Compilation
 `taskoo-core` can be compiled standalone (though you need to use either
@@ -19,6 +19,23 @@ To compile it for `taskoo-web`, run
 # Installation
 `rustup target add wasm32-wasi`
 
-## Core
-### Task
+# Concepts
+## Task
+# Task Attributes
+ - id (Unique)
+ - body (Required)
+ - priority
+ - context (Required)
+ - tags
+ - date_created
+ - date_due
+ - date_scheduled
+ - repetition_due
+ - repetition_scheduled
+ - state (Not customizable)
+ - annotation
+ - parent_task_ids (Unused)
+## Context
+## Tag
+## State
 
