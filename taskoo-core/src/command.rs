@@ -215,6 +215,7 @@ impl<'a> SimpleCommand<'a> for TagCommand<'a> {
     }
 
     fn delete(&mut self, names: Vec<String>) -> Result<(), CoreError> {
+        println!("got here with names {:?}", names);
         let tx = match self.db_manager.as_mut() {
             Some(manager) => manager.conn.transaction()?,
             None => match self.db_manager_for_test.as_mut() {

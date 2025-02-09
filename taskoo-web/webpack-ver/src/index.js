@@ -3,6 +3,13 @@ import './style.css';
 import {handleOperation, createTaskCard, OPERATION_TYPES} from './task_helpers.js';
 import {SERVER_ENDPOINT_MAPPING} from './consts.mjs';
 
+function resetTabItems() {
+  const tabs = document.querySelector(".tabs");
+  const tab_items = tabs.querySelectorAll("li");
+  for (const tab_item of tab_items) {
+    tab_item.classList.remove("is-active");
+  }
+}
 
 // Initialize tabs
 function InitTabs() {
@@ -10,13 +17,7 @@ function InitTabs() {
   const tab_items = tabs.querySelectorAll("li");
   for (const tab_item of tab_items) {
     tab_item.addEventListener("click", function() {
-      for (const tab_item of tab_items) {
-        tab_item.classList.remove("is-active");
-      }
       const classList = tab_item.classList;
-      if (!classList.contains("is-active")) {
-        classList.add("is-active");
-      }
 
       SwtichTab(tab_item);
     });
@@ -24,7 +25,12 @@ function InitTabs() {
 }
 
 function SwtichTab(newTab) {
-  document.querySelector("main").replaceChildren();
+  window.location.hash = `#${newTab.id}`;
+
+  resetTabItems();
+  if (!newTab.classList.contains("is-active")) {
+    newTab.classList.add("is-active");
+  }
 
   if (newTab.classList.contains("tab-today")) {
     const endpoint = SERVER_ENDPOINT_MAPPING["agenda"];
@@ -54,18 +60,34 @@ function SwtichTab(newTab) {
 
     result.then(function(data) {
       data.json().then(function(r) {
-        const inbox_data = [r[0][0], JSON.parse(r[0][1])];
-        const parsed_data = [inbox_data];
-        console.log(parsed_data);
-        handleOperation(OPERATION_TYPES.AGENDA, parsed_data);
+        handleOperation(OPERATION_TYPES.AGENDA, r);
       });
     });
   }
 }
 
+function Init() {
+  const removeErrorButton = document.getElementById("remove-error-message");
+  removeErrorButton.addEventListener("click", function() {
+    const notification = document.getElementById('error-notification');
+    notification.style.display = 'none';
+  });
+}
+
 window.onload = function() {
   InitTabs();
-  SwtichTab(document.querySelector(".tab-today"));
+  Init();
+
+  const currentHash = window.location.hash.replace('#', '');
+  console.log(currentHash);
+  if (currentHash === "today-tab" || !currentHash) {
+    console.log("switch to today tab");
+    SwtichTab(document.getElementById("today-tab"));
+  } else {
+    console.log("switch to inbox tab");
+    SwtichTab(document.getElementById("inbox-tab"));
+  }
+
 
   // Give functionalities to each button
   document.querySelector("#add-button").addEventListener("click", function() {
@@ -92,5 +114,32 @@ window.onload = function() {
         console.error("Empty input body, doing nothing");
       }
     })
+  });
+
+  const searchInput = document.getElementById("search-input");
+  searchInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault(); // Prevent the default form submission behavior
+      console.log('Enter key pressed, perform search');
+      resetTabItems();
+
+      const body = searchInput.value;
+      const endpoint = SERVER_ENDPOINT_MAPPING["list"];
+      let result = fetch(endpoint, {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ "data": searchInput.value })
+      });
+
+      result.then(function(data) {
+        data.json().then(function(r) {
+          handleOperation(OPERATION_TYPES.LIST, r);
+        });
+      });
+
+      // TODO: should the result of the operation
+    }
   });
 }

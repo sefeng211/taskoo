@@ -54,6 +54,12 @@ fn handle_result(result: Result<String, anyhow::Error>) {
     }
 }
 
+#[derive(Debug)]
+struct InfoCommand {
+    task_id: Option<u64>,
+    attribute: Option<String>,
+}
+
 // Note: this requires the `derive` feature
 use clap::Parser;
 #[derive(Parser)]
@@ -104,14 +110,9 @@ enum Commands {
         end_day: Option<String>,
     },
     /// Show information about the given task
-    Info {
-        task_id: u64,
-        attribute: Option<String>,
-    },
+    Info { input: String },
     /// Clean context, tag or state
-    Clean {
-        provided_type: String
-    },
+    Clean { provided_type: String },
     /// Change the state of the given tasks to 'start'
     Start { task_ids: Vec<u64> },
     /// Change the state of the given tasks to 'complete'
@@ -159,18 +160,26 @@ fn main() -> Result<(), ClientError> {
                 .agenda(&start_day, &end_day)
                 .context("agenda command failed to operate"),
         ),
-        Commands::Info { task_id, attribute } => {
+        Commands::Info { input } => {
+            let mut info_command = InfoCommand {
+                task_id: None,
+                attribute: None,
+            };
+
+            // Try to parse the input as a task_id (u64), otherwise treat it as an attribute
+            if let Ok(task_id) = input.parse::<u64>() {
+                info_command.task_id = Some(task_id);
+            } else {
+                info_command.attribute = Some(input.clone());
+            }
             let info = Info::new();
             handle_result(
-                info.run(task_id, attribute)
+                info.run(&info_command.task_id, &info_command.attribute)
                     .context("info command failed to operate"),
             );
-        },
+        }
         Commands::Clean { provided_type } => {
-            handle_result(
-                Clean::run(provided_type)
-                    .context("clean command failed to operate"),
-            );
+            handle_result(Clean::run(provided_type).context("clean command failed to operate"));
         }
         Commands::Start { task_ids } => handle_result(
             StateChanger::to_started()

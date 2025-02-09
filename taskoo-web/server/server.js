@@ -8,6 +8,11 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*'); // Allow from any origin
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  next();
+});
 
 const ENDPOINTS = {};
 const server = app.listen(7001, () => {
@@ -20,12 +25,17 @@ app.get('/today', (req, res) => {
 });
 
 app.post('/list', (req, res) => {
+  console.log("Taskoo server: list endpoint");
   const data = Endpoints.List(req.body.data);
+  console.log("Taskoo server: list endpoint, got data");
+  console.log(data);
   let ret;
   try {
     ret = JSON.parse(data);
+    console.log("parsed success");
   } catch(e) {
     ret = {"error": data};
+    console.log("parsed failed");
   }
   res.send(ret);
 });
@@ -33,6 +43,7 @@ app.post('/list', (req, res) => {
 app.post('/agenda', (req, res) => {
   console.log("Taskoo server: agenda endpoint");
   const data = Endpoints.Agenda(req.body.data);
+  console.log(data);
   let ret;
   try {
     ret = JSON.parse(data);
@@ -60,4 +71,9 @@ app.post('/add', createPost, (req, res) => {
 app.post('/state_change', createPost, (req, res) => {
   console.log("state_change endpoint");
   Endpoints.StateChange(req.body.data);
+});
+
+app.post('/delete', createPost, (req, res) => {
+  console.log("delete endpoint");
+  Endpoints.Delete(req.body.data);
 });

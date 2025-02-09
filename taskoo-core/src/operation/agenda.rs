@@ -4,8 +4,8 @@ use crate::db::task_helper::Task;
 use crate::db::task_manager::TaskManager;
 use crate::error::*;
 
-/* Some of the view functionalities are overlap with list, however,
- * view should provide better API for clients */
+/* Some of the Agenda functionalities are overlap with list, however,
+ * Agenda should provide better API for clients */
 pub struct Agenda {
     pub start_day: String,
     pub end_day: Option<String>,
