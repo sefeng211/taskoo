@@ -1,30 +1,60 @@
 <!DOCTYPE html>
-<html>
+<html data-theme="dark">
   <head>
      <link href='https://fonts.googleapis.com/css?family=Noto Sans' rel='stylesheet'>
-     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/yegor256/tacit@gh-pages/tacit-css-1.5.5.min.css"/>
-     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.1/css/bulma.min.css" >
      <meta name="viewport" content="width=device-width, initial-scale=1" charset="utf-8">
+     <link rel="icon" type="image/x-icon" href="images/favicon.png">
+     <title>Taskoo - Managing Todo List</title>
   </head>
   <body>
-      <div class="tabs is-centered">
-        <ul>
-          <li class="tab-saved"><a>Saved</a></li>
-          <li class="is-active tab-today"><a>Today's Tasks</a></li>
-          <li class="tab-inbox"><a>Inbox</a></li>
-        </ul>
+      <div id="error-notification" class="notification is-danger is-hidden">
+        <button id="remove-error-message" class="delete"></button>
+        <span id="error-message"></span>
       </div>
 
-      <main>
-      </main>
+      <div class="header">
+        <span class="title">Taskoo</span>
+        <div class="tabs is-centered is-normal is-toggle">
+          <ul>
+            <li id="today-tab" class="tab-today"><a>Today's Tasks</a></li>
+            <li id="inbox-tab" class="tab-inbox"><a>Inbox</a></li>
+          </ul>
+        </div>
+      </div>
 
-      <div id="control-buttons">
-        <figure id="" class="task-button image is-48x48">
-          <img src="images/search-button.png">
-        </figure>
-        <figure id="add-button" class="task-button image is-48x48">
-          <img class="is-rounded" src="images/add-button.png">
-        </figure>
+      <div class="container">
+        <div class="is-centered" style="display: flex; margin: auto; width: fit-content">
+          <div id="input-field" class="field">
+            <div class="control has-icons-left">
+              <input id="search-input" class="input my-input" type="search" placeholder="Search...">
+              <span class="icon is-small is-left">
+                <i class="fas fa-search"></i>
+              </span>
+            </div>
+          </div>
+          <button class="button is-primary" id="add-button">Add</button>
+        </div>
+
+        <!--<figure id="add-button" class="task-button image is-48x48">-->
+          <!--<img class="is-rounded" src="images/add-button.png">-->
+        <!--</figure>-->
+      </div>
+
+      <div id="context-switches"></div>
+
+      <div id="main" class="is-centered">
+        <table class="table is-centeredm" id="task-table">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th style="width: max-width">Body</th>
+                    <th></th> <!-- Controls -->
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
       </div>
 
       <template id="add-modal-template">
@@ -35,13 +65,24 @@
         </dialog>
       </template>
 
-      <template id="card-tools">
-        <div class="card-tools-container">
-          <img class="card-tools-complete-button card-tools-button" src="images/check-mark.png">
-          <img class="card-tools-button" src="images/delete-button.png">
-        </div>
+      <template id="list-modal-template">
+        <dialog id="list-dialog" style="margin:auto; padding: 5px;">
+          <h4 class="title is-4">List New Task</h4>
+          <input id="list-input-body" placeholder="Task Body" style="display:block; margin-left: auto; margin-right: auto; margin-top: 5px; margin-bottom: 5px;">
+          <button class="button is-primary" type="submit" id="list-submit-button">Submit</button>
+        </dialog>
       </template>
+
+      <template id="card-tools-complete">
+          <img class="card-tools-complete-button card-tools-button" src="images/check-mark.png">
+      </template>
+
+      <template id="card-tools-delete">
+          <img class="card-tools-delete-button card-tools-button" src="images/delete-button.png">
+      </template>
+
     <script src="main.js"></script>
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
     <!--<a href="https://www.flaticon.com/free-icons/delete" title="delete icons">Delete icons created by Kiranshastry - Flaticon</a>-->
     <!--<a href="https://www.flaticon.com/free-icons/correct" title="correct icons">Correct icons created by Freepik - Flaticon</a>-->
   </body>

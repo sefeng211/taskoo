@@ -75,17 +75,25 @@ pub unsafe fn list(ptr: *mut u8, len: usize) -> *mut c_char {
     let data = read_data_from_js(ptr, len);
     let mut operations = operation::Get::new2(&data).expect("Failed to create the get operation");
 
-    let mut ret: Vec<(String, String)> = vec![];
+    let mut ret: Vec<(String, &Vec<Task>)> = vec![];
 
     for operation_tuple in operations.iter_mut() {
         let serded_string: String = match operation::execute(&mut operation_tuple.1) {
-            Ok(_) => serde_json::to_string(&operation_tuple.1.get_result()).unwrap(),
-            Err(e) => e.to_string(),
+            Ok(_) => {
+                println!("got ok here");
+                serde_json::to_string(&operation_tuple.1.get_result()).unwrap()
+            }
+            Err(e) => {
+                println!("got err here");
+                e.to_string()
+            }
         };
 
-        ret.push((operation_tuple.0.to_owned(), serded_string));
+        println!("serded_string {} ", serded_string);
+        ret.push((operation_tuple.0.to_owned(), operation_tuple.1.get_result()));
     }
     let serded_ret: String = serde_json::to_string(&ret).unwrap();
+    println!("serded_ret {} ", serded_ret);
     unsafe { LENGTH = serded_ret.len() }
     let s = CString::new(serded_ret).unwrap();
     return s.into_raw();
@@ -113,6 +121,7 @@ pub unsafe fn agenda(ptr: *mut u8, len: usize) -> *mut c_char {
         Err(e) => e.to_string(),
     };
 
+    println!("serded_ret for agenda {} ", serded_string);
     unsafe { LENGTH = serded_string.len() }
     let s = CString::new(serded_string).unwrap();
     return s.into_raw();
@@ -133,4 +142,24 @@ pub unsafe fn state_change(ptr: *mut u8, len: usize) -> *mut c_char {
     unsafe { LENGTH = serded_string.len() }
     let s = CString::new(serded_string).unwrap();
     return s.into_raw();
+}
+
+// Delete Operation
+#[no_mangle]
+pub unsafe fn delete(ptr: *mut u8, len: usize) {
+    println!("delete in wasm");
+    let data = read_data_from_js(ptr, len);
+    let mut operation =
+        operation::DeleteOperation::new(&data).expect("Failed to create the DeleteOperation");
+    operation::execute(&mut operation).expect("Failed to execute the operation");
+
+    // The following doesn't work because taskoo-core doesn't store the delete task ids
+
+    // let deleted_tasks = &operation.get_result();
+    // let serded_ret: String = serde_json::to_string(&deleted_tasks).unwrap();
+    // println!("serded_ret {} for delete", serded_ret);
+    // unsafe { LENGTH = serded_ret.len() }
+    // let s = CString::new(serded_ret).unwrap();
+    // Return the delete tasks back to clients
+    // return s.into_raw();
 }
