@@ -1,4 +1,3 @@
-#![feature(provide_any)]
 #![feature(error_generic_member_access)]
 
 use anyhow::{Context, Result};

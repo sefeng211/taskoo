@@ -20,7 +20,7 @@ const wasi = new WASI({
     '~/.config': CONFIG_DIR,
     '~/.config/taskoo': TASKOO_CONFIG_DIR,
   },
-
+  version : "preview1",
   env: {
     RUST_LOG: "debug", // Enable the debug logging for Taskoo
     HOME: "/home/sefeng" // Enable the debug logging for Taskoo
@@ -28,7 +28,13 @@ const wasi = new WASI({
 });
 
 // pass import Object to WASM to use host APIs
-const importObject = { wasi_snapshot_preview1: wasi.wasiImport };
+const importObject = {
+  wasi_snapshot_preview1: wasi.wasiImport ,
+  env: {
+    memory: new WebAssembly.Memory({ initial: 256 }), // ✅ Provide memory if required
+    sqlite3_os_init: () => 0,  // ✅ Stub function (if required)
+  }
+};
 
 console.log(process.env.WASM_PATH);
 const wasm =

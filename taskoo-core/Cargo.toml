@@ -24,14 +24,9 @@ shellexpand = "2.1.0"
 serde = {version= "1.0.145", features = ["derive"]}
 serde_json = "1.0.86"
 
-# [dependencies.rusqlite]
-# version = "0.24.1"
-# default-features = false
-# features = ["bundled", "array"]
-
 [dependencies.rusqlite]
-path = "/home/sefeng/.local/workspace/repos/rusqlite"
-version = "0.26.3"
+git = "https://github.com/sefeng211/rusqlite.git"
+branch = "check-target-env-build-wasm32-wasi"
 features = [
     "bundled",
     "wasm32-wasi-vfs"

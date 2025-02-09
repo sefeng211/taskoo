@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 
-# set WASI_SDK_PATH to the correct location in your system
+# Set WASI_SDK_PATH to the correct location in your system.
+# It should look like "/home/sefeng/.local/share/wasi-sdk-16.0"
+# Currently only wasi-sdk-16 is tested/supported.
 
-WASI_SDK_PATH="/home/sefeng/.local/share/wasi-sdk-16.0"
+if [ -z "${WASI_SDK_PATH}" ]; then
+    echo "WASI_SDK_PATH is not set, exit"
+    exit 1
+fi
 
 export WASI_SYSROOT="${WASI_SDK_PATH}/share/wasi-sysroot"
 export CC="${WASI_SDK_PATH}/bin/clang --sysroot=${WASI_SYSROOT}"
@@ -20,4 +25,4 @@ export LIBSQLITE3_FLAGS="\
     -DSQLITE_OMIT_LOAD_EXTENSION \
     -DLONGDOUBLE_TYPE=double"
 
-cargo build --release --target "wasm32-wasi"
+cargo build --release --target "wasm32-wasip1"
