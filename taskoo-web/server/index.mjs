@@ -23,7 +23,8 @@ const wasi = new WASI({
   version : "preview1",
   env: {
     RUST_LOG: "debug", // Enable the debug logging for Taskoo
-    HOME: "/home/sefeng" // Enable the debug logging for Taskoo
+    HOME: "/home/sefeng", // Enable the debug logging for Taskoo
+    RUST_BACKTRACE: "full"
   }
 });
 
@@ -32,7 +33,7 @@ const importObject = {
   wasi_snapshot_preview1: wasi.wasiImport ,
   env: {
     memory: new WebAssembly.Memory({ initial: 256 }), // ✅ Provide memory if required
-    sqlite3_os_init: () => 0,  // ✅ Stub function (if required)
+    // sqlite3_os_init: () => 0,  // ✅ Stub function (if required)
   }
 };
 

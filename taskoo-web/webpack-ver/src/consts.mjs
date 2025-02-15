@@ -1,4 +1,4 @@
-let SERVER_ENDPOINT = "http://100.86.23.103:7001";
+let SERVER_ENDPOINT = "http://localhost:7001";
 
 if (window.location.hostname === "taskoo.seanfeng.dev") {
   SERVER_ENDPOINT = "";

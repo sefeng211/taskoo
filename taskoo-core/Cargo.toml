@@ -25,8 +25,9 @@ serde = {version= "1.0.145", features = ["derive"]}
 serde_json = "1.0.86"
 
 [dependencies.rusqlite]
-git = "https://github.com/sefeng211/rusqlite.git"
-branch = "check-target-env-build-wasm32-wasi"
+git = "https://github.com/rusqlite/rusqlite.git"
+#branch = "master"
+rev = "2a1a287bcf58cdc818976da5098e20273307ca3f"
 features = [
     "bundled",
     "wasm32-wasi-vfs"
