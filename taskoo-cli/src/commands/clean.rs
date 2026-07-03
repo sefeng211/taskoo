@@ -1,7 +1,6 @@
 use crate::error::ClientError;
 
 use anyhow::{Result};
-use std::backtrace::Backtrace;
 use clap::ArgMatches;
 use log::{info};
 
@@ -30,7 +29,7 @@ impl Clean {
             }
             &_ => {
                 return Err(ClientError::UnexpectedFailure(
-                String::from("The provided type is neither 'context' nor 'tag', so we can't process it, but how come?"), Backtrace::capture()));
+                String::from("The provided type is neither 'context' nor 'tag', so we can't process it, but how come?")));
             }
         }
     }

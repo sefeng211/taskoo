@@ -1,5 +1,4 @@
 use thiserror::Error;
-use std::backtrace::Backtrace;
 
 use taskoo_core::error::{CoreError, ArgumentError};
 
@@ -8,11 +7,11 @@ use taskoo_core::option_parser::CommandError;
 #[derive(Error, Debug)]
 pub enum ClientError {
     #[error("{attr} is missing, unable to process the command")]
-    MissingAttrError { attr: String, backtrace: Backtrace },
+    MissingAttrError { attr: String },
     #[error(transparent)]
     CoreError(#[from] CoreError),
     #[error("{0}")]
-    UnexpectedFailure(String, Backtrace),
+    UnexpectedFailure(String),
     #[error("Failed to parse {0} to format {0}")]
     ParseError(String, String),
     #[error(transparent)]

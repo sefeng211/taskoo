@@ -1,4 +1,3 @@
-use std::backtrace::Backtrace;
 use clap::ArgMatches;
 use log::info;
 use anyhow::Result;
@@ -25,7 +24,6 @@ impl Info {
         if task_id.is_none() && attribute.is_none() {
             return Err(ClientError::MissingAttrError {
                 attr: String::from("None of task_id or attribute is provided"),
-                backtrace: Backtrace::capture(),
             });
         }
         // let task_id = match matches.value_of("task_id") {
@@ -44,7 +42,6 @@ impl Info {
             if *id > std::i64::MAX as u64 {
                 return Err(ClientError::MissingAttrError {
                     attr: String::from("Provided task_id is greater than i64::MAX"),
-                    backtrace: Backtrace::capture(),
                 });
             }
 
@@ -58,7 +55,6 @@ impl Info {
             if tasks.is_empty() {
                 return Err(ClientError::UnexpectedFailure(
                     String::from(format!("Unable to find task with id : {}", real_id)),
-                    Backtrace::capture(),
                 ));
             }
 

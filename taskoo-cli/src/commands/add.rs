@@ -5,7 +5,6 @@ use taskoo_core::option_parser::{CommandOption, parse_command_option};
 use crate::error::ClientError;
 use taskoo_core::core::Operation;
 use dialoguer::Editor;
-use std::backtrace::Backtrace;
 
 //use crate::option_parser::parse_command_option;
 use log::debug;
@@ -21,7 +20,6 @@ impl Add {
             } else {
                 return Err(ClientError::UnexpectedFailure(
                     String::from("Unable to get the annotation text, abort!"),
-                    Backtrace::capture(),
                 ));
             }
         } else {
@@ -33,12 +31,11 @@ impl Add {
 
         let added_tasks = &operation.get_result();
         if added_tasks.len() != 1 {
-            return Err(ClientError::UnexpectedFailure(
-                String::from(
-                    "Add operation failed in an unexpected way, please consider to report it",
-                ),
-                Backtrace::capture(),
-            ));
+                return Err(ClientError::UnexpectedFailure(
+                    String::from(
+                        "Add operation failed in an unexpected way, please consider to report it",
+                    ),
+                ));
         }
 
         let task = &added_tasks[0];
@@ -56,7 +53,6 @@ impl Add {
             None => {
                 return Err(ClientError::MissingAttrError {
                     attr: String::from("task_id"),
-                    backtrace: Backtrace::capture(),
                 });
             }
         };
@@ -68,12 +64,11 @@ impl Add {
 
         let tasks = &operation.get_result();
         if tasks.len() != 1 {
-            return Err(ClientError::UnexpectedFailure(
-                String::from(
-                    "AddAnnotation operation failed in an unexpected way, please consider to report it",
-                ),
-                Backtrace::capture(),
-            ));
+                return Err(ClientError::UnexpectedFailure(
+                    String::from(
+                        "AddAnnotation operation failed in an unexpected way, please consider to report it",
+                    ),
+                ));
         }
 
         if let Some(rv) = Editor::new().edit(&tasks[0].annotation).unwrap() {
@@ -82,7 +77,6 @@ impl Add {
         } else {
             return Err(ClientError::UnexpectedFailure(
                 String::from("Unable to get the annotation text, abort!"),
-                Backtrace::capture(),
             ));
         }
 

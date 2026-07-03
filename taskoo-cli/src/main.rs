@@ -1,5 +1,3 @@
-#![feature(error_generic_member_access)]
-
 use anyhow::{Context, Result};
 use clap::{Subcommand};
 use ini::Ini;
