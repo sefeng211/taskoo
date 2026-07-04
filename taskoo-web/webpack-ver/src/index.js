@@ -1,145 +1,278 @@
-import _ from 'lodash';
 import './style.css';
-import {handleOperation, createTaskCard, OPERATION_TYPES} from './task_helpers.js';
+import {handleOperation, OPERATION_TYPES} from './task_helpers.js';
 import {SERVER_ENDPOINT_MAPPING} from './consts.mjs';
 
-function resetTabItems() {
-  const tabs = document.querySelector(".tabs");
-  const tab_items = tabs.querySelectorAll("li");
-  for (const tab_item of tab_items) {
-    tab_item.classList.remove("is-active");
+const state = {
+  currentView: 'today',
+  currentQuery: '',
+  loading: false,
+};
+
+function endpoint(name) {
+  return SERVER_ENDPOINT_MAPPING[name];
+}
+
+async function post(name, data) {
+  const response = await fetch(endpoint(name), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({data}),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Request failed with ${response.status}`);
+  }
+
+  return response.json();
+}
+
+function showError(message) {
+  const notification = document.getElementById('error-notification');
+  const errorMessage = document.getElementById('error-message');
+  errorMessage.textContent = message;
+  notification.classList.remove('is-hidden');
+}
+
+function showToast(message) {
+  const container = document.getElementById('toast-stack');
+  if (!container) {
+    return;
+  }
+
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  container.appendChild(toast);
+
+  window.setTimeout(() => {
+    toast.classList.add('is-fading');
+    window.setTimeout(() => {
+      toast.remove();
+    }, 220);
+  }, 2200);
+}
+
+function setLoading(isLoading) {
+  state.loading = isLoading;
+  document.body.classList.toggle('is-loading-data', isLoading);
+
+  const status = document.getElementById('view-status');
+  if (status) {
+    status.textContent = isLoading ? 'Syncing' : 'Ready';
   }
 }
 
-// Initialize tabs
-function InitTabs() {
-  const tabs = document.querySelector(".tabs");
-  const tab_items = tabs.querySelectorAll("li");
-  for (const tab_item of tab_items) {
-    tab_item.addEventListener("click", function() {
-      const classList = tab_item.classList;
+function setActiveNav(view) {
+  document.querySelectorAll('[data-view]').forEach((item) => {
+    item.classList.toggle('is-active', item.dataset.view === view);
+  });
+}
 
-      SwtichTab(tab_item);
-    });
+function setViewTitle(title, subtitle) {
+  document.getElementById('view-title').textContent = title;
+  document.getElementById('view-subtitle').textContent = subtitle;
+}
+
+async function renderTaskResponse(operation, tasks, meta) {
+  handleOperation(operation, tasks, {
+    ...meta,
+    onDelete: deleteTask,
+    onStateChange: changeTaskState,
+    onReload: reloadCurrentView,
+  });
+}
+
+async function loadToday() {
+  state.currentView = 'today';
+  state.currentQuery = '';
+  window.location.hash = '#today';
+  setActiveNav('today');
+  setViewTitle('Today', 'Scheduled and due tasks');
+  setLoading(true);
+
+  try {
+    const tasks = await post('agenda', 'today');
+    await renderTaskResponse(OPERATION_TYPES.AGENDA, tasks, {viewName: 'Today'});
+  } catch (error) {
+    showError(error.message);
+  } finally {
+    setLoading(false);
   }
 }
 
-function SwtichTab(newTab) {
-  window.location.hash = `#${newTab.id}`;
+async function loadInbox() {
+  state.currentView = 'inbox';
+  state.currentQuery = 'c:Inbox';
+  window.location.hash = '#inbox';
+  setActiveNav('inbox');
+  setViewTitle('Inbox', 'Unsorted tasks');
+  setLoading(true);
 
-  resetTabItems();
-  if (!newTab.classList.contains("is-active")) {
-    newTab.classList.add("is-active");
+  try {
+    const tasks = await post('list', 'c:Inbox');
+    await renderTaskResponse(OPERATION_TYPES.LIST, tasks, {viewName: 'Inbox'});
+  } catch (error) {
+    showError(error.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function searchTasks(query) {
+  const trimmedQuery = query.trim();
+  if (!trimmedQuery) {
+    return loadInbox();
   }
 
-  if (newTab.classList.contains("tab-today")) {
-    const endpoint = SERVER_ENDPOINT_MAPPING["agenda"];
+  state.currentView = 'search';
+  state.currentQuery = trimmedQuery;
+  window.location.hash = '#search';
+  setActiveNav('search');
+  setViewTitle('Search', trimmedQuery);
+  setLoading(true);
 
-    let result = fetch(endpoint, {
-      method: "POST",
+  try {
+    const tasks = await post('list', trimmedQuery);
+    await renderTaskResponse(OPERATION_TYPES.LIST, tasks, {viewName: 'Search'});
+  } catch (error) {
+    showError(error.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function reloadCurrentView() {
+  if (state.currentView === 'today') {
+    return loadToday();
+  }
+  if (state.currentView === 'search') {
+    return searchTasks(state.currentQuery);
+  }
+  return loadInbox();
+}
+
+async function addTask(body) {
+  const trimmedBody = body.trim();
+  if (!trimmedBody) {
+    return false;
+  }
+
+  setLoading(true);
+  try {
+    await fetch(endpoint('add'), {
+      method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ "data": "today" })
+      body: JSON.stringify({data: trimmedBody}),
     });
-
-    result.then(function(data) {
-      data.json().then(function(r) {
-        handleOperation(OPERATION_TYPES.AGENDA, r);
-      });
-    });
-  } else if (newTab.classList.contains("tab-inbox")) {
-    const endpoint = SERVER_ENDPOINT_MAPPING["list"];
-    let result = fetch(endpoint, {
-      method: "POST",
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ "data": "c:Inbox" })
-    });
-
-    result.then(function(data) {
-      data.json().then(function(r) {
-        handleOperation(OPERATION_TYPES.AGENDA, r);
-      });
-    });
+    showToast('Task added');
+    return true;
+  } catch (error) {
+    showError(error.message);
+    return false;
+  } finally {
+    setLoading(false);
   }
 }
 
-function Init() {
-  const removeErrorButton = document.getElementById("remove-error-message");
-  removeErrorButton.addEventListener("click", function() {
-    const notification = document.getElementById('error-notification');
-    notification.style.display = 'none';
+async function deleteTask(task) {
+  setLoading(true);
+  try {
+    await fetch(endpoint('del'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({data: task.id}),
+    });
+    showToast('Task removed');
+    await reloadCurrentView();
+  } catch (error) {
+    showError(error.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function changeTaskState(task, nextState) {
+  setLoading(true);
+  try {
+    await post('state_change', `${task.id} @${nextState}`);
+    await reloadCurrentView();
+  } catch (error) {
+    showError(error.message);
+  } finally {
+    setLoading(false);
+  }
+}
+
+function openAddDialog() {
+  const dialog = document.getElementById('add-dialog');
+  const input = document.getElementById('input-body');
+  input.value = '';
+  dialog.showModal();
+  input.focus();
+}
+
+function initAddDialog() {
+  const dialog = document.getElementById('add-dialog');
+  const form = document.getElementById('add-form');
+
+  document.getElementById('add-button').addEventListener('click', openAddDialog);
+  document.getElementById('empty-add-button').addEventListener('click', openAddDialog);
+  document.getElementById('cancel-add-button').addEventListener('click', () => dialog.close());
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const input = document.getElementById('input-body');
+    const created = await addTask(input.value);
+    if (created) {
+      dialog.close();
+      await loadInbox();
+    }
+  });
+}
+
+function initSearch() {
+  const searchInput = document.getElementById('search-input');
+  const searchButton = document.getElementById('search-button');
+
+  searchButton.addEventListener('click', () => searchTasks(searchInput.value));
+  searchInput.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      searchTasks(searchInput.value);
+    }
+  });
+}
+
+function initNavigation() {
+  document.querySelector('[data-view="today"]').addEventListener('click', loadToday);
+  document.querySelector('[data-view="inbox"]').addEventListener('click', loadInbox);
+  document.querySelector('[data-view="search"]').addEventListener('click', () => {
+    searchTasks(document.getElementById('search-input').value);
+  });
+}
+
+function initErrorNotification() {
+  document.getElementById('remove-error-message').addEventListener('click', () => {
+    document.getElementById('error-notification').classList.add('is-hidden');
   });
 }
 
 window.onload = function() {
-  InitTabs();
-  Init();
+  initErrorNotification();
+  initNavigation();
+  initSearch();
+  initAddDialog();
 
   const currentHash = window.location.hash.replace('#', '');
-  console.log(currentHash);
-  if (currentHash === "today-tab" || !currentHash) {
-    console.log("switch to today tab");
-    SwtichTab(document.getElementById("today-tab"));
+  if (currentHash === 'inbox') {
+    loadInbox();
   } else {
-    console.log("switch to inbox tab");
-    SwtichTab(document.getElementById("inbox-tab"));
+    loadToday();
   }
-
-
-  // Give functionalities to each button
-  document.querySelector("#add-button").addEventListener("click", function() {
-    const dialog = document.querySelector("#add-modal-template");
-    document.body.appendChild(dialog.content);
-    document.body.querySelector("#add-dialog").showModal();
-
-    document.querySelector("#submit-button").addEventListener("click", function() {
-      const body = document.querySelector("#input-body").value;
-      if (body) {
-        console.log(body);
-        const endpoint = SERVER_ENDPOINT_MAPPING["add"];
-        let result = fetch(endpoint, {
-          method: "POST",
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ "data": body })
-        });
-
-        document.body.querySelector("#add-dialog").close();
-        // TODO: should the result of the operation
-      } else {
-        console.error("Empty input body, doing nothing");
-      }
-    })
-  });
-
-  const searchInput = document.getElementById("search-input");
-  searchInput.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter') {
-      event.preventDefault(); // Prevent the default form submission behavior
-      console.log('Enter key pressed, perform search');
-      resetTabItems();
-
-      const body = searchInput.value;
-      const endpoint = SERVER_ENDPOINT_MAPPING["list"];
-      let result = fetch(endpoint, {
-        method: "POST",
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ "data": searchInput.value })
-      });
-
-      result.then(function(data) {
-        data.json().then(function(r) {
-          handleOperation(OPERATION_TYPES.LIST, r);
-        });
-      });
-
-      // TODO: should the result of the operation
-    }
-  });
-}
+};

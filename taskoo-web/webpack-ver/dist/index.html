@@ -1,89 +1,124 @@
 <!DOCTYPE html>
-<html data-theme="dark">
+<html lang="en">
   <head>
-     <link href='https://fonts.googleapis.com/css?family=Noto Sans' rel='stylesheet'>
-     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.1/css/bulma.min.css" >
-     <meta name="viewport" content="width=device-width, initial-scale=1" charset="utf-8">
-     <link rel="icon" type="image/x-icon" href="images/favicon.png">
-     <title>Taskoo - Managing Todo List</title>
+    <link href="https://fonts.googleapis.com/css?family=Noto Sans" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.1/css/bulma.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="utf-8">
+    <link rel="icon" type="image/x-icon" href="images/favicon.png">
+    <title>Taskoo</title>
   </head>
   <body>
-      <div id="error-notification" class="notification is-danger is-hidden">
-        <button id="remove-error-message" class="delete"></button>
-        <span id="error-message"></span>
-      </div>
+    <div id="error-notification" class="notification is-danger is-hidden">
+      <button id="remove-error-message" class="delete" aria-label="Dismiss"></button>
+      <span id="error-message"></span>
+    </div>
+    <div id="toast-stack" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
 
-      <div class="header">
-        <span class="title">Taskoo</span>
-        <div class="tabs is-centered is-normal is-toggle">
-          <ul>
-            <li id="today-tab" class="tab-today"><a>Today's Tasks</a></li>
-            <li id="inbox-tab" class="tab-inbox"><a>Inbox</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="container">
-        <div class="is-centered" style="display: flex; margin: auto; width: fit-content">
-          <div id="input-field" class="field">
-            <div class="control has-icons-left">
-              <input id="search-input" class="input my-input" type="search" placeholder="Search...">
-              <span class="icon is-small is-left">
-                <i class="fas fa-search"></i>
-              </span>
-            </div>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-mark">
+            <span class="icon"><i class="fas fa-check" aria-hidden="true"></i></span>
+          </span>
+          <div>
+            <h1 class="brand-title">Taskoo</h1>
+            <p class="brand-subtitle">Tasks</p>
           </div>
-          <button class="button is-primary" id="add-button">Add</button>
         </div>
 
-        <!--<figure id="add-button" class="task-button image is-48x48">-->
-          <!--<img class="is-rounded" src="images/add-button.png">-->
-        <!--</figure>-->
-      </div>
+        <nav class="side-nav" aria-label="Task views">
+          <button class="nav-item is-active" type="button" data-view="today">
+            <span class="icon"><i class="fas fa-calendar-day" aria-hidden="true"></i></span>
+            <span>Today</span>
+          </button>
+          <button class="nav-item" type="button" data-view="inbox">
+            <span class="icon"><i class="fas fa-inbox" aria-hidden="true"></i></span>
+            <span>Inbox</span>
+          </button>
+          <button class="nav-item" type="button" data-view="search">
+            <span class="icon"><i class="fas fa-search" aria-hidden="true"></i></span>
+            <span>Search</span>
+          </button>
+        </nav>
 
-      <div id="context-switches"></div>
+        <div class="sidebar-footer">
+          <span class="status-pill">
+            <span class="status-dot"></span>
+            <span id="view-status">Ready</span>
+          </span>
+        </div>
+      </aside>
 
-      <div id="main" class="is-centered">
-        <table class="table is-centeredm" id="task-table">
-            <thead>
-                <tr>
-                    <th>Id</th>
-                    <th style="width: max-width">Body</th>
-                    <th></th> <!-- Controls -->
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
-      </div>
+      <main class="main-panel">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Workspace</p>
+            <h2 id="view-title" class="view-title">Today</h2>
+            <p id="view-subtitle" class="view-subtitle">Scheduled and due tasks</p>
+          </div>
+          <button class="primary-action" type="button" id="add-button">
+            <span class="icon"><i class="fas fa-plus" aria-hidden="true"></i></span>
+            <span>New task</span>
+          </button>
+        </header>
 
-      <template id="add-modal-template">
-        <dialog id="add-dialog" style="margin:auto; padding: 5px;">
-          <h4 class="title is-4">Add New Task</h4>
-          <input id="input-body" placeholder="Task Body" style="display:block; margin-left: auto; margin-right: auto; margin-top: 5px; margin-bottom: 5px;">
-          <button class="button is-primary" type="submit" id="submit-button">Submit</button>
-        </dialog>
-      </template>
+        <section class="command-bar" aria-label="Task search">
+          <label class="search-box" for="search-input">
+            <span class="icon"><i class="fas fa-search" aria-hidden="true"></i></span>
+            <input id="search-input" type="search" placeholder="Search tasks or use c:Inbox">
+          </label>
+          <button class="secondary-action" type="button" id="search-button">
+            <span class="icon"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+            <span>Search</span>
+          </button>
+        </section>
 
-      <template id="list-modal-template">
-        <dialog id="list-dialog" style="margin:auto; padding: 5px;">
-          <h4 class="title is-4">List New Task</h4>
-          <input id="list-input-body" placeholder="Task Body" style="display:block; margin-left: auto; margin-right: auto; margin-top: 5px; margin-bottom: 5px;">
-          <button class="button is-primary" type="submit" id="list-submit-button">Submit</button>
-        </dialog>
-      </template>
+        <section class="summary-grid" aria-label="Task summary">
+          <div class="summary-tile">
+            <span class="summary-label">Active</span>
+            <span class="summary-value" id="active-count">0</span>
+          </div>
+          <div class="summary-tile">
+            <span class="summary-label">Completed</span>
+            <span class="summary-value" id="completed-count">0</span>
+          </div>
+          <div class="summary-tile">
+            <span class="summary-label">Groups</span>
+            <span class="summary-value" id="context-count">0</span>
+          </div>
+        </section>
 
-      <template id="card-tools-complete">
-          <img class="card-tools-complete-button card-tools-button" src="images/check-mark.png">
-      </template>
+        <section id="context-switches" class="context-switches" aria-label="Groups"></section>
 
-      <template id="card-tools-delete">
-          <img class="card-tools-delete-button card-tools-button" src="images/delete-button.png">
-      </template>
+        <section id="task-list" class="task-list" aria-label="Tasks"></section>
+
+        <section id="empty-state" class="empty-state is-hidden">
+          <span class="icon"><i class="fas fa-check-double" aria-hidden="true"></i></span>
+          <h2 class="empty-title">Nothing here</h2>
+          <p class="empty-copy">No active tasks in this view.</p>
+          <button class="primary-action" type="button" id="empty-add-button">
+            <span class="icon"><i class="fas fa-plus" aria-hidden="true"></i></span>
+            <span>New task</span>
+          </button>
+        </section>
+      </main>
+    </div>
+
+    <dialog id="add-dialog" class="modal-dialog">
+      <form id="add-form" class="modal-body" method="dialog">
+        <h2 class="modal-title">New task</h2>
+        <input id="input-body" class="modal-input" placeholder="Task body" autocomplete="off">
+        <div class="modal-actions">
+          <button class="ghost-action" type="button" id="cancel-add-button">Cancel</button>
+          <button class="primary-action" type="submit" id="submit-button">
+            <span class="icon"><i class="fas fa-plus" aria-hidden="true"></i></span>
+            <span>Add task</span>
+          </button>
+        </div>
+      </form>
+    </dialog>
 
     <script src="main.js"></script>
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
-    <!--<a href="https://www.flaticon.com/free-icons/delete" title="delete icons">Delete icons created by Kiranshastry - Flaticon</a>-->
-    <!--<a href="https://www.flaticon.com/free-icons/correct" title="correct icons">Correct icons created by Freepik - Flaticon</a>-->
   </body>
 </html>
