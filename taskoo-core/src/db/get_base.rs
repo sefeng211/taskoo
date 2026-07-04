@@ -22,7 +22,7 @@ pub fn get_base(tx: &Transaction, conditions: &str) -> Result<Vec<Task>, CoreErr
     on task_state.state_id = state.id
     LEFT JOIN
         (
-        SELECT priority.name, priority_task.task_id FROM priority
+        SELECT priority.id as priority_id, priority.name, priority_task.task_id FROM priority
         INNER JOIN priority_task ON priority_task.priority_id = priority.id
         ) priority_task
     on task.id = priority_task.task_id

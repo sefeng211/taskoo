@@ -26,7 +26,7 @@ fn task_not_matches_tag_ids(task: &Task, not_tag_ids: &Vec<i64>) -> bool {
 
 pub fn get(
     conn: &Transaction,
-    _priority: &Option<u8>,
+    priority_id: &Option<i64>,
     context_id: &Option<i64>,
     tag_ids: &Vec<i64>,
     date_due: &Option<&str>,
@@ -34,10 +34,13 @@ pub fn get(
     task_id: &Option<i64>,
     not_tag_ids: &Option<Vec<i64>>,
 ) -> Result<Vec<Task>, CoreError> {
-    let conditions = match task_id {
+    let mut conditions = match task_id {
         Some(id) => vec![format!("task.id = {}", id)],
         None => generate_get_condition(&None, context_id, date_due, date_scheduled),
     };
+    if let Some(priority_id) = priority_id {
+        conditions.push(format!("priority_task.priority_id = {}", priority_id));
+    }
 
     let mut tasks = get_base(&conn, &conditions.join(" and "))?;
 

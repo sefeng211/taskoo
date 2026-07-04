@@ -7,7 +7,7 @@ use crate::command::ContextCommand;
 use crate::command::SimpleCommand;
 
 pub struct Get<'a> {
-    pub priority: Option<u8>,
+    pub priority: Option<String>,
     pub context: Option<String>,
     pub tags: Vec<String>,
     pub date_due: Option<&'a str>,
@@ -57,6 +57,7 @@ impl<'a> Get<'a> {
         for context in context_names.iter() {
             let mut operation = Get::new();
             operation.context = Some(context.to_string());
+            operation.priority = command_option.priority.clone();
             operation.tags = command_option.tags.clone();
             operation.date_due = command_option.date_due;
             operation.date_scheduled = command_option.date_scheduled;

@@ -154,3 +154,35 @@ fn test_get_with_not_tag_ids() -> Result<(), CoreError> {
     assert_eq!(rows.len(), 0);
     Ok(())
 }
+
+#[test]
+fn test_get_with_priority() -> Result<(), CoreError> {
+    let mut database_manager = TaskManager::new(&get_setting());
+
+    let mut operation = Add::new_with_task_manager("High Priority", &mut database_manager);
+    operation.priority = Some(String::from("H"));
+    execute(&mut operation)?;
+    let mut operation = Add::new_with_task_manager("Medium Priority", &mut database_manager);
+    operation.priority = Some(String::from("M"));
+    execute(&mut operation)?;
+    let mut operation = Add::new_with_task_manager("No Priority", &mut database_manager);
+    execute(&mut operation)?;
+
+    let rows = database_manager
+        .get(
+            &Some("h".to_string()),
+            &None,
+            &vec![],
+            &None,
+            &None,
+            &None,
+            &None,
+        )
+        .unwrap();
+
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0].body, "High Priority");
+    assert_eq!(rows[0].priority, "h");
+
+    Ok(())
+}

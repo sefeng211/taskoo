@@ -171,7 +171,7 @@ impl TaskManager {
 
     pub fn get(
         &mut self,
-        priority: &Option<u8>,
+        priority: &Option<String>,
         context: &Option<String>,
         tags: &Vec<String>,
         date_due: &Option<&str>,
@@ -200,6 +200,14 @@ impl TaskManager {
             tag_ids.push(TaskManager::convert_tag_name_to_id(&tx, &tag_name)?);
         }
 
+        let priority_id = match priority {
+            Some(priority_type) => Some(TaskManager::convert_priority_type_to_id(
+                &tx,
+                &priority_type,
+            )?),
+            None => None,
+        };
+
         let not_tag_ids: Option<Vec<i64>> = match not_tags {
             None => None,
             Some(tags) => {
@@ -213,7 +221,7 @@ impl TaskManager {
 
         let tasks = get(
             &tx,
-            &priority,
+            &priority_id,
             &Some(context_id),
             &tag_ids,
             &date_due,

@@ -4,6 +4,7 @@ import {SERVER_ENDPOINT_MAPPING} from '../src/consts.mjs';
 import {
   buildBulkModificationCommand,
   navCounts,
+  priorityLabel,
   pruneSelectionForVisibleTasks,
   tagView,
 } from '../src/ui_logic.mjs';
@@ -71,6 +72,11 @@ test('tag sidebar entries map to tag query views', () => {
     subtitle: 'Tagged tasks',
     query: '+taskoo',
   });
+});
+
+test('priority badges use explicit labels', () => {
+  assert.equal(priorityLabel('h'), 'Pri:H');
+  assert.equal(priorityLabel('L'), 'Pri:L');
 });
 
 let passed = 0;

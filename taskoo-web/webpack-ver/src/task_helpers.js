@@ -1,5 +1,7 @@
 export const OPERATION_TYPES = {AGENDA: 'AGENDA', LIST: 'LIST'};
 
+import {priorityLabel} from './ui_logic.mjs';
+
 function clearElement(element) {
   element.replaceChildren();
 }
@@ -55,7 +57,7 @@ function createMeta(task) {
   meta.appendChild(createBadge(stateLabel(task.state), `state-${stateLabel(task.state)}`));
 
   if (task.priority) {
-    meta.appendChild(createBadge(task.priority, 'priority'));
+    meta.appendChild(createBadge(priorityLabel(task.priority), 'priority'));
   }
 
   if (task.context) {

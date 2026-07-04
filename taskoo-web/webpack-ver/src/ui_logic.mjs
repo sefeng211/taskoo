@@ -10,6 +10,10 @@ export function tagTokens(value, prefix) {
     .map((tag) => `${prefix}${tag}`);
 }
 
+export function priorityLabel(priority) {
+  return `Pri:${String(priority).toUpperCase()}`;
+}
+
 export function pruneSelectionForVisibleTasks(selectedIds, tasks) {
   const visibleIds = new Set(tasks.map((task) => task.id));
   return new Set([...selectedIds].filter((id) => visibleIds.has(id)));

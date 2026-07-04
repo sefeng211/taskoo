@@ -3,6 +3,7 @@ import {SERVER_ENDPOINT_MAPPING} from './consts.mjs';
 import {
   buildBulkModificationCommand,
   navCounts,
+  priorityLabel,
   pruneSelectionForVisibleTasks,
   tagView,
 } from './ui_logic.mjs';
@@ -666,7 +667,7 @@ function createTaskRow(task) {
   });
 
   const meta = [
-    task.priority ? `<span class="badge priority">P${task.priority}</span>` : '',
+    task.priority ? `<span class="badge priority">${priorityLabel(task.priority)}</span>` : '',
     task.context ? `<span class="badge">${task.context}</span>` : '',
     taskDateLabel(task) ? `<span class="badge ${isPast(task.date_due || task.date_scheduled) ? 'danger' : ''}">${taskDateLabel(task)}</span>` : '',
     ...(task.tags || []).map((tag) => `<span class="badge tag">#${tag}</span>`),
