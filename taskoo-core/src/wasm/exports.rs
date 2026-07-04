@@ -3,8 +3,10 @@ extern crate serde_json;
 use std::ffi::CString;
 use std::os::raw::c_char;
 
+use crate::command::{ContextCommand, SimpleCommand, StateCommand, TagCommand};
 use crate::operation;
 use crate::core::Operation;
+use crate::option_parser::parse_command_option;
 use crate::wasm::helpers::read_data_from_js;
 
 pub use crate::db::task_helper::Task;
@@ -140,6 +142,90 @@ pub unsafe fn state_change(ptr: *mut u8, len: usize) -> *mut c_char {
     };
 
     unsafe { LENGTH = serded_string.len() }
+    let s = CString::new(serded_string).unwrap();
+    return s.into_raw();
+}
+
+// Full Modify Operation
+#[no_mangle]
+pub unsafe fn modify(ptr: *mut u8, len: usize) -> *mut c_char {
+    let data = read_data_from_js(ptr, len);
+    if data.is_empty() {
+        let message = String::from("{\"error\":\"Empty data provided for modify\"}");
+        LENGTH = message.len();
+        return CString::new(message).unwrap().into_raw();
+    }
+
+    let option = match parse_command_option(
+        &data.iter().map(|s| &**s).collect(),
+        false,
+        true,
+        true,
+    ) {
+        Ok(option) => option,
+        Err(e) => {
+            let message = serde_json::json!({"error": e.to_string()}).to_string();
+            LENGTH = message.len();
+            return CString::new(message).unwrap().into_raw();
+        }
+    };
+
+    let mut operation = operation::ModifyOperation::new(option.task_ids);
+    operation.context_name = option.context;
+    operation.tag_names = option.tags;
+    operation.due_date = option.date_due;
+    operation.scheduled_at = option.date_scheduled;
+    operation.due_repeat = option.repetition_due;
+    operation.scheduled_repeat = option.repetition_scheduled;
+    operation.tags_to_remove = option.tags_to_remove;
+    operation.priority = option.priority;
+
+    if option.state == Some(String::from("started")) {
+        operation.set_state_to_started();
+    } else if option.state == Some(String::from("completed")) {
+        operation.set_state_to_completed();
+    } else if option.state == Some(String::from("ready")) {
+        operation.set_state_to_ready();
+    } else if option.state == Some(String::from("blocked")) {
+        operation.set_state_to_blocked();
+    } else if option.state.is_some() {
+        operation.set_custom_state(option.state.unwrap().to_string());
+    }
+
+    let serded_string: String = match operation::execute(&mut operation) {
+        Ok(_) => serde_json::to_string(&operation.get_result()).unwrap(),
+        Err(e) => serde_json::json!({"error": e.to_string()}).to_string(),
+    };
+
+    LENGTH = serded_string.len();
+    let s = CString::new(serded_string).unwrap();
+    return s.into_raw();
+}
+
+// Metadata for UI filters and editors
+#[no_mangle]
+pub unsafe fn metadata() -> *mut c_char {
+    let contexts = match ContextCommand::new().and_then(|mut command| command.get_all()) {
+        Ok(contexts) => contexts,
+        Err(_) => vec![],
+    };
+    let tags = match TagCommand::new().and_then(|mut command| command.get_all()) {
+        Ok(tags) => tags,
+        Err(_) => vec![],
+    };
+    let custom_states = match StateCommand::new().and_then(|mut command| command.get_all()) {
+        Ok(states) => states,
+        Err(_) => vec![],
+    };
+    let serded_string = serde_json::json!({
+        "contexts": contexts,
+        "tags": tags,
+        "states": ["ready", "started", "blocked", "completed"],
+        "custom_states": custom_states,
+        "priorities": ["H", "M", "L"]
+    }).to_string();
+
+    LENGTH = serded_string.len();
     let s = CString::new(serded_string).unwrap();
     return s.into_raw();
 }

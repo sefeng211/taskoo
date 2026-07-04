@@ -19,6 +19,18 @@ const server = app.listen(7001, () => {
   console.log(`Express running → PORT ${server.address().port}`);
 });
 
+function parseEndpointData(data) {
+  try {
+    const parsed = JSON.parse(data);
+    if (parsed && parsed.error) {
+      return {status: 400, body: parsed};
+    }
+    return {status: 200, body: parsed};
+  } catch(e) {
+    return {status: 400, body: {"error": data}};
+  }
+}
+
 app.get('/today', (req, res) => {
   let tasks = JSON.parse(run());
   res.send(tasks[0][1]);
@@ -29,28 +41,21 @@ app.post('/list', (req, res) => {
   const data = Endpoints.List(req.body.data);
   console.log("Taskoo server: list endpoint, got data");
   console.log(data);
-  let ret;
-  try {
-    ret = JSON.parse(data);
-    console.log("parsed success");
-  } catch(e) {
-    ret = {"error": data};
-    console.log("parsed failed");
-  }
-  res.send(ret);
+  const ret = parseEndpointData(data);
+  res.status(ret.status).send(ret.body);
 });
 
 app.post('/agenda', (req, res) => {
   console.log("Taskoo server: agenda endpoint");
   const data = Endpoints.Agenda(req.body.data);
   console.log(data);
-  let ret;
-  try {
-    ret = JSON.parse(data);
-  } catch(e) {
-    ret = {"error": data};
-  }
-  res.send(ret);
+  const ret = parseEndpointData(data);
+  res.status(ret.status).send(ret.body);
+});
+
+app.get('/metadata', (req, res) => {
+  const ret = parseEndpointData(Endpoints.Metadata());
+  res.status(ret.status).send(ret.body);
 });
 
 const createPost = (req, res, next) => {
@@ -65,15 +70,24 @@ app.post('/run', createPost, (req, res) => {
 
 app.post('/add', createPost, (req, res) => {
   console.log("add endpoint");
-  Endpoints.Add(req.body.data);
+  const ret = parseEndpointData(Endpoints.Add(req.body.data));
+  res.status(ret.status).send(ret.body);
 });
 
 app.post('/state_change', createPost, (req, res) => {
   console.log("state_change endpoint");
-  Endpoints.StateChange(req.body.data);
+  const ret = parseEndpointData(Endpoints.StateChange(req.body.data));
+  res.status(ret.status).send(ret.body);
+});
+
+app.post('/modify', createPost, (req, res) => {
+  console.log("modify endpoint");
+  const ret = parseEndpointData(Endpoints.Modify(req.body.data));
+  res.status(ret.status).send(ret.body);
 });
 
 app.post('/delete', createPost, (req, res) => {
   console.log("delete endpoint");
-  Endpoints.Delete(req.body.data);
+  const ret = parseEndpointData(Endpoints.Delete(req.body.data));
+  res.status(ret.status).send(ret.body);
 });

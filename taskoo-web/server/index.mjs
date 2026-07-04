@@ -121,51 +121,54 @@ function allocateInput(input) {
   return {ptr: ptr, bytes: bytes};
 }
 
+function readSharedString(offset) {
+  const len = instance.exports.get_shared_buffer_size();
+  const buffer = new Uint8Array(instance.exports.memory.buffer, offset, len);
+  const data = new TextDecoder().decode(buffer);
+  instance.exports.free_shared_buffer(offset);
+  return data;
+}
+
 export class Endpoints {
   static List(input) {
     const allocated = allocateInput(input);
     const offset = instance.exports.list(allocated.ptr, allocated.bytes.length);
-    const len = instance.exports.get_shared_buffer_size();
-    const buffer = new Uint8Array(instance.exports.memory.buffer, offset, len);
-    const data = new TextDecoder().decode(buffer);
-    instance.exports.free_shared_buffer(offset);
-    return data;
+    return readSharedString(offset);
   }
 
   static Agenda(input) {
     const allocated = allocateInput(input);
     const offset = instance.exports.agenda(allocated.ptr, allocated.bytes.length);
-    const len = instance.exports.get_shared_buffer_size();
-    const buffer = new Uint8Array(instance.exports.memory.buffer, offset, len);
-    const data = new TextDecoder().decode(buffer);
-    instance.exports.free_shared_buffer(offset);
-    return data;
+    return readSharedString(offset);
   }
 
   static Add(input) {
     const allocated = allocateInput(input);
     instance.exports.add(allocated.ptr, allocated.bytes.length);
+    return JSON.stringify({ok: true});
   }
 
   static Delete(input) {
     const allocated = allocateInput(input);
-    const offset = instance.exports.delete(allocated.ptr, allocated.bytes.length);
-    const len = instance.exports.get_shared_buffer_size();
-    const buffer = new Uint8Array(instance.exports.memory.buffer, offset, len);
-    const data = new TextDecoder().decode(buffer);
-    instance.exports.free_shared_buffer(offset);
-    return data;
+    instance.exports.delete(allocated.ptr, allocated.bytes.length);
+    return JSON.stringify({ok: true});
   }
 
   static StateChange(input) {
     const allocated = allocateInput(input);
 
     const result = instance.exports.state_change(allocated.ptr, allocated.bytes.length);
-    const len = instance.exports.get_shared_buffer_size();
-    const buffer = new Uint8Array(instance.exports.memory.buffer, result, len);
+    return readSharedString(result);
+  }
 
-    const data = new TextDecoder().decode(buffer);
-    instance.exports.free_shared_buffer(result);
-    return data;
+  static Modify(input) {
+    const allocated = allocateInput(input);
+    const result = instance.exports.modify(allocated.ptr, allocated.bytes.length);
+    return readSharedString(result);
+  }
+
+  static Metadata() {
+    const result = instance.exports.metadata();
+    return readSharedString(result);
   }
 };

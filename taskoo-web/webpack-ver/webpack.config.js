@@ -17,9 +17,10 @@ module.exports = {
     },
     proxy: {
       '/api': {
-        target: 'http://100.86.23.103:4141',
-        changeOrigin: true, // If needed, change the origin of the host header
-        secure: false // If you're proxying to HTTP, ensure this is set to false
+        target: 'http://127.0.0.1:7001',
+        changeOrigin: true,
+        pathRewrite: {'^/api': ''},
+        secure: false
       }
     }
   },

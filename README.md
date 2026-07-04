@@ -15,6 +15,9 @@ of code for its backend.
 
 
 ## Development
+For day-to-day command-line usage and GTD workflow guidance, see
+[CLI_USAGE.md](CLI_USAGE.md).
+
 ### Build the command-line version
 #### taskoo-cli
 ```
