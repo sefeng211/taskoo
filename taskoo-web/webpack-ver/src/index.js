@@ -28,12 +28,17 @@ function endpoint(name) {
 }
 
 async function request(name, {method = 'GET', data} = {}) {
+  const url = endpoint(name);
+  if (!url) {
+    throw new Error(`Unknown endpoint: ${name}`);
+  }
+
   const options = {method, headers: {'Content-Type': 'application/json'}};
   if (data !== undefined) {
     options.body = JSON.stringify({data});
   }
 
-  const response = await fetch(endpoint(name), options);
+  const response = await fetch(url, options);
   const payload = await response.json().catch(() => ({}));
   if (!response.ok || payload.error) {
     throw new Error(payload.error || `Request failed with ${response.status}`);

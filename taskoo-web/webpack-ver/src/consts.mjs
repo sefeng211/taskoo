@@ -9,7 +9,7 @@ const SERVER_ENDPOINT_MAPPING = {
   run: SERVER_ENDPOINT + "/run",
   today: SERVER_ENDPOINT + "/today",
   state_change: SERVER_ENDPOINT + "/state_change",
-  del: SERVER_ENDPOINT + "/delete"
+  delete: SERVER_ENDPOINT + "/delete"
 };
 
 export {
