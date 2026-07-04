@@ -1,11 +1,8 @@
-use clap::ArgMatches;
 use log::{debug, info};
 use anyhow::{Result, Context};
 
 use taskoo_core::operation::{execute, ModifyOperation};
 use taskoo_core::core::Operation;
-
-use taskoo_core::option_parser::{parse_command_option, CommandOption};
 
 pub struct StateChanger<'a> {
     custom_state: Option<&'a str>,
@@ -67,27 +64,24 @@ impl<'a> StateChanger<'a> {
     }
 
     pub fn run(&self, task_ids: &Vec<u64>) -> Result<String> {
-        let v2: Vec<String> = task_ids.iter().map(|s| s.to_string()).collect();
-        let v3: Vec<&str> = v2.iter().map(|s| &**s).collect();
-
-        let option = parse_command_option(&v3, false, true, true)
-            .context("Unable to parse the provided option for modify")?;
-
-        debug!("Running state_changer with {:?}", option.task_ids);
-
-        let mut operation = ModifyOperation::new(option.task_ids);
+        let mut tokens: Vec<String> = task_ids.iter().map(|s| s.to_string()).collect();
         if self.to_started {
-            operation.set_state_to_started();
+            tokens.push(String::from("@started"));
         } else if self.to_completed {
-            operation.set_state_to_completed();
+            tokens.push(String::from("@completed"));
         } else if self.to_ready {
-            operation.set_state_to_ready();
+            tokens.push(String::from("@ready"));
         } else if self.to_blocked {
-            operation.set_state_to_blocked();
+            tokens.push(String::from("@blocked"));
         } else {
             assert!(self.custom_state.is_some());
-            operation.set_custom_state(self.custom_state.unwrap().to_string());
+            tokens.push(format!("@{}", self.custom_state.unwrap()));
         }
+
+        debug!("Running state_changer with {:?}", tokens);
+
+        let mut operation = ModifyOperation::new(&tokens)
+            .context("Unable to parse the provided option for modify")?;
 
         execute(&mut operation)?;
 

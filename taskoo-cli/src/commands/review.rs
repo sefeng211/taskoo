@@ -204,12 +204,25 @@ impl Review {
             .map_err(|error| ClientError::TerminalError { source: error })?
         {
             info!("Modify task {}", task.id);
-            let mut modify_operation = ModifyOperation::new(vec![task.id]);
-            modify_operation.context_name = new_context;
-            modify_operation.due_date = new_due_date.as_deref();
-            modify_operation.scheduled_at = new_scheduled_at.as_deref();
-            modify_operation.tag_names = new_tags;
+            let mut tokens = vec![task.id.to_string()];
+            if let Some(context) = new_context {
+                tokens.push(format!("c:{}", context));
+            }
+            for tag in new_tags.iter().filter(|tag| !tag.is_empty()) {
+                tokens.push(format!("+{}", tag));
+            }
+            if let Some(due_date) = new_due_date.as_deref() {
+                if !due_date.is_empty() {
+                    tokens.push(format!("d:{}", due_date));
+                }
+            }
+            if let Some(scheduled_at) = new_scheduled_at.as_deref() {
+                if !scheduled_at.is_empty() {
+                    tokens.push(format!("s:{}", scheduled_at));
+                }
+            }
 
+            let mut modify_operation = ModifyOperation::new(&tokens)?;
             execute(&mut modify_operation)?;
             println!("Task Modified!");
         }
