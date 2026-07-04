@@ -114,3 +114,25 @@ directory automatically. If needed, you can override the paths when starting the
 ```
 TASKOO_HOME=/path/to/home TASKOO_DB_DIR=/path/to/db/dir npm run start
 ```
+
+### Run the web version with Docker Compose
+The repository also includes a Docker Compose setup for the full web stack. From the
+repo root:
+
+```
+docker compose up --build
+```
+
+The frontend is available at `http://localhost:4141`, and it proxies `/api` requests
+to the backend container. The backend is also exposed directly at `http://localhost:7001`.
+
+By default, Compose bind-mounts `${HOME}/taskoo_sync` into the backend container as
+`/taskoo_sync` and writes a container config that points at `/taskoo_sync/tasks.db`.
+To use a different sync directory:
+
+```
+TASKOO_SYNC_DIR=/absolute/path/to/taskoo_sync docker compose up --build
+```
+
+The named Docker volume `taskoo-data` is still used for the container's Taskoo home
+and config directory.

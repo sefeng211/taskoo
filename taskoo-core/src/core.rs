@@ -22,7 +22,6 @@ impl ConfigManager {
             .get("db_path")
             .expect("Failed to get the location of the database file");
         let expanded_db_path: &str = &shellexpand::tilde(database_path);
-        // let expanded_db_path: &str = "/home/sefeng/.config/taskoo/tasks.db";
         debug!("Expanded Database Path: {} \n", &expanded_db_path);
         ConfigManager::ensure_db_file_exists(&expanded_db_path)
             .expect("Unable to create the database file");

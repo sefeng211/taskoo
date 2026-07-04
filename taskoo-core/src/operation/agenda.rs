@@ -31,9 +31,16 @@ impl Agenda {
             ));
         }
 
+        let start_day = data[0].clone();
+        let end_day = if data.len() > 1 {
+            Some(data[1].clone())
+        } else {
+            None
+        };
+
         Ok(Agenda {
-            start_day: String::from("today"),
-            end_day: None,
+            start_day,
+            end_day,
             database_manager: None,
             result: vec![],
         })

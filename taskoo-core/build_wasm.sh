@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Set WASI_SDK_PATH to the correct location in your system.
-# It should look like "/home/sefeng/.local/share/wasi-sdk-16.0"
+# It should look like "$HOME/.local/share/wasi-sdk-16.0"
 # Currently only wasi-sdk-16 is tested/supported.
 
 if [ -z "${WASI_SDK_PATH}" ]; then

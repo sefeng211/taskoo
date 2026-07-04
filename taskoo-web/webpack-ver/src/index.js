@@ -2,6 +2,7 @@ import './style.css';
 import {SERVER_ENDPOINT_MAPPING} from './consts.mjs';
 
 const BUILTIN_STATES = ['ready', 'started', 'blocked', 'completed'];
+const AGENDA_RANGE_KEY = 'taskoo.agendaDays';
 
 const state = {
   view: 'inbox',
@@ -19,6 +20,7 @@ const state = {
     priorities: ['H', 'M', 'L'],
   },
   loading: false,
+  agendaDays: Number(window.localStorage.getItem(AGENDA_RANGE_KEY) || 10),
 };
 
 function endpoint(name) {
@@ -49,6 +51,16 @@ function activeTasks(tasks) {
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function toIsoDate(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function addDays(date, days) {
+  const nextDate = new Date(date);
+  nextDate.setDate(nextDate.getDate() + days);
+  return nextDate;
 }
 
 function formatDate(value) {
@@ -135,7 +147,7 @@ function renderShell() {
         </button>
         <nav class="nav-list">
           ${navButton('inbox', 'fas fa-inbox', 'Inbox')}
-          ${navButton('today', 'fas fa-calendar-day', 'Today')}
+          ${navButton('agenda', 'fas fa-calendar-alt', 'Agenda')}
           ${navButton('all', 'fas fa-layer-group', 'All')}
           ${navButton('started', 'fas fa-play', 'Started')}
           ${navButton('blocked', 'fas fa-ban', 'Blocked')}
@@ -199,6 +211,22 @@ function renderShell() {
           </div>
         </section>
 
+        <section id="agenda-controls" class="agenda-controls" aria-label="Agenda range">
+          <div>
+            <span>Agenda range</span>
+            <strong id="agenda-range-label">10 days</strong>
+          </div>
+          <div class="agenda-presets">
+            <button type="button" data-agenda-days="7">7d</button>
+            <button type="button" data-agenda-days="10">10d</button>
+            <button type="button" data-agenda-days="30">30d</button>
+          </div>
+          <label>
+            <span>Days</span>
+            <input id="agenda-days-input" type="number" min="1" max="366" step="1">
+          </label>
+        </section>
+
         <section id="filter-chips" class="filter-chips" aria-label="View filters"></section>
         <section id="task-board" class="task-board" aria-label="Tasks"></section>
       </main>
@@ -233,6 +261,12 @@ function bindShellEvents() {
       event.preventDefault();
       runQuery();
     }
+  });
+  document.querySelectorAll('[data-agenda-days]').forEach((button) => {
+    button.addEventListener('click', () => setAgendaDays(Number(button.dataset.agendaDays)));
+  });
+  document.getElementById('agenda-days-input').addEventListener('change', (event) => {
+    setAgendaDays(Number(event.target.value));
   });
 }
 
@@ -300,10 +334,8 @@ async function loadView(view) {
   state.clientFilter = null;
   document.getElementById('query-input').value = '';
 
-  if (view === 'today') {
-    state.title = 'Today';
-    state.subtitle = 'Scheduled or due before tomorrow';
-    await loadAgenda('today');
+  if (view === 'agenda') {
+    await loadAgendaRange();
     return;
   }
   if (view === 'all') {
@@ -329,14 +361,37 @@ async function loadView(view) {
 }
 
 async function reload() {
-  if (state.view === 'today') {
-    await loadAgenda('today');
+  if (state.view === 'agenda') {
+    await loadView(state.view);
   } else if (state.view.startsWith('context:')) {
     await loadContext(state.view.slice('context:'.length));
   } else if (state.view === 'search') {
     await runQuery();
   } else {
     await loadView(state.view);
+  }
+}
+
+function agendaRange() {
+  const start = todayIso();
+  const end = toIsoDate(addDays(new Date(), Math.max(state.agendaDays, 1) - 1));
+  return {start, end};
+}
+
+async function loadAgendaRange() {
+  const {start, end} = agendaRange();
+  state.title = 'Agenda';
+  state.subtitle = `${start} to ${end}`;
+  await loadAgenda(`${start} ${end}`);
+}
+
+function setAgendaDays(days) {
+  const nextDays = Math.min(Math.max(Number.isFinite(days) ? Math.round(days) : 10, 1), 366);
+  state.agendaDays = nextDays;
+  window.localStorage.setItem(AGENDA_RANGE_KEY, String(nextDays));
+  renderAgendaControls();
+  if (state.view === 'agenda') {
+    loadAgendaRange();
   }
 }
 
@@ -383,9 +438,25 @@ function render() {
     item.classList.toggle('is-active', item.dataset.view === state.view);
   });
   renderSummary();
+  renderAgendaControls();
   renderChips();
   renderTasks();
   renderDetail();
+}
+
+function renderAgendaControls() {
+  const controls = document.getElementById('agenda-controls');
+  const input = document.getElementById('agenda-days-input');
+  const label = document.getElementById('agenda-range-label');
+  if (!controls || !input || !label) {
+    return;
+  }
+  controls.classList.toggle('is-active', state.view === 'agenda');
+  input.value = state.agendaDays;
+  label.textContent = `${state.agendaDays} ${state.agendaDays === 1 ? 'day' : 'days'}`;
+  document.querySelectorAll('[data-agenda-days]').forEach((button) => {
+    button.classList.toggle('is-active', Number(button.dataset.agendaDays) === state.agendaDays);
+  });
 }
 
 function renderSummary() {
@@ -397,7 +468,7 @@ function renderSummary() {
 
   const counts = {
     inbox: all.filter((task) => task.context === 'inbox' && task.state !== 'completed').length,
-    today: all.filter((task) => isToday(task.date_due) || isToday(task.date_scheduled)).length,
+    agenda: all.length,
     all: all.length,
     started: all.filter((task) => task.state === 'started').length,
     blocked: all.filter((task) => task.state === 'blocked').length,
