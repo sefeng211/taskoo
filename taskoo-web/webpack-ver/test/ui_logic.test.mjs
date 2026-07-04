@@ -19,28 +19,21 @@ test('delete endpoint uses the key called by the UI', () => {
   assert.equal(SERVER_ENDPOINT_MAPPING.del, undefined);
 });
 
-test('bulk modify command includes multiple ids and supported fields', () => {
-  const command = buildBulkModificationCommand([12, 15, 19], {
-    context: 'Deep Work',
-    tags: 'next, waiting on Bob',
-    remove_tags: 'old tag',
-    state: 'started',
-    priority: 'H',
-    due: '2026-07-10',
-    due_repeat: 'weekly',
-    scheduled: '2026-07-08',
-    scheduled_repeat: 'daily',
-  });
+test('bulk modify command prefixes command options with multiple task ids', () => {
+  const command = buildBulkModificationCommand(
+    [12, 15, 19],
+    '+next ~oldtag c:work @started pri:H d:2026-07-10 s:2026-07-08',
+  );
 
   assert.equal(
     command,
-    '12 15 19 c:Deep-Work +next +waiting-on-Bob ~old-tag @started pri:H d:2026-07-10+weekly s:2026-07-08+daily',
+    '12 15 19 +next ~oldtag c:work @started pri:H d:2026-07-10 s:2026-07-08',
   );
 });
 
-test('bulk modify command can represent delete-independent date-only updates', () => {
+test('bulk modify command trims empty space and can represent date-only updates', () => {
   assert.equal(
-    buildBulkModificationCommand([4, 5], {due: '2026-08-01'}),
+    buildBulkModificationCommand([4, 5], '  d:2026-08-01  '),
     '4 5 d:2026-08-01',
   );
 });

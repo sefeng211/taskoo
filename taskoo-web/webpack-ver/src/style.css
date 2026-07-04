@@ -437,7 +437,7 @@ button {
 
 .bulk-form {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  grid-template-columns: minmax(260px, 1fr) auto;
   gap: 8px;
   align-items: center;
 }

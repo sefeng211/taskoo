@@ -593,21 +593,7 @@ function renderBulkActions() {
       <i class="fas fa-times"></i><span>Clear</span>
     </button>
     <form id="bulk-form" class="bulk-form">
-      <select name="state" aria-label="State">
-        <option value="">State</option>
-        ${state.metadata.states.map((item) => `<option value="${item}">${item}</option>`).join('')}
-      </select>
-      <select name="priority" aria-label="Priority">
-        <option value="">Priority</option>
-        ${state.metadata.priorities.map((item) => `<option value="${item}">${item}</option>`).join('')}
-      </select>
-      <input name="context" type="text" placeholder="Context" aria-label="Context">
-      <input name="tags" type="text" placeholder="Add tags" aria-label="Add tags">
-      <input name="remove_tags" type="text" placeholder="Remove tags" aria-label="Remove tags">
-      <input name="due" type="date" aria-label="Due date">
-      <input name="scheduled" type="date" aria-label="Scheduled date">
-      <input name="due_repeat" type="text" placeholder="Due repeat" aria-label="Due repeat" value="${singleTask ? singleTask.repetition_due || '' : ''}">
-      <input name="scheduled_repeat" type="text" placeholder="Schedule repeat" aria-label="Schedule repeat" value="${singleTask ? singleTask.repetition_scheduled || '' : ''}">
+      <input name="options" type="text" autocomplete="off" placeholder="+tag ~oldtag c:work @started d:2026-07-10 s:2026-07-08 pri:H" aria-label="Modification options">
       <button class="primary-button" type="submit">
         <i class="fas fa-magic"></i><span>Apply</span>
       </button>
@@ -719,17 +705,10 @@ function selectedTaskIdsText() {
 
 function bulkModificationTokens(form) {
   const data = new FormData(form);
-  return buildBulkModificationCommand(selectedBulkTasks().map((task) => task.id), {
-    context: data.get('context'),
-    tags: data.get('tags'),
-    remove_tags: data.get('remove_tags'),
-    state: data.get('state'),
-    priority: data.get('priority'),
-    due: data.get('due'),
-    due_repeat: data.get('due_repeat'),
-    scheduled: data.get('scheduled'),
-    scheduled_repeat: data.get('scheduled_repeat'),
-  });
+  return buildBulkModificationCommand(
+    selectedBulkTasks().map((task) => task.id),
+    data.get('options'),
+  );
 }
 
 async function modifySelectedTasks(event) {

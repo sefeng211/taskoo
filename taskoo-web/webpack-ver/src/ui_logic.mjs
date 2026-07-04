@@ -17,6 +17,11 @@ export function pruneSelectionForVisibleTasks(selectedIds, tasks) {
 
 export function buildBulkModificationCommand(taskIds, values) {
   const tokens = [taskIds.join(' ')];
+  if (typeof values === 'string') {
+    tokens.push(values.trim());
+    return tokens.filter(Boolean).join(' ');
+  }
+
   const context = escapeToken(values.context);
   if (context) tokens.push(`c:${context}`);
   tokens.push(...tagTokens(values.tags, '+'));

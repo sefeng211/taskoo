@@ -1,5 +1,5 @@
 use crate::db::task_manager::TaskManager;
-use rusqlite::{Error as DbError, Result, NO_PARAMS};
+use rusqlite::{Error as DbError, Result};
 use std::collections::HashMap;
 
 fn get_setting() -> HashMap<String, String> {
@@ -22,7 +22,7 @@ fn test_create_table_if_needed() -> Result<(), DbError> {
         .prepare("select * from sqlite_master where type='table'")
         .expect("Failed to prepare the statement");
     let mut rows = tables
-        .query(NO_PARAMS)
+        .query([])
         .expect("Failed to query the rows from sqlite_master");
 
     let mut names: Vec<String> = Vec::new();
@@ -57,7 +57,7 @@ fn test_ensure_context_is_created() -> Result<(), DbError> {
         .conn
         .prepare("SELECT name FROM context")
         .expect("");
-    let mut rows = context.query(NO_PARAMS).expect("");
+    let mut rows = context.query([]).expect("");
 
     let mut context_names: Vec<String> = Vec::new();
     while let Some(names) = rows.next().expect("") {
@@ -75,7 +75,7 @@ fn test_ensure_state_is_created() -> Result<(), DbError> {
         .conn
         .prepare("SELECT name FROM state")
         .expect("");
-    let mut rows = context.query(NO_PARAMS).expect("");
+    let mut rows = context.query([]).expect("");
 
     let mut state_names: Vec<String> = Vec::new();
     while let Some(names) = rows.next().expect("") {
@@ -93,7 +93,7 @@ fn test_ensure_priority_are_created() -> Result<(), DbError> {
         .conn
         .prepare("SELECT name FROM priority")
         .expect("");
-    let mut rows = context.query(NO_PARAMS).expect("");
+    let mut rows = context.query([]).expect("");
 
     let mut p_names: Vec<String> = Vec::new();
     while let Some(names) = rows.next().expect("") {

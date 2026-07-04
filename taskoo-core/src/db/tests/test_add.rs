@@ -1,7 +1,7 @@
 use crate::core::Operation;
 use std::error::Error;
 use chrono::{Date, DateTime, Duration, Local, NaiveDate, Utc, NaiveDateTime};
-use rusqlite::{Result, NO_PARAMS};
+use rusqlite::Result;
 use std::collections::HashMap;
 
 // Note this useful idiom: importing names from outer (for mod tests) scope.
@@ -116,7 +116,7 @@ fn test_add_exist_tag() -> Result<(), CoreError> {
         .prepare("SELECT * FROM task_tag")
         .expect("");
 
-    let mut result = tasks.query(NO_PARAMS).unwrap();
+    let mut result = tasks.query([]).unwrap();
 
     let mut inserted_task_tag: Vec<(i64, i64)> = vec![];
 

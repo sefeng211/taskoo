@@ -299,4 +299,41 @@ mod tests {
         let parsed_option = parse_command_option(&option, false, false, true).unwrap();
         assert_eq!(parsed_option.not_tags, Some(vec!["tag1".to_string()]));
     }
+
+    #[test]
+    fn test_parse_web_bulk_modify_options() {
+        let option = vec![
+            "12",
+            "15",
+            "19",
+            "+next",
+            "~oldtag",
+            "c:work",
+            "@started",
+            "pri:H",
+            "d:2026-07-10+weekly",
+            "s:2026-07-08+daily",
+        ];
+        let parsed_option = parse_command_option(&option, false, true, true).unwrap();
+
+        assert_eq!(parsed_option.task_ids, vec![12, 15, 19]);
+        assert_eq!(parsed_option.tags, vec!["next"]);
+        assert_eq!(parsed_option.tags_to_remove, vec!["oldtag"]);
+        assert_eq!(parsed_option.context, Some("work".to_string()));
+        assert_eq!(parsed_option.state, Some("started".to_string()));
+        assert_eq!(parsed_option.priority, Some("H".to_string()));
+        assert_eq!(parsed_option.date_due, Some("2026-07-10"));
+        assert_eq!(parsed_option.repetition_due, Some("weekly"));
+        assert_eq!(parsed_option.date_scheduled, Some("2026-07-08"));
+        assert_eq!(parsed_option.repetition_scheduled, Some("daily"));
+    }
+
+    #[test]
+    fn test_parse_web_bulk_modify_range_task_ids() {
+        let option = vec!["1..3", "@completed"];
+        let parsed_option = parse_command_option(&option, false, true, true).unwrap();
+
+        assert_eq!(parsed_option.task_ids, vec![1, 2, 3]);
+        assert_eq!(parsed_option.state, Some("completed".to_string()));
+    }
 }
