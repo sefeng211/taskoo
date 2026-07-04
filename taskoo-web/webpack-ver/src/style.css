@@ -39,7 +39,7 @@ button {
 
 .app-shell {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr) 360px;
+  grid-template-columns: 280px minmax(0, 1fr);
   min-height: 100vh;
 }
 
@@ -85,7 +85,8 @@ button {
 }
 
 .compose-button,
-.primary-button {
+.primary-button,
+.secondary-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -107,6 +108,19 @@ button {
 .compose-button:hover,
 .primary-button:hover {
   background: #1765cc;
+}
+
+.secondary-button {
+  min-height: 36px;
+  padding: 0 12px;
+  background: var(--panel-soft);
+  color: var(--muted);
+  box-shadow: none;
+}
+
+.secondary-button:hover {
+  background: var(--blue-soft);
+  color: var(--blue);
 }
 
 .nav-list,
@@ -224,8 +238,7 @@ button {
 .search-strip,
 .summary-grid > div,
 .task-row,
-.empty-state,
-.detail-panel {
+.empty-state {
   background: var(--panel);
   border: 1px solid var(--line);
 }
@@ -243,13 +256,11 @@ button {
 
 .quick-add input,
 .search-strip input,
-.detail-form input,
-.detail-form select {
+.bulk-form input,
+.bulk-form select {
   width: 100%;
   min-width: 0;
-  border: 0;
   outline: 0;
-  background: transparent;
   color: var(--text);
 }
 
@@ -388,6 +399,61 @@ button {
   margin-bottom: 14px;
 }
 
+.bulk-actions {
+  display: none;
+  grid-template-columns: auto auto auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+  padding: 10px;
+  border: 1px solid #c5d7fb;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(60, 64, 67, 0.08);
+}
+
+.bulk-actions.is-active {
+  display: grid;
+}
+
+.bulk-summary {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: max-content;
+  padding: 0 6px;
+}
+
+.bulk-summary strong {
+  color: var(--blue);
+  font-size: 1.15rem;
+}
+
+.bulk-summary span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.bulk-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 8px;
+  align-items: center;
+}
+
+.bulk-form input,
+.bulk-form select {
+  min-width: 0;
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0 10px;
+  background: #fff;
+  color: var(--text);
+  outline: 0;
+}
+
 .filter-chips button,
 .badge,
 .task-state {
@@ -449,7 +515,7 @@ button {
 
 .task-row {
   display: grid;
-  grid-template-columns: 38px minmax(0, 1fr) auto;
+  grid-template-columns: 26px 38px minmax(0, 1fr) auto;
   gap: 12px;
   align-items: center;
   min-height: 72px;
@@ -459,9 +525,21 @@ button {
 }
 
 .task-row:hover,
-.task-row.is-selected {
+.task-row.is-selected,
+.task-row.is-bulk-selected {
   border-color: #c5d7fb;
   box-shadow: 0 4px 14px rgba(60, 64, 67, 0.10);
+}
+
+.task-row.is-bulk-selected {
+  background: #fbfdff;
+}
+
+.bulk-check {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--blue);
+  cursor: pointer;
 }
 
 .task-check {
@@ -563,53 +641,6 @@ button {
   margin: 0;
 }
 
-.detail-panel {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow: auto;
-  border-top: 0;
-  border-right: 0;
-  border-bottom: 0;
-  padding: 22px;
-}
-
-.detail-empty {
-  display: grid;
-  min-height: 100%;
-  place-items: center;
-  align-content: center;
-  gap: 12px;
-  color: var(--muted);
-}
-
-.detail-empty i {
-  color: var(--blue);
-  font-size: 2rem;
-}
-
-.detail-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  color: var(--muted);
-}
-
-.detail-panel h2 {
-  margin: 16px 0;
-  font-size: 1.25rem;
-  font-weight: 500;
-  line-height: 1.35;
-}
-
-.detail-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin-bottom: 18px;
-}
-
-.detail-actions button,
 .danger-button {
   display: inline-flex;
   align-items: center;
@@ -623,56 +654,7 @@ button {
   font-weight: 600;
 }
 
-.detail-actions button:hover,
-.detail-actions button.is-active {
-  background: var(--blue-soft);
-  color: var(--blue);
-}
-
-.detail-form {
-  display: grid;
-  gap: 12px;
-}
-
-.detail-form label {
-  display: grid;
-  gap: 6px;
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 700;
-}
-
-.detail-form input,
-.detail-form select {
-  min-height: 42px;
-  padding: 0 12px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: #fff;
-  font-size: 0.95rem;
-}
-
-.annotation {
-  margin-top: 18px;
-  padding: 14px;
-  border-radius: 14px;
-  background: var(--panel-soft);
-}
-
-.annotation h3 {
-  margin: 0 0 6px;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-}
-
-.annotation p {
-  margin: 0;
-  color: var(--muted);
-}
-
 .danger-button {
-  width: 100%;
-  margin-top: 14px;
   background: #fce8e6;
   color: var(--red);
 }
@@ -713,24 +695,6 @@ button {
 @media only screen and (max-width: 1120px) {
   .app-shell {
     grid-template-columns: 240px minmax(0, 1fr);
-  }
-
-  .detail-panel {
-    display: none;
-    position: fixed;
-    right: 16px;
-    top: 16px;
-    bottom: 16px;
-    z-index: 40;
-    width: min(360px, calc(100vw - 32px));
-    height: auto;
-    border: 1px solid var(--line);
-    border-radius: 18px;
-    box-shadow: var(--shadow);
-  }
-
-  .detail-panel.has-task {
-    display: block;
   }
 }
 
@@ -803,19 +767,25 @@ button {
     grid-template-columns: 1fr;
   }
 
+  .bulk-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .bulk-summary {
+    padding: 0;
+  }
+
+  .bulk-form {
+    grid-template-columns: 1fr;
+  }
+
   .task-row {
-    grid-template-columns: 34px minmax(0, 1fr);
+    grid-template-columns: 24px 34px minmax(0, 1fr);
   }
 
   .task-state {
-    grid-column: 2;
+    grid-column: 3;
     justify-self: flex-start;
   }
 
-  .detail-panel {
-    left: 12px;
-    right: 12px;
-    width: auto;
-    max-height: calc(100vh - 24px);
-  }
 }

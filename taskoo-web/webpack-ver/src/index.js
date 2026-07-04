@@ -1,5 +1,11 @@
 import './style.css';
 import {SERVER_ENDPOINT_MAPPING} from './consts.mjs';
+import {
+  buildBulkModificationCommand,
+  navCounts,
+  pruneSelectionForVisibleTasks,
+  tagView,
+} from './ui_logic.mjs';
 
 const BUILTIN_STATES = ['ready', 'started', 'blocked', 'completed'];
 const AGENDA_RANGE_KEY = 'taskoo.agendaDays';
@@ -10,8 +16,10 @@ const state = {
   subtitle: 'Clarify and organize newly captured tasks',
   groups: [],
   tasks: [],
+  navTasks: [],
+  navAgendaTasks: [],
+  selectedTaskIds: new Set(),
   clientFilter: null,
-  selectedTaskId: null,
   metadata: {
     contexts: ['inbox'],
     tags: [],
@@ -68,10 +76,6 @@ function addDays(date, days) {
   return nextDate;
 }
 
-function isCompactLayout() {
-  return window.matchMedia('(max-width: 1120px)').matches;
-}
-
 function formatDate(value) {
   if (!value) {
     return '';
@@ -86,10 +90,6 @@ function isToday(value) {
 function isPast(value) {
   const date = formatDate(value);
   return date && date < todayIso();
-}
-
-function escapeToken(value) {
-  return (value || '').trim().replace(/\s+/g, '-');
 }
 
 function addClassByState(task) {
@@ -166,6 +166,10 @@ function renderShell() {
           <div class="rail-heading">Contexts</div>
           <div id="context-list" class="context-list"></div>
         </div>
+        <div class="rail-section">
+          <div class="rail-heading">Tags</div>
+          <div id="tag-list" class="context-list"></div>
+        </div>
         <div class="rail-footer">
           <span class="status-dot"></span>
           <span id="sync-status">Ready</span>
@@ -237,10 +241,9 @@ function renderShell() {
         </section>
 
         <section id="filter-chips" class="filter-chips" aria-label="View filters"></section>
+        <section id="bulk-actions" class="bulk-actions" aria-label="Bulk task actions"></section>
         <section id="task-board" class="task-board" aria-label="Tasks"></section>
       </main>
-
-      <aside id="detail-panel" class="detail-panel" aria-label="Task details"></aside>
     </div>
   `;
 
@@ -283,6 +286,16 @@ async function refreshMetadata() {
   state.metadata = await request('metadata');
   state.metadata.states = [...BUILTIN_STATES, ...(state.metadata.custom_states || [])];
   renderContexts();
+  renderTags();
+}
+
+async function refreshNavCounts() {
+  const [allGroups, agendaGroups] = await Promise.all([
+    request('list', {method: 'POST', data: ''}),
+    request('agenda', {method: 'POST', data: `${agendaRange().start} ${agendaRange().end}`}),
+  ]);
+  state.navTasks = flattenGroups(Array.isArray(allGroups) ? allGroups : []);
+  state.navAgendaTasks = flattenGroups(Array.isArray(agendaGroups) ? agendaGroups : []);
 }
 
 function renderContexts() {
@@ -294,6 +307,19 @@ function renderContexts() {
     button.className = 'context-item';
     button.textContent = context;
     button.addEventListener('click', () => loadContext(context));
+    container.appendChild(button);
+  });
+}
+
+function renderTags() {
+  const container = document.getElementById('tag-list');
+  container.replaceChildren();
+  state.metadata.tags.forEach((tag) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'context-item';
+    button.textContent = `#${tag}`;
+    button.addEventListener('click', () => loadTag(tag));
     container.appendChild(button);
   });
 }
@@ -338,6 +364,16 @@ async function loadContext(context) {
   await loadList(`c:${context}`);
 }
 
+async function loadTag(tag) {
+  const nextView = tagView(tag);
+  state.view = nextView.view;
+  state.title = nextView.title;
+  state.subtitle = nextView.subtitle;
+  state.clientFilter = null;
+  document.getElementById('query-input').value = nextView.query;
+  await loadList(nextView.query);
+}
+
 async function loadView(view) {
   state.view = view;
   state.clientFilter = null;
@@ -374,6 +410,8 @@ async function reload() {
     await loadView(state.view);
   } else if (state.view.startsWith('context:')) {
     await loadContext(state.view.slice('context:'.length));
+  } else if (state.view.startsWith('tag:')) {
+    await loadTag(state.view.slice('tag:'.length));
   } else if (state.view === 'search') {
     await runQuery();
   } else {
@@ -407,6 +445,7 @@ function setAgendaDays(days) {
 async function loadAgenda(query) {
   setLoading(true);
   try {
+    await refreshNavCounts();
     const groups = await request('agenda', {method: 'POST', data: query});
     setGroups(groups);
   } catch (error) {
@@ -419,6 +458,7 @@ async function loadAgenda(query) {
 async function loadList(query) {
   setLoading(true);
   try {
+    await refreshNavCounts();
     const groups = await request('list', {method: 'POST', data: query});
     setGroups(groups);
   } catch (error) {
@@ -434,9 +474,7 @@ function setGroups(groups) {
     ? rawGroups.map(([name, tasks]) => [name, (tasks || []).filter(state.clientFilter)])
     : rawGroups;
   state.tasks = flattenGroups(state.groups);
-  if (!state.tasks.some((task) => task.id === state.selectedTaskId)) {
-    state.selectedTaskId = isCompactLayout() ? null : state.tasks[0]?.id ?? null;
-  }
+  state.selectedTaskIds = pruneSelectionForVisibleTasks(state.selectedTaskIds, state.tasks);
   render();
 }
 
@@ -449,8 +487,8 @@ function render() {
   renderSummary();
   renderAgendaControls();
   renderChips();
+  renderBulkActions();
   renderTasks();
-  renderDetail();
 }
 
 function renderAgendaControls() {
@@ -470,19 +508,13 @@ function renderAgendaControls() {
 
 function renderSummary() {
   const all = state.tasks;
+  const navAll = state.navTasks;
   document.getElementById('active-count').textContent = activeTasks(all).length;
   document.getElementById('started-count').textContent = all.filter((task) => task.state === 'started').length;
   document.getElementById('blocked-count').textContent = all.filter((task) => task.state === 'blocked').length;
   document.getElementById('completed-count').textContent = all.filter((task) => task.state === 'completed').length;
 
-  const counts = {
-    inbox: all.filter((task) => task.context === 'inbox' && task.state !== 'completed').length,
-    agenda: all.length,
-    all: all.length,
-    started: all.filter((task) => task.state === 'started').length,
-    blocked: all.filter((task) => task.state === 'blocked').length,
-    completed: all.filter((task) => task.state === 'completed').length,
-  };
+  const counts = navCounts(navAll, state.navAgendaTasks);
   Object.entries(counts).forEach(([key, count]) => {
     const node = document.querySelector(`[data-count-for="${key}"]`);
     if (node) {
@@ -512,6 +544,83 @@ function renderChips() {
     });
     container.appendChild(button);
   });
+}
+
+function selectedBulkTasks() {
+  return state.tasks.filter((task) => state.selectedTaskIds.has(task.id));
+}
+
+function toggleBulkSelection(task, checked) {
+  if (checked) {
+    state.selectedTaskIds.add(task.id);
+  } else {
+    state.selectedTaskIds.delete(task.id);
+  }
+  render();
+}
+
+function clearBulkSelection() {
+  state.selectedTaskIds.clear();
+  render();
+}
+
+function selectAllVisibleTasks() {
+  state.tasks.forEach((task) => state.selectedTaskIds.add(task.id));
+  render();
+}
+
+function renderBulkActions() {
+  const container = document.getElementById('bulk-actions');
+  const selected = selectedBulkTasks();
+  const count = selected.length;
+  const singleTask = count === 1 ? selected[0] : null;
+
+  container.classList.toggle('is-active', count > 0);
+  if (count === 0) {
+    container.replaceChildren();
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="bulk-summary">
+      <strong>${count}</strong>
+      <span>${count === 1 ? 'task selected' : 'tasks selected'}</span>
+    </div>
+    <button class="secondary-button" type="button" id="bulk-select-all">
+      <i class="fas fa-check-square"></i><span>Select all</span>
+    </button>
+    <button class="secondary-button" type="button" id="bulk-clear">
+      <i class="fas fa-times"></i><span>Clear</span>
+    </button>
+    <form id="bulk-form" class="bulk-form">
+      <select name="state" aria-label="State">
+        <option value="">State</option>
+        ${state.metadata.states.map((item) => `<option value="${item}">${item}</option>`).join('')}
+      </select>
+      <select name="priority" aria-label="Priority">
+        <option value="">Priority</option>
+        ${state.metadata.priorities.map((item) => `<option value="${item}">${item}</option>`).join('')}
+      </select>
+      <input name="context" type="text" placeholder="Context" aria-label="Context">
+      <input name="tags" type="text" placeholder="Add tags" aria-label="Add tags">
+      <input name="remove_tags" type="text" placeholder="Remove tags" aria-label="Remove tags">
+      <input name="due" type="date" aria-label="Due date">
+      <input name="scheduled" type="date" aria-label="Scheduled date">
+      <input name="due_repeat" type="text" placeholder="Due repeat" aria-label="Due repeat" value="${singleTask ? singleTask.repetition_due || '' : ''}">
+      <input name="scheduled_repeat" type="text" placeholder="Schedule repeat" aria-label="Schedule repeat" value="${singleTask ? singleTask.repetition_scheduled || '' : ''}">
+      <button class="primary-button" type="submit">
+        <i class="fas fa-magic"></i><span>Apply</span>
+      </button>
+    </form>
+    <button class="danger-button" type="button" id="bulk-delete">
+      <i class="fas fa-trash"></i><span>Delete</span>
+    </button>
+  `;
+
+  document.getElementById('bulk-select-all').addEventListener('click', selectAllVisibleTasks);
+  document.getElementById('bulk-clear').addEventListener('click', clearBulkSelection);
+  document.getElementById('bulk-delete').addEventListener('click', deleteSelectedTasks);
+  document.getElementById('bulk-form').addEventListener('submit', modifySelectedTasks);
 }
 
 function renderTasks() {
@@ -546,11 +655,19 @@ function renderTasks() {
 function createTaskRow(task) {
   const row = document.createElement('article');
   row.className = addClassByState(task);
-  row.classList.toggle('is-selected', task.id === state.selectedTaskId);
+  row.classList.toggle('is-bulk-selected', state.selectedTaskIds.has(task.id));
   row.addEventListener('click', () => {
-    state.selectedTaskId = task.id;
-    render();
+    toggleBulkSelection(task, !state.selectedTaskIds.has(task.id));
   });
+
+  const bulkCheck = document.createElement('input');
+  bulkCheck.type = 'checkbox';
+  bulkCheck.className = 'bulk-check';
+  bulkCheck.checked = state.selectedTaskIds.has(task.id);
+  bulkCheck.title = `Select task #${task.id}`;
+  bulkCheck.setAttribute('aria-label', `Select task #${task.id}`);
+  bulkCheck.addEventListener('click', (event) => event.stopPropagation());
+  bulkCheck.addEventListener('change', (event) => toggleBulkSelection(task, event.target.checked));
 
   const check = document.createElement('button');
   check.type = 'button';
@@ -580,77 +697,8 @@ function createTaskRow(task) {
     <div class="task-state">${task.state || 'ready'}</div>
   `;
   row.prepend(check);
+  row.prepend(bulkCheck);
   return row;
-}
-
-function selectedTask() {
-  return state.tasks.find((task) => task.id === state.selectedTaskId) || null;
-}
-
-function renderDetail() {
-  const panel = document.getElementById('detail-panel');
-  const task = selectedTask();
-  panel.classList.toggle('has-task', Boolean(task));
-  if (!task) {
-    panel.innerHTML = `<div class="detail-empty"><i class="fas fa-tasks"></i><p>Select a task</p></div>`;
-    return;
-  }
-
-  panel.innerHTML = `
-    <div class="detail-header">
-      <button class="icon-button" type="button" id="close-detail" title="Clear selection" aria-label="Clear selection">
-        <i class="fas fa-times"></i>
-      </button>
-      <span>#${task.id}</span>
-    </div>
-    <h2>${task.body}</h2>
-    <div class="detail-actions">
-      ${stateButton(task, 'ready', 'fa-undo')}
-      ${stateButton(task, 'started', 'fa-play')}
-      ${stateButton(task, 'blocked', 'fa-ban')}
-      ${stateButton(task, 'completed', 'fa-check')}
-    </div>
-    <form id="detail-form" class="detail-form">
-      ${inputField('Context', 'context', task.context, 'text', 'inbox')}
-      ${inputField('Tags', 'tags', (task.tags || []).join(', '), 'text', 'next, waiting')}
-      ${inputField('Remove tags', 'remove_tags', '', 'text', 'oldtag, someday')}
-      ${selectField('State', 'state', task.state, state.metadata.states)}
-      ${selectField('Priority', 'priority', task.priority, ['', ...state.metadata.priorities])}
-      ${inputField('Due date', 'due', formatDate(task.date_due), 'date')}
-      ${inputField('Scheduled', 'scheduled', formatDate(task.date_scheduled), 'date')}
-      ${inputField('Due repeat', 'due_repeat', task.repetition_due, 'text', 'weekly')}
-      ${inputField('Schedule repeat', 'scheduled_repeat', task.repetition_scheduled, 'text', 'daily')}
-      <button class="primary-button" type="submit">Save changes</button>
-    </form>
-    ${task.annotation ? `<section class="annotation"><h3>Annotation</h3><p>${task.annotation}</p></section>` : ''}
-    <button class="danger-button" type="button" id="delete-task"><i class="fas fa-trash"></i><span>Delete task</span></button>
-  `;
-
-  document.getElementById('close-detail').addEventListener('click', () => {
-    state.selectedTaskId = null;
-    renderDetail();
-  });
-  document.querySelectorAll('[data-next-state]').forEach((button) => {
-    button.addEventListener('click', async () => setTaskState(task, button.dataset.nextState));
-  });
-  document.getElementById('detail-form').addEventListener('submit', (event) => saveTask(event, task));
-  document.getElementById('delete-task').addEventListener('click', () => deleteTask(task));
-}
-
-function stateButton(task, nextState, icon) {
-  return `<button class="${task.state === nextState ? 'is-active' : ''}" type="button" data-next-state="${nextState}">
-    <i class="fas ${icon}"></i><span>${nextState}</span>
-  </button>`;
-}
-
-function inputField(label, name, value, type = 'text', placeholder = '') {
-  return `<label><span>${label}</span><input name="${name}" type="${type}" value="${value || ''}" placeholder="${placeholder}"></label>`;
-}
-
-function selectField(label, name, value, options) {
-  return `<label><span>${label}</span><select name="${name}">
-    ${options.map((option) => `<option value="${option}" ${option === value ? 'selected' : ''}>${option || 'none'}</option>`).join('')}
-  </select></label>`;
 }
 
 async function setTaskState(task, nextState) {
@@ -665,33 +713,40 @@ async function setTaskState(task, nextState) {
   }
 }
 
-function tagTokens(value, prefix) {
-  return value
-    .split(',')
-    .map((tag) => escapeToken(tag))
-    .filter(Boolean)
-    .map((tag) => `${prefix}${tag}`);
+function selectedTaskIdsText() {
+  return selectedBulkTasks().map((task) => task.id).join(' ');
 }
 
-async function saveTask(event, task) {
+function bulkModificationTokens(form) {
+  const data = new FormData(form);
+  return buildBulkModificationCommand(selectedBulkTasks().map((task) => task.id), {
+    context: data.get('context'),
+    tags: data.get('tags'),
+    remove_tags: data.get('remove_tags'),
+    state: data.get('state'),
+    priority: data.get('priority'),
+    due: data.get('due'),
+    due_repeat: data.get('due_repeat'),
+    scheduled: data.get('scheduled'),
+    scheduled_repeat: data.get('scheduled_repeat'),
+  });
+}
+
+async function modifySelectedTasks(event) {
   event.preventDefault();
-  const data = new FormData(event.currentTarget);
-  const tokens = [`${task.id}`];
-  const context = escapeToken(data.get('context'));
-  if (context) tokens.push(`c:${context}`);
-  tokens.push(...tagTokens(data.get('tags') || '', '+'));
-  tokens.push(...tagTokens(data.get('remove_tags') || '', '~'));
-  if (data.get('state')) tokens.push(`@${data.get('state')}`);
-  if (data.get('priority')) tokens.push(`pri:${data.get('priority')}`);
-  if (data.get('due')) tokens.push(`d:${data.get('due')}${data.get('due_repeat') ? `+${escapeToken(data.get('due_repeat'))}` : ''}`);
-  if (data.get('scheduled')) tokens.push(`s:${data.get('scheduled')}${data.get('scheduled_repeat') ? `+${escapeToken(data.get('scheduled_repeat'))}` : ''}`);
+  const command = bulkModificationTokens(event.currentTarget);
+  if (state.selectedTaskIds.size === 0 || command === selectedTaskIdsText()) {
+    toast('Choose tasks and at least one change');
+    return;
+  }
 
   setLoading(true);
   try {
-    await request('modify', {method: 'POST', data: tokens.join(' ')});
+    await request('modify', {method: 'POST', data: command});
+    state.selectedTaskIds.clear();
     await refreshMetadata();
     await reload();
-    toast('Task updated');
+    toast('Tasks updated');
   } catch (error) {
     showError(error);
   } finally {
@@ -699,17 +754,22 @@ async function saveTask(event, task) {
   }
 }
 
-async function deleteTask(task) {
-  if (!window.confirm(`Delete "${task.body}"?`)) {
+async function deleteSelectedTasks() {
+  const selected = selectedBulkTasks();
+  if (selected.length === 0) {
     return;
   }
+  if (!window.confirm(`Delete ${selected.length} ${selected.length === 1 ? 'task' : 'tasks'}?`)) {
+    return;
+  }
+
   setLoading(true);
   try {
-    await request('delete', {method: 'POST', data: `${task.id}`});
-    state.selectedTaskId = null;
+    await request('delete', {method: 'POST', data: selected.map((task) => task.id).join(' ')});
+    state.selectedTaskIds.clear();
     await refreshMetadata();
     await reload();
-    toast('Task deleted');
+    toast('Tasks deleted');
   } catch (error) {
     showError(error);
   } finally {
