@@ -68,6 +68,10 @@ function addDays(date, days) {
   return nextDate;
 }
 
+function isCompactLayout() {
+  return window.matchMedia('(max-width: 1120px)').matches;
+}
+
 function formatDate(value) {
   if (!value) {
     return '';
@@ -431,7 +435,7 @@ function setGroups(groups) {
     : rawGroups;
   state.tasks = flattenGroups(state.groups);
   if (!state.tasks.some((task) => task.id === state.selectedTaskId)) {
-    state.selectedTaskId = state.tasks[0]?.id ?? null;
+    state.selectedTaskId = isCompactLayout() ? null : state.tasks[0]?.id ?? null;
   }
   render();
 }
