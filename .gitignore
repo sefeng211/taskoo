@@ -1,2 +1,4 @@
 target/
 taskoo-web/server/taskoo_core.wasm
+.local-tools/
+taskoo-web/server/.taskoo-home/

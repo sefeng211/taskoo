@@ -29,15 +29,85 @@ make build-core
 This command builds `taskoo-core` as a library, however this library can only be used for
 `taskoo-cli`. If you need to build `taskoo-core` for the web interface, please see below.
 
-### Build the web version
-First, make sure you have [wask-sdk-16](https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-16) installed in your system.
+### Build and run the web version
+The web version has three pieces:
 
-`wasm32-wasip1` is also a required build target, so execute
+1. `taskoo-core`, compiled to WASI WebAssembly.
+2. `taskoo-web/server`, a Node/Express backend that loads the WASM module.
+3. `taskoo-web/webpack-ver`, the webpack frontend.
+
+Install these prerequisites first:
+
+- Rust with `rustup`
+- Node.js and npm
+- [wasi-sdk-16](https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-16)
+
+Add the Rust WASI target:
+
 ```
-rustup target add wasm32-wasipi
+rustup target add wasm32-wasip1
 ```
 
-There are a couple of steps required.
+Set `WASI_SDK_PATH` to your wasi-sdk-16 installation. For example:
 
-1. Set `WASI_SDK_PATH` to be the path for `wask-sdk-16`.
-2. Run `make build-web`
+```
+export WASI_SDK_PATH="$HOME/.local/share/wasi-sdk-16.0"
+```
+
+Build the WASM backend artifact:
+
+```
+make build-web
+```
+
+This copies `target/wasm32-wasip1/release/taskoo_core.wasm` into
+`taskoo-web/server/taskoo_core.wasm`.
+
+Install the Node dependencies:
+
+```
+cd taskoo-web/server && npm install
+cd ../webpack-ver && npm install
+```
+
+Run both web processes from two terminals:
+
+```
+cd taskoo-web/server
+npm run start
+```
+
+The backend listens on `http://localhost:7001`.
+
+```
+cd taskoo-web/webpack-ver
+npm run start
+```
+
+The frontend listens on `http://localhost:4141`.
+
+#### Database configuration
+Taskoo reads its database path from:
+
+```
+~/.config/taskoo/config
+```
+
+If the config file does not exist, Taskoo creates a default database at:
+
+```
+~/.config/taskoo/tasks.db
+```
+
+To use an existing database, set `db_path` in `~/.config/taskoo/config`:
+
+```
+db_path=/absolute/path/to/tasks.db
+```
+
+The web server reads this config before starting WASI and preopens the configured database
+directory automatically. If needed, you can override the paths when starting the server:
+
+```
+TASKOO_HOME=/path/to/home TASKOO_DB_DIR=/path/to/db/dir npm run start
+```

@@ -3,27 +3,64 @@
 import process from 'process';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { fileURLToPath } from 'url';
 import { WASI } from 'wasi';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const CONFIG_DIR = "/home/sefeng/.config";
-const TASKOO_CONFIG_DIR = "/home/sefeng/.config/taskoo";
+const TASKOO_HOME = process.env.TASKOO_HOME || process.env.HOME || os.homedir();
+const CONFIG_DIR = path.join(TASKOO_HOME, ".config");
+const TASKOO_CONFIG_DIR = path.join(CONFIG_DIR, "taskoo");
+const CONFIG_PATH = path.join(TASKOO_CONFIG_DIR, "config");
 const WASM_PATH = "./taskoo_core.wasm";
+
+function expandHome(value) {
+  if (value === "~") {
+    return TASKOO_HOME;
+  }
+  if (value.startsWith("~/")) {
+    return path.join(TASKOO_HOME, value.slice(2));
+  }
+  return value;
+}
+
+function readConfiguredDbDir() {
+  if (!fs.existsSync(CONFIG_PATH)) {
+    return TASKOO_CONFIG_DIR;
+  }
+
+  const config = fs.readFileSync(CONFIG_PATH, "utf8");
+  const dbPathLine = config
+    .split(/\r?\n/)
+    .find((line) => line.trim().startsWith("db_path="));
+  if (!dbPathLine) {
+    return TASKOO_CONFIG_DIR;
+  }
+
+  const dbPath = expandHome(dbPathLine.split("=").slice(1).join("=").trim());
+  return path.dirname(dbPath);
+}
+
+fs.mkdirSync(TASKOO_CONFIG_DIR, { recursive: true });
+const TASKOO_DB_DIR = process.env.TASKOO_DB_DIR || readConfiguredDbDir();
+fs.mkdirSync(TASKOO_DB_DIR, { recursive: true });
 
 const wasi = new WASI({
   // Same as --mapdir of wasmtime, map virtual filesystem to host filesystem
   preopens: {
-    '/home/sefeng/.config': CONFIG_DIR,
-    '/home/sefeng/.config/taskoo': TASKOO_CONFIG_DIR,
+    [CONFIG_DIR]: CONFIG_DIR,
+    [TASKOO_CONFIG_DIR]: TASKOO_CONFIG_DIR,
+    [TASKOO_DB_DIR]: TASKOO_DB_DIR,
+    [path.join(TASKOO_HOME, ".config")]: CONFIG_DIR,
+    [path.join(TASKOO_HOME, ".config", "taskoo")]: TASKOO_CONFIG_DIR,
     '~/.config': CONFIG_DIR,
     '~/.config/taskoo': TASKOO_CONFIG_DIR,
   },
   version : "preview1",
   env: {
     RUST_LOG: "debug", // Enable the debug logging for Taskoo
-    HOME: "/home/sefeng", // Enable the debug logging for Taskoo
+    HOME: TASKOO_HOME,
     RUST_BACKTRACE: "full"
   }
 });
@@ -132,4 +169,3 @@ export class Endpoints {
     return data;
   }
 };
-

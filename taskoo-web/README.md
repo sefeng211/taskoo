@@ -12,16 +12,68 @@ communicate with the server.
 
 Both components need to be run.
 
-To run the server
-```
-cd server && npm run start
-```
-This will run a local web server listening port 7000.
+## Fresh install
+From a fresh clone, install:
 
-To start the frontend
+- Rust with `rustup`
+- Node.js and npm
+- [wasi-sdk-16](https://github.com/WebAssembly/wasi-sdk/releases/tag/wasi-sdk-16)
+
+Add the Rust WASI target:
+
+```
+rustup target add wasm32-wasip1
 ```
 
-cd ui && npm run start
-```
-This will start the local webpack server.
+Set `WASI_SDK_PATH` to the wasi-sdk-16 installation:
 
+```
+export WASI_SDK_PATH="$HOME/.local/share/wasi-sdk-16.0"
+```
+
+From the repo root, build the WASM file used by the Node server:
+
+```
+make build-web
+```
+
+Install dependencies:
+
+```
+cd taskoo-web/server && npm install
+cd ../webpack-ver && npm install
+```
+
+Run the backend from one terminal:
+
+```
+cd taskoo-web/server
+npm run start
+```
+
+The backend listens on `http://localhost:7001`.
+
+Run the frontend from another terminal:
+
+```
+cd taskoo-web/webpack-ver
+npm run start
+```
+
+The frontend listens on `http://localhost:4141`.
+
+## Database
+Taskoo uses `~/.config/taskoo/config` to find the database:
+
+```
+db_path=/absolute/path/to/tasks.db
+```
+
+If the config file does not exist, Taskoo creates `~/.config/taskoo/tasks.db`.
+
+The web server preopens the configured database directory for the WASI module. If the
+database lives somewhere unusual, you can also pass it explicitly:
+
+```
+TASKOO_DB_DIR=/absolute/path/to/db/dir npm run start
+```
