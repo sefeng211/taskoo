@@ -1,0 +1,10 @@
+.git
+.github
+.agents
+.codex
+target
+taskoo-web/server/node_modules
+taskoo-web/webpack-ver/node_modules
+taskoo-web/server/.taskoo-home
+taskoo-web/server/taskoo_core.wasm
+npm-debug.log*

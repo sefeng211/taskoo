@@ -1,0 +1,34 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    environment:
+      TASKOO_HOME: /data
+      TASKOO_DB_DIR: /taskoo_sync
+    volumes:
+      - taskoo-data:/data
+      - ${TASKOO_SYNC_DIR:-${HOME}/taskoo_sync}:/taskoo_sync
+    ports:
+      - "7001:7001"
+    command:
+      - sh
+      - -c
+      - |
+        mkdir -p /data/.config/taskoo
+        printf 'db_path=/taskoo_sync/tasks.db\n' > /data/.config/taskoo/config
+        exec node --experimental-wasi-unstable-preview1 server.js
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    environment:
+      TASKOO_BACKEND_URL: http://backend:7001
+    depends_on:
+      - backend
+    ports:
+      - "4141:4141"
+
+volumes:
+  taskoo-data:

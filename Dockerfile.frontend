@@ -1,0 +1,14 @@
+FROM node:20-bookworm-slim
+
+WORKDIR /app
+
+ENV TASKOO_BACKEND_URL=http://backend:7001
+
+COPY taskoo-web/webpack-ver/package*.json ./
+RUN npm ci
+
+COPY taskoo-web/webpack-ver ./
+
+EXPOSE 4141
+
+CMD ["npx", "webpack", "serve", "--host", "0.0.0.0", "--port", "4141"]
