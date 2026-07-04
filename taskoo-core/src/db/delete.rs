@@ -1,4 +1,5 @@
 use crate::db::task_helper::Task;
+use super::get_base::get_base;
 use crate::error::CoreError;
 use rusqlite::{named_params, Result, Transaction};
 use rusqlite::Statement;
@@ -27,6 +28,12 @@ pub fn delete(conn: &Transaction, task_ids: &Vec<i64>) -> Result<Vec<Task>, Core
     ];
 
     let task_ids_str: Vec<String> = task_ids.into_iter().map(|i| i.to_string()).collect();
+    let mut deleted_tasks: Vec<Task> = vec![];
+
+    for task_id in task_ids_str.iter() {
+        let mut tasks = get_base(conn, &format!("task.id = {}", task_id))?;
+        deleted_tasks.append(&mut tasks);
+    }
 
     // Okay, it's super stupid that we need to execute the delete
     // query for each task_id, however this seems to be the limitation
@@ -44,5 +51,5 @@ pub fn delete(conn: &Transaction, task_ids: &Vec<i64>) -> Result<Vec<Task>, Core
         }
     }
 
-    Ok(vec![])
+    Ok(deleted_tasks)
 }
