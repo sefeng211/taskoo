@@ -24,7 +24,7 @@ impl Agenda {
         debug!("Parsed Option {:?}", start_day);
 
         let mut operation = AgendaOperation::new(
-            start_day.to_string(), end_day.to_owned());
+            start_day.to_string(), end_day.to_owned(), None);
         execute_agenda(&mut operation)?;
 
         DisplayAgenda::display(operation.get_result(), &self.config)?;

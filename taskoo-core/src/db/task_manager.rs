@@ -339,6 +339,7 @@ impl TaskManager {
         &mut self,
         start_day: String,
         end_day: Option<String>,
+        context_name: Option<String>,
     ) -> Result<Vec<(NaiveDate, Vec<Task>)>, CoreError> {
         let tx = self.conn.transaction()?;
         let start_day_in_date = NaiveDateTime::parse_from_str(
@@ -358,7 +359,7 @@ impl TaskManager {
                 .date(),
             ),
         };
-        return agenda(&tx, &start_day_in_date, &end_day_in_date);
+        return agenda(&tx, &start_day_in_date, &end_day_in_date, &context_name);
     }
 
     pub fn agenda(

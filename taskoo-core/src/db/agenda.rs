@@ -12,8 +12,9 @@ pub fn agenda(
     conn: &Transaction,
     start_day: &NaiveDate,
     end_day: &Option<NaiveDate>,
+    context_name: &Option<String>,
 ) -> Result<Vec<(NaiveDate, Vec<Task>)>, CoreError> {
-    info!("[agenda] start_day={:?} end_day={:?}", start_day, end_day);
+    info!("[agenda] start_day={:?} end_day={:?} context_name={:?}", start_day, end_day, context_name);
 
     let mut days: Vec<NaiveDate> = vec![start_day.clone()];
 
@@ -27,9 +28,13 @@ pub fn agenda(
 
     let mut result = vec![];
     for day in days.iter() {
-        let conditions = generate_agenda_condition(day);
-        assert!(!conditions.is_empty());
-        let tasks = get_base(&conn, &conditions.join(" or "))?;
+        let day_conditions = generate_agenda_condition(day);
+        assert!(!day_conditions.is_empty());
+        let mut conditions = vec![format!("({})", day_conditions.join(" or "))];
+        if let Some(context_name) = context_name {
+            conditions.push(format!("context.name = '{}'", context_name));
+        }
+        let tasks = get_base(&conn, &conditions.join(" and "))?;
         result.push((day.clone(), tasks));
     }
 

@@ -52,6 +52,17 @@ button {
   background: #fff;
 }
 
+.rail-mobile-top {
+  display: none;
+}
+
+.rail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 0;
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -334,7 +345,7 @@ button {
 
 .agenda-controls {
   display: none;
-  grid-template-columns: minmax(0, 1fr) auto 120px;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 240px) auto 120px;
   gap: 12px;
   align-items: center;
   margin: -4px 0 18px;
@@ -394,6 +405,17 @@ button {
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 0 10px;
+  outline: 0;
+}
+
+.agenda-controls select {
+  min-height: 36px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0 10px;
+  background: #fff;
+  color: var(--text);
   outline: 0;
 }
 
@@ -728,14 +750,46 @@ button {
     padding: 12px;
   }
 
-  .brand,
+  .rail-mobile-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 40px;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .rail-body {
+    display: none;
+  }
+
+  .rail-body.is-open {
+    display: flex;
+    gap: 12px;
+    padding-top: 10px;
+  }
+
+  .brand {
+    display: flex;
+  }
+
   .rail-section,
   .rail-footer {
-    display: none;
+    display: block;
   }
 
   .compose-button {
     width: 100%;
+  }
+
+  .rail-mobile-top .compose-button {
+    width: 100%;
+  }
+
+  .rail-toggle {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: var(--panel-soft);
+    color: var(--muted);
   }
 
   .nav-list {

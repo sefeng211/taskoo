@@ -33,6 +33,7 @@ const state = {
   },
   loading: false,
   agendaDays: Number(window.localStorage.getItem(AGENDA_RANGE_KEY) || 10),
+  agendaContext: '',
 };
 
 function endpoint(name) {
@@ -122,6 +123,14 @@ function taskDateLabel(task) {
   return '';
 }
 
+function agendaRequestData() {
+  const {start, end} = agendaRange();
+  if (state.agendaContext) {
+    return `${start} ${end} c:${state.agendaContext}`;
+  }
+  return `${start} ${end}`;
+}
+
 function setLoading(isLoading) {
   state.loading = isLoading;
   document.body.classList.toggle('is-loading', isLoading);
@@ -159,36 +168,43 @@ function renderShell() {
     <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
     <div class="app-shell">
       <aside class="rail" aria-label="Task navigation">
-        <div class="brand">
-          <div class="brand-dot">${appMarkSvg()}</div>
-          <div>
-            <h1>Taskoo</h1>
-            <span>GTD workspace</span>
+        <div class="rail-mobile-top">
+          <button class="compose-button" type="button" id="compose-button">
+            <i class="fas fa-plus"></i>
+            <span>Add task</span>
+          </button>
+          <button class="icon-button rail-toggle" type="button" id="rail-toggle" title="Show sidebar" aria-label="Show sidebar" aria-expanded="false">
+            <i class="fas fa-ellipsis-v"></i>
+          </button>
+        </div>
+        <div id="rail-body" class="rail-body">
+          <div class="brand">
+            <div class="brand-dot">${appMarkSvg()}</div>
+            <div>
+              <h1>Taskoo</h1>
+              <span>GTD workspace</span>
+            </div>
           </div>
-        </div>
-        <button class="compose-button" type="button" id="compose-button">
-          <i class="fas fa-plus"></i>
-          <span>Add task</span>
-        </button>
-        <nav class="nav-list">
-          ${navButton('inbox', 'fas fa-inbox', 'Inbox')}
-          ${navButton('agenda', 'fas fa-calendar-alt', 'Agenda')}
-          ${navButton('all', 'fas fa-layer-group', 'All')}
-          ${navButton('started', 'fas fa-play', 'Started')}
-          ${navButton('blocked', 'fas fa-ban', 'Blocked')}
-          ${navButton('completed', 'fas fa-check-double', 'Completed')}
-        </nav>
-        <div class="rail-section">
-          <div class="rail-heading">Contexts</div>
-          <div id="context-list" class="context-list"></div>
-        </div>
-        <div class="rail-section">
-          <div class="rail-heading">Tags</div>
-          <div id="tag-list" class="context-list"></div>
-        </div>
-        <div class="rail-footer">
-          <span class="status-dot"></span>
-          <span id="sync-status">Ready</span>
+          <nav class="nav-list">
+            ${navButton('inbox', 'fas fa-inbox', 'Inbox')}
+            ${navButton('agenda', 'fas fa-calendar-alt', 'Agenda')}
+            ${navButton('all', 'fas fa-layer-group', 'All')}
+            ${navButton('started', 'fas fa-play', 'Started')}
+            ${navButton('blocked', 'fas fa-ban', 'Blocked')}
+            ${navButton('completed', 'fas fa-check-double', 'Completed')}
+          </nav>
+          <div class="rail-section">
+            <div class="rail-heading">Contexts</div>
+            <div id="context-list" class="context-list"></div>
+          </div>
+          <div class="rail-section">
+            <div class="rail-heading">Tags</div>
+            <div id="tag-list" class="context-list"></div>
+          </div>
+          <div class="rail-footer">
+            <span class="status-dot"></span>
+            <span id="sync-status">Ready</span>
+          </div>
         </div>
       </aside>
 
@@ -245,6 +261,10 @@ function renderShell() {
             <span>Agenda range</span>
             <strong id="agenda-range-label">10 days</strong>
           </div>
+          <label>
+            <span>Context</span>
+            <select id="agenda-context-select"></select>
+          </label>
           <div class="agenda-presets">
             <button type="button" data-agenda-days="7">7d</button>
             <button type="button" data-agenda-days="10">10d</button>
@@ -281,6 +301,13 @@ function bindShellEvents() {
   document.getElementById('compose-button').addEventListener('click', () => {
     document.getElementById('quick-add-input').focus();
   });
+  const railToggle = document.getElementById('rail-toggle');
+  railToggle.addEventListener('click', () => {
+    const railBody = document.getElementById('rail-body');
+    const nextState = !railBody.classList.contains('is-open');
+    railBody.classList.toggle('is-open', nextState);
+    railToggle.setAttribute('aria-expanded', String(nextState));
+  });
   document.getElementById('refresh-button').addEventListener('click', reload);
   document.getElementById('quick-add-form').addEventListener('submit', addTask);
   document.getElementById('query-button').addEventListener('click', runQuery);
@@ -296,6 +323,9 @@ function bindShellEvents() {
   document.getElementById('agenda-days-input').addEventListener('change', (event) => {
     setAgendaDays(Number(event.target.value));
   });
+  document.getElementById('agenda-context-select').addEventListener('change', (event) => {
+    setAgendaContext(event.target.value);
+  });
 }
 
 async function refreshMetadata() {
@@ -308,7 +338,7 @@ async function refreshMetadata() {
 async function refreshNavCounts() {
   const [allGroups, agendaGroups] = await Promise.all([
     request('list', {method: 'POST', data: ''}),
-    request('agenda', {method: 'POST', data: `${agendaRange().start} ${agendaRange().end}`}),
+    request('agenda', {method: 'POST', data: agendaRequestData()}),
   ]);
   state.navTasks = flattenGroups(Array.isArray(allGroups) ? allGroups : []);
   state.navAgendaTasks = uniqueTasksById(flattenGroups(Array.isArray(agendaGroups) ? agendaGroups : []));
@@ -444,14 +474,22 @@ function agendaRange() {
 async function loadAgendaRange() {
   const {start, end} = agendaRange();
   state.title = 'Agenda';
-  state.subtitle = `${start} to ${end}`;
-  await loadAgenda(`${start} ${end}`);
+  state.subtitle = state.agendaContext ? `${state.agendaContext} · ${start} to ${end}` : `${start} to ${end}`;
+  await loadAgenda(agendaRequestData());
 }
 
 function setAgendaDays(days) {
   const nextDays = Math.min(Math.max(Number.isFinite(days) ? Math.round(days) : 10, 1), 366);
   state.agendaDays = nextDays;
   window.localStorage.setItem(AGENDA_RANGE_KEY, String(nextDays));
+  renderAgendaControls();
+  if (state.view === 'agenda') {
+    loadAgendaRange();
+  }
+}
+
+function setAgendaContext(context) {
+  state.agendaContext = context;
   renderAgendaControls();
   if (state.view === 'agenda') {
     loadAgendaRange();
@@ -513,12 +551,29 @@ function renderAgendaControls() {
   const controls = document.getElementById('agenda-controls');
   const input = document.getElementById('agenda-days-input');
   const label = document.getElementById('agenda-range-label');
-  if (!controls || !input || !label) {
+  const contextSelect = document.getElementById('agenda-context-select');
+  if (!controls || !input || !label || !contextSelect) {
     return;
   }
   controls.classList.toggle('is-active', state.view === 'agenda');
+  const railToggle = document.getElementById('rail-toggle');
+  if (railToggle) {
+    railToggle.title = state.view === 'agenda' ? 'Show sidebar' : 'Show sidebar';
+  }
   input.value = state.agendaDays;
   label.textContent = `${state.agendaDays} ${state.agendaDays === 1 ? 'day' : 'days'}`;
+  contextSelect.replaceChildren();
+  const allOption = document.createElement('option');
+  allOption.value = '';
+  allOption.textContent = 'All contexts';
+  contextSelect.appendChild(allOption);
+  state.metadata.contexts.forEach((context) => {
+    const option = document.createElement('option');
+    option.value = context;
+    option.textContent = context;
+    contextSelect.appendChild(option);
+  });
+  contextSelect.value = state.agendaContext;
   document.querySelectorAll('[data-agenda-days]').forEach((button) => {
     button.classList.toggle('is-active', Number(button.dataset.agendaDays) === state.agendaDays);
   });

@@ -28,7 +28,7 @@ fn test_agenda_single_day_due() -> Result<(), CoreError> {
     // operation.date_due = Some("2020-11-13");
     // execute(&mut operation)?;
 
-    let rows = database_manager.view_agenda(String::from("2020-11-14"), None)?;
+    let rows = database_manager.view_agenda(String::from("2020-11-14"), None, None)?;
 
     assert_eq!(rows.len(), 1);
 
@@ -55,7 +55,7 @@ fn test_agenda_single_day_due_and_overdue() -> Result<(), CoreError> {
     operation.date_due = Some("2020-11-13");
     execute(&mut operation)?;
 
-    let rows = database_manager.view_agenda(String::from("2020-11-14"), None)?;
+    let rows = database_manager.view_agenda(String::from("2020-11-14"), None, None)?;
 
     assert_eq!(rows.len(), 1);
 
@@ -83,7 +83,7 @@ fn test_agenda_single_day_scheduled_and_overscheduled() -> Result<(), CoreError>
     operation.date_scheduled = Some("2020-11-13");
     execute(&mut operation)?;
 
-    let rows = database_manager.view_agenda(String::from("2020-11-14"), None)?;
+    let rows = database_manager.view_agenda(String::from("2020-11-14"), None, None)?;
 
     assert_eq!(rows.len(), 1);
 
@@ -107,7 +107,7 @@ fn test_agenda_single_day_due_and_scheduled() -> Result<(), CoreError> {
     operation.date_scheduled = Some("2020-11-14");
     execute(&mut operation)?;
 
-    let rows = database_manager.view_agenda(String::from("2020-11-15"), None)?;
+    let rows = database_manager.view_agenda(String::from("2020-11-15"), None, None)?;
 
     assert_eq!(rows.len(), 1);
 
@@ -132,7 +132,7 @@ fn test_agenda_multiple_day_due_and_scheduled() -> Result<(), CoreError> {
     execute(&mut operation)?;
 
     let rows = database_manager
-        .view_agenda(String::from("2020-11-14"), Some(String::from("2020-11-15")))?;
+        .view_agenda(String::from("2020-11-14"), Some(String::from("2020-11-15")), None)?;
 
     assert_eq!(rows.len(), 2);
 
@@ -147,5 +147,32 @@ fn test_agenda_multiple_day_due_and_scheduled() -> Result<(), CoreError> {
     assert_eq!(tasks[0].date_due, "2020-11-15 00:00:00".to_string());
     assert_eq!(tasks[1].date_scheduled, "2020-11-14 00:00:00".to_string());
 
+    Ok(())
+}
+
+#[test]
+fn test_agenda_filters_by_context() -> Result<(), CoreError> {
+    let mut database_manager = TaskManager::new(&get_setting());
+
+    let mut operation = Add::new_with_task_manager("Work Task", &mut database_manager);
+    operation.context = Some("work".to_string());
+    operation.date_due = Some("2020-11-14");
+    execute(&mut operation)?;
+
+    let mut operation = Add::new_with_task_manager("Inbox Task", &mut database_manager);
+    operation.context = Some("inbox".to_string());
+    operation.date_due = Some("2020-11-14");
+    execute(&mut operation)?;
+
+    let rows = database_manager.view_agenda(
+        String::from("2020-11-14"),
+        None,
+        Some(String::from("work")),
+    )?;
+
+    assert_eq!(rows.len(), 1);
+    assert_eq!(rows[0].1.len(), 1);
+    assert_eq!(rows[0].1[0].context, "work".to_string());
+    assert_eq!(rows[0].1[0].body, "Work Task".to_string());
     Ok(())
 }
