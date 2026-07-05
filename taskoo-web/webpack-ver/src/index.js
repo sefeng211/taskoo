@@ -13,6 +13,12 @@ import {
 
 const BUILTIN_STATES = ['ready', 'started', 'blocked', 'completed'];
 const AGENDA_RANGE_KEY = 'taskoo.agendaDays';
+const THEME_KEY = 'taskoo.theme';
+const THEME_SCHEMES = [
+  {id: 'light', label: 'Light'},
+  {id: 'dark', label: 'Dark'},
+  {id: 'gruvbox-light', label: 'Gruvbox Light'},
+];
 
 const state = {
   view: 'inbox',
@@ -25,6 +31,9 @@ const state = {
   selectedTaskIds: new Set(),
   detailTask: null,
   detailLoading: false,
+  annotationDraft: '',
+  annotationTaskId: null,
+  annotationSaving: false,
   clientFilter: null,
   metadata: {
     contexts: ['inbox'],
@@ -36,6 +45,7 @@ const state = {
   loading: false,
   agendaDays: Number(window.localStorage.getItem(AGENDA_RANGE_KEY) || 10),
   agendaContext: '',
+  theme: window.localStorage.getItem(THEME_KEY) || 'light',
 };
 
 function endpoint(name) {
@@ -95,6 +105,17 @@ function displayValue(value) {
     return value.length > 0 ? value.join(', ') : 'None';
   }
   return value || 'None';
+}
+
+function themeExists(theme) {
+  return THEME_SCHEMES.some((scheme) => scheme.id === theme);
+}
+
+function applyTheme(theme) {
+  const nextTheme = themeExists(theme) ? theme : 'light';
+  state.theme = nextTheme;
+  document.documentElement.setAttribute('data-theme', nextTheme);
+  window.localStorage.setItem(THEME_KEY, nextTheme);
 }
 
 function isToday(value) {
@@ -225,6 +246,7 @@ function renderShell() {
             <p id="view-subtitle">Clarify and organize newly captured tasks</p>
           </div>
           <div class="topbar-actions">
+            <select id="theme-select" class="theme-select" aria-label="Color scheme"></select>
             <button class="icon-button" type="button" id="refresh-button" title="Refresh" aria-label="Refresh">
               <i class="fas fa-sync-alt"></i>
             </button>
@@ -307,6 +329,9 @@ function navButton(view, icon, label) {
 function bindShellEvents() {
   document.querySelectorAll('[data-view]').forEach((button) => {
     button.addEventListener('click', () => loadView(button.dataset.view));
+  });
+  document.getElementById('theme-select').addEventListener('change', (event) => {
+    applyTheme(event.target.value);
   });
   document.getElementById('compose-button').addEventListener('click', () => {
     document.getElementById('quick-add-input').focus();
@@ -562,6 +587,28 @@ function render() {
   renderBulkActions();
   renderTasks();
   renderTaskDetail();
+  renderThemeSelector();
+}
+
+function renderThemeSelector() {
+  const select = document.getElementById('theme-select');
+  if (!select) {
+    return;
+  }
+
+  const currentTheme = themeExists(state.theme) ? state.theme : 'light';
+  if (select.options.length !== THEME_SCHEMES.length || select.dataset.boundThemes !== 'true') {
+    select.replaceChildren();
+    THEME_SCHEMES.forEach((scheme) => {
+      const option = document.createElement('option');
+      option.value = scheme.id;
+      option.textContent = scheme.label;
+      select.appendChild(option);
+    });
+    select.dataset.boundThemes = 'true';
+  }
+
+  select.value = currentTheme;
 }
 
 function detailField(label, value, valueClass = '') {
@@ -583,6 +630,9 @@ function detailField(label, value, valueClass = '') {
 function closeTaskDetail() {
   state.detailTask = null;
   state.detailLoading = false;
+  state.annotationDraft = '';
+  state.annotationTaskId = null;
+  state.annotationSaving = false;
   render();
 }
 
@@ -619,6 +669,12 @@ function renderTaskDetail() {
   const task = state.detailTask;
   if (!task) {
     return;
+  }
+
+  if (state.annotationTaskId !== task.id) {
+    state.annotationTaskId = task.id;
+    state.annotationDraft = task.annotation || '';
+    state.annotationSaving = false;
   }
 
   const header = document.createElement('header');
@@ -658,9 +714,39 @@ function renderTaskDetail() {
   annotation.className = 'detail-annotation';
   const annotationTitle = document.createElement('h3');
   annotationTitle.textContent = 'Annotation';
-  const annotationBody = document.createElement('p');
-  annotationBody.textContent = task.annotation || 'None';
-  annotation.append(annotationTitle, annotationBody);
+  const annotationEditor = document.createElement('div');
+  annotationEditor.className = 'detail-annotation-editor';
+
+  const annotationInput = document.createElement('textarea');
+  annotationInput.value = state.annotationDraft;
+  annotationInput.placeholder = 'Write any note, checklist, or reference text';
+  annotationInput.setAttribute('aria-label', 'Annotation');
+  annotationInput.addEventListener('input', (event) => {
+    state.annotationDraft = event.target.value;
+  });
+
+  const annotationActions = document.createElement('div');
+  annotationActions.className = 'detail-annotation-actions';
+
+  const saveAnnotationButton = document.createElement('button');
+  saveAnnotationButton.type = 'button';
+  saveAnnotationButton.className = 'primary-button';
+  saveAnnotationButton.disabled = state.annotationSaving;
+  saveAnnotationButton.innerHTML = `<i class="fas ${state.annotationSaving ? 'fa-spinner fa-spin' : 'fa-save'}"></i><span>Save note</span>`;
+  saveAnnotationButton.addEventListener('click', () => saveTaskAnnotation(task));
+
+  const clearAnnotationButton = document.createElement('button');
+  clearAnnotationButton.type = 'button';
+  clearAnnotationButton.className = 'secondary-button';
+  clearAnnotationButton.textContent = 'Clear';
+  clearAnnotationButton.addEventListener('click', () => {
+    state.annotationDraft = '';
+    renderTaskDetail();
+  });
+
+  annotationActions.append(clearAnnotationButton, saveAnnotationButton);
+  annotationEditor.append(annotationInput, annotationActions);
+  annotation.append(annotationTitle, annotationEditor);
 
   const actions = document.createElement('footer');
   const toggle = document.createElement('button');
@@ -671,6 +757,33 @@ function renderTaskDetail() {
   actions.appendChild(toggle);
 
   panel.append(header, meta, annotation, actions);
+}
+
+async function saveTaskAnnotation(task) {
+  if (!task) {
+    return;
+  }
+
+  setLoading(true);
+  state.annotationSaving = true;
+  renderTaskDetail();
+  try {
+    const updatedTask = await request('annotation', {
+      method: 'POST',
+      data: JSON.stringify({task_id: task.id, annotation: state.annotationDraft}),
+    });
+    state.detailTask = updatedTask;
+    state.annotationTaskId = updatedTask.id;
+    state.annotationDraft = updatedTask.annotation || '';
+    await reload();
+    toast('Annotation saved');
+  } catch (error) {
+    showError(error);
+  } finally {
+    state.annotationSaving = false;
+    setLoading(false);
+    renderTaskDetail();
+  }
 }
 
 function renderAgendaControls() {
@@ -972,6 +1085,7 @@ async function deleteSelectedTasks() {
 }
 
 async function boot() {
+  applyTheme(state.theme);
   renderShell();
   setLoading(true);
   try {

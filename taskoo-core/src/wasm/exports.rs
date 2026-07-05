@@ -12,6 +12,12 @@ pub use crate::db::task_helper::Task;
 
 static mut LENGTH: usize = 123;
 
+#[derive(serde::Deserialize)]
+struct AnnotationInput {
+    task_id: i64,
+    annotation: String,
+}
+
 #[no_mangle]
 pub extern "C" fn allocate(size: usize) -> *mut c_char {
     // create a new mutable buffer with capacity `len`
@@ -70,6 +76,11 @@ pub unsafe fn upper(ptr: *mut u8, len: usize) {
     println!("read {:?}", input_str);
 }
 
+unsafe fn read_raw_string_from_js(ptr: *mut u8, len: usize) -> String {
+    let data = Vec::from_raw_parts(ptr, len, len);
+    String::from_utf8(data).unwrap()
+}
+
 // List Operation
 #[no_mangle]
 pub unsafe fn list(ptr: *mut u8, len: usize) -> *mut c_char {
@@ -108,6 +119,37 @@ pub unsafe fn add(ptr: *mut u8, len: usize) {
     operation::execute(&mut operation).expect("Failed to execute the operation");
     let added_tasks = &operation.get_result();
     println!("Added a task with id {}", added_tasks[0].id);
+}
+
+// Annotation Operation
+#[no_mangle]
+pub unsafe fn annotation(ptr: *mut u8, len: usize) -> *mut c_char {
+    let input = read_raw_string_from_js(ptr, len);
+    let payload: AnnotationInput = match serde_json::from_str(&input) {
+        Ok(payload) => payload,
+        Err(e) => {
+            let message = serde_json::json!({"error": e.to_string()}).to_string();
+            LENGTH = message.len();
+            return CString::new(message).unwrap().into_raw();
+        }
+    };
+
+    let mut operation = operation::AddAnnotation::new(payload.task_id, payload.annotation);
+    let serded_string: String = match operation::execute(&mut operation) {
+        Ok(_) => {
+            let tasks = operation.get_result();
+            if tasks.is_empty() {
+                serde_json::json!({"error": "Unable to update annotation"}).to_string()
+            } else {
+                serde_json::to_string(&tasks[0]).unwrap()
+            }
+        }
+        Err(e) => serde_json::json!({"error": e.to_string()}).to_string(),
+    };
+
+    unsafe { LENGTH = serded_string.len() }
+    let s = CString::new(serded_string).unwrap();
+    return s.into_raw();
 }
 
 // Agenda Operation

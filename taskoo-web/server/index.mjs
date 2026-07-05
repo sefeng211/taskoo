@@ -148,6 +148,12 @@ export class Endpoints {
     return JSON.stringify({ok: true});
   }
 
+  static Annotation(input) {
+    const allocated = allocateInput(input);
+    const result = instance.exports.annotation(allocated.ptr, allocated.bytes.length);
+    return readSharedString(result);
+  }
+
   static Delete(input) {
     const allocated = allocateInput(input);
     instance.exports.delete(allocated.ptr, allocated.bytes.length);
