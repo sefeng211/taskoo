@@ -2,10 +2,12 @@ import assert from 'node:assert/strict';
 
 import {SERVER_ENDPOINT_MAPPING} from '../src/consts.mjs';
 import {
+  agendaDateLabel,
   buildBulkModificationCommand,
   navCounts,
   priorityLabel,
   pruneSelectionForVisibleTasks,
+  uniqueTasksById,
   tagView,
 } from '../src/ui_logic.mjs';
 
@@ -77,6 +79,22 @@ test('tag sidebar entries map to tag query views', () => {
 test('priority badges use explicit labels', () => {
   assert.equal(priorityLabel('h'), 'Pri:H');
   assert.equal(priorityLabel('L'), 'Pri:L');
+});
+
+test('agenda dates include relative offsets from today', () => {
+  const today = new Date(2026, 6, 4);
+  assert.equal(agendaDateLabel('2026-07-07', today), '2026-07-07 (3 days from now)');
+  assert.equal(agendaDateLabel('2026-07-01', today), '2026-07-01 (3 days ago)');
+  assert.equal(agendaDateLabel('2026-07-04', today), '2026-07-04 (today)');
+});
+
+test('uniqueTasksById collapses duplicate agenda entries', () => {
+  const tasks = [{id: 7, body: 'Pay bill'}, {id: 7, body: 'Pay bill'}, {id: 9, body: 'Other'}];
+
+  assert.deepEqual(uniqueTasksById(tasks), [
+    {id: 7, body: 'Pay bill'},
+    {id: 9, body: 'Other'},
+  ]);
 });
 
 let passed = 0;

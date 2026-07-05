@@ -1,10 +1,12 @@
 import './style.css';
 import {SERVER_ENDPOINT_MAPPING} from './consts.mjs';
 import {
+  agendaDateLabel,
   buildBulkModificationCommand,
   navCounts,
   priorityLabel,
   pruneSelectionForVisibleTasks,
+  uniqueTasksById,
   tagView,
 } from './ui_logic.mjs';
 
@@ -548,7 +550,7 @@ function renderChips() {
 }
 
 function selectedBulkTasks() {
-  return state.tasks.filter((task) => state.selectedTaskIds.has(task.id));
+  return uniqueTasksById(state.tasks.filter((task) => state.selectedTaskIds.has(task.id)));
 }
 
 function toggleBulkSelection(task, checked) {
@@ -630,7 +632,8 @@ function renderTasks() {
   visibleGroups.forEach(([name, tasks]) => {
     const section = document.createElement('section');
     section.className = 'task-section';
-    section.innerHTML = `<header><h3>${name || 'Tasks'}</h3><span>${tasks.length}</span></header>`;
+    const title = state.view === 'agenda' ? agendaDateLabel(name) : (name || 'Tasks');
+    section.innerHTML = `<header><h3>${title}</h3><span>${tasks.length}</span></header>`;
     const rows = document.createElement('div');
     rows.className = 'task-rows';
     tasks.forEach((task) => rows.appendChild(createTaskRow(task)));
