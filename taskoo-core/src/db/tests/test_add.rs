@@ -171,7 +171,9 @@ fn test_add_scheduled_at_days() -> Result<(), CoreError> {
 fn test_add_scheduled_at_hours() -> Result<(), CoreError> {
     let mut database_manager = TaskManager::new(&get_setting());
 
-    let start = (Local::now() + Duration::hours(11)).format("%Y-%m-%d %H:%M:%S").to_string();
+    let start = (Local::now() + Duration::hours(11))
+        .format("%Y-%m-%d %H:%M:%S")
+        .to_string();
 
     let mut operation = Add::new_with_task_manager("Test Body", &mut database_manager);
     operation.priority = Some(String::from("H"));
@@ -180,7 +182,9 @@ fn test_add_scheduled_at_hours() -> Result<(), CoreError> {
     operation.date_scheduled = Some("11hours");
     execute(&mut operation)?;
 
-    let end = (Local::now() + Duration::hours(11)).format("%Y-%m-%d %H:%M:%S").to_string();
+    let end = (Local::now() + Duration::hours(11))
+        .format("%Y-%m-%d %H:%M:%S")
+        .to_string();
     let mut tasks = database_manager
         .get(
             &None,

@@ -167,6 +167,12 @@ export class Endpoints {
     return readSharedString(result);
   }
 
+  static Info(input) {
+    const allocated = allocateInput(input);
+    const result = instance.exports.info(allocated.ptr, allocated.bytes.length);
+    return readSharedString(result);
+  }
+
   static Metadata() {
     const result = instance.exports.metadata();
     return readSharedString(result);

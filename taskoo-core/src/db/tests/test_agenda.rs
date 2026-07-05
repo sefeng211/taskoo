@@ -131,8 +131,11 @@ fn test_agenda_multiple_day_due_and_scheduled() -> Result<(), CoreError> {
     operation.date_scheduled = Some("2020-11-14");
     execute(&mut operation)?;
 
-    let rows = database_manager
-        .view_agenda(String::from("2020-11-14"), Some(String::from("2020-11-15")), None)?;
+    let rows = database_manager.view_agenda(
+        String::from("2020-11-14"),
+        Some(String::from("2020-11-15")),
+        None,
+    )?;
 
     assert_eq!(rows.len(), 2);
 

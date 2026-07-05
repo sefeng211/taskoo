@@ -196,7 +196,43 @@ pub unsafe fn metadata() -> *mut c_char {
         "states": ["ready", "started", "blocked", "completed"],
         "custom_states": custom_states,
         "priorities": ["H", "M", "L"]
-    }).to_string();
+    })
+    .to_string();
+
+    LENGTH = serded_string.len();
+    let s = CString::new(serded_string).unwrap();
+    return s.into_raw();
+}
+
+// Task info operation
+#[no_mangle]
+pub unsafe fn info(ptr: *mut u8, len: usize) -> *mut c_char {
+    let data = read_data_from_js(ptr, len);
+    let input = data.join(" ");
+    let task_id = match input.trim().parse::<i64>() {
+        Ok(task_id) => task_id,
+        Err(_) => {
+            let message = serde_json::json!({"error": "Task id must be an integer"}).to_string();
+            LENGTH = message.len();
+            return CString::new(message).unwrap().into_raw();
+        }
+    };
+
+    let mut operation = operation::Get::new();
+    operation.task_id = Some(task_id);
+
+    let serded_string: String = match operation::execute(&mut operation) {
+        Ok(_) => {
+            let tasks = operation.get_result();
+            if tasks.is_empty() {
+                serde_json::json!({"error": format!("Unable to find task with id: {}", task_id)})
+                    .to_string()
+            } else {
+                serde_json::to_string(&tasks[0]).unwrap()
+            }
+        }
+        Err(e) => serde_json::json!({"error": e.to_string()}).to_string(),
+    };
 
     LENGTH = serded_string.len();
     let s = CString::new(serded_string).unwrap();

@@ -6,6 +6,5 @@ pub mod wasm;
 mod db;
 mod util;
 
-pub mod option_parser;
 pub mod operation;
-
+pub mod option_parser;

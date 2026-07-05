@@ -18,9 +18,9 @@ impl Add {
             if let Some(rv) = Editor::new().edit("").unwrap() {
                 Some(rv.clone())
             } else {
-                return Err(ClientError::UnexpectedFailure(
-                    String::from("Unable to get the annotation text, abort!"),
-                ));
+                return Err(ClientError::UnexpectedFailure(String::from(
+                    "Unable to get the annotation text, abort!",
+                )));
             }
         } else {
             None
@@ -31,11 +31,9 @@ impl Add {
 
         let added_tasks = &operation.get_result();
         if added_tasks.len() != 1 {
-                return Err(ClientError::UnexpectedFailure(
-                    String::from(
-                        "Add operation failed in an unexpected way, please consider to report it",
-                    ),
-                ));
+            return Err(ClientError::UnexpectedFailure(String::from(
+                "Add operation failed in an unexpected way, please consider to report it",
+            )));
         }
 
         let task = &added_tasks[0];
@@ -64,20 +62,18 @@ impl Add {
 
         let tasks = &operation.get_result();
         if tasks.len() != 1 {
-                return Err(ClientError::UnexpectedFailure(
-                    String::from(
-                        "AddAnnotation operation failed in an unexpected way, please consider to report it",
-                    ),
-                ));
+            return Err(ClientError::UnexpectedFailure(String::from(
+                "AddAnnotation operation failed in an unexpected way, please consider to report it",
+            )));
         }
 
         if let Some(rv) = Editor::new().edit(&tasks[0].annotation).unwrap() {
             let mut operation = AddAnnotation::new(task_id, rv);
             execute(&mut operation)?;
         } else {
-            return Err(ClientError::UnexpectedFailure(
-                String::from("Unable to get the annotation text, abort!"),
-            ));
+            return Err(ClientError::UnexpectedFailure(String::from(
+                "Unable to get the annotation text, abort!",
+            )));
         }
 
         Ok(String::from(format!(

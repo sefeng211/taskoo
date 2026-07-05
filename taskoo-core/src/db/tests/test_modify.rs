@@ -160,7 +160,7 @@ fn test_modify_tag_only() -> Result<(), CoreError> {
             &None,
             &None,
             &None,
-            &None
+            &None,
         )
         .unwrap();
 
@@ -300,7 +300,15 @@ fn test_modify_multiple_tasks_can_remove_tags() -> Result<(), CoreError> {
         &vec!["blocked".to_string()],
     )?;
 
-    let tasks = database_manager.get(&None, &None, &vec!["ready".to_string()], &None, &None, &None, &None)?;
+    let tasks = database_manager.get(
+        &None,
+        &None,
+        &vec!["ready".to_string()],
+        &None,
+        &None,
+        &None,
+        &None,
+    )?;
 
     assert_eq!(tasks.len(), 2);
     assert_eq!(tasks[0].tags, vec!["ready"]);

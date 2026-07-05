@@ -58,6 +58,12 @@ app.get('/metadata', (req, res) => {
   res.status(ret.status).send(ret.body);
 });
 
+app.post('/info', (req, res) => {
+  console.log("info endpoint");
+  const ret = parseEndpointData(Endpoints.Info(req.body.data));
+  res.status(ret.status).send(ret.body);
+});
+
 const createPost = (req, res, next) => {
     console.log('createPost', req.body)
     next()

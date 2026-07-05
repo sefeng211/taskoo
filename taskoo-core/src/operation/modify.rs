@@ -29,12 +29,7 @@ impl<'a> ModifyOperation<'a> {
             )));
         }
 
-        let option = parse_command_option(
-            &data.iter().map(|s| &**s).collect(),
-            false,
-            true,
-            true,
-        )?;
+        let option = parse_command_option(&data.iter().map(|s| &**s).collect(), false, true, true)?;
         Ok(Self::from_command_option(option))
     }
 

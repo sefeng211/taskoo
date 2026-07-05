@@ -23,6 +23,8 @@ const state = {
   navTasks: [],
   navAgendaTasks: [],
   selectedTaskIds: new Set(),
+  detailTask: null,
+  detailLoading: false,
   clientFilter: null,
   metadata: {
     contexts: ['inbox'],
@@ -86,6 +88,13 @@ function formatDate(value) {
     return '';
   }
   return value.split(' ')[0];
+}
+
+function displayValue(value) {
+  if (Array.isArray(value)) {
+    return value.length > 0 ? value.join(', ') : 'None';
+  }
+  return value || 'None';
 }
 
 function isToday(value) {
@@ -280,6 +289,7 @@ function renderShell() {
         <section id="bulk-actions" class="bulk-actions" aria-label="Bulk task actions"></section>
         <section id="task-board" class="task-board" aria-label="Tasks"></section>
       </main>
+      <aside id="task-detail" class="task-detail" aria-label="Task detail"></aside>
     </div>
   `;
 
@@ -531,6 +541,12 @@ function setGroups(groups) {
     ? uniqueTasksById(flattenGroups(state.groups))
     : flattenGroups(state.groups);
   state.selectedTaskIds = pruneSelectionForVisibleTasks(state.selectedTaskIds, state.tasks);
+  if (state.detailTask) {
+    const visibleDetailTask = state.tasks.find((task) => task.id === state.detailTask.id);
+    if (visibleDetailTask) {
+      state.detailTask = {...state.detailTask, ...visibleDetailTask};
+    }
+  }
   render();
 }
 
@@ -545,6 +561,116 @@ function render() {
   renderChips();
   renderBulkActions();
   renderTasks();
+  renderTaskDetail();
+}
+
+function detailField(label, value, valueClass = '') {
+  const item = document.createElement('div');
+  item.className = 'detail-field';
+
+  const labelNode = document.createElement('span');
+  labelNode.textContent = label;
+  const valueNode = document.createElement('strong');
+  if (valueClass) {
+    valueNode.className = valueClass;
+  }
+  valueNode.textContent = displayValue(value);
+
+  item.append(labelNode, valueNode);
+  return item;
+}
+
+function closeTaskDetail() {
+  state.detailTask = null;
+  state.detailLoading = false;
+  render();
+}
+
+async function openTaskDetail(taskId) {
+  state.detailLoading = true;
+  renderTaskDetail();
+  try {
+    state.detailTask = await request('info', {method: 'POST', data: String(taskId)});
+  } catch (error) {
+    showError(error);
+  } finally {
+    state.detailLoading = false;
+    render();
+  }
+}
+
+function renderTaskDetail() {
+  const panel = document.getElementById('task-detail');
+  if (!panel) {
+    return;
+  }
+
+  panel.classList.toggle('is-open', Boolean(state.detailTask) || state.detailLoading);
+  panel.replaceChildren();
+
+  if (state.detailLoading && !state.detailTask) {
+    const loading = document.createElement('div');
+    loading.className = 'detail-loading';
+    loading.textContent = 'Loading task';
+    panel.appendChild(loading);
+    return;
+  }
+
+  const task = state.detailTask;
+  if (!task) {
+    return;
+  }
+
+  const header = document.createElement('header');
+  const heading = document.createElement('div');
+  const eyebrow = document.createElement('span');
+  eyebrow.className = 'detail-eyebrow';
+  eyebrow.textContent = `Task #${task.id}`;
+  const title = document.createElement('h2');
+  title.textContent = task.body;
+  heading.append(eyebrow, title);
+
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'icon-button';
+  close.title = 'Close details';
+  close.setAttribute('aria-label', 'Close details');
+  close.innerHTML = '<i class="fas fa-times"></i>';
+  close.addEventListener('click', closeTaskDetail);
+  header.append(heading, close);
+
+  const meta = document.createElement('section');
+  meta.className = 'detail-grid';
+  meta.append(
+    detailField('State', task.state || 'ready', `state-${task.state || 'ready'}`),
+    detailField('Context', task.context),
+    detailField('Priority', priorityLabel(task.priority)),
+    detailField('Tags', task.tags),
+    detailField('Created', formatDate(task.date_created)),
+    detailField('Due', formatDate(task.date_due)),
+    detailField('Scheduled', formatDate(task.date_scheduled)),
+    detailField('Due repeat', task.repetition_due),
+    detailField('Schedule repeat', task.repetition_scheduled),
+    detailField('Dependencies', task.parent_task_ids),
+  );
+
+  const annotation = document.createElement('section');
+  annotation.className = 'detail-annotation';
+  const annotationTitle = document.createElement('h3');
+  annotationTitle.textContent = 'Annotation';
+  const annotationBody = document.createElement('p');
+  annotationBody.textContent = task.annotation || 'None';
+  annotation.append(annotationTitle, annotationBody);
+
+  const actions = document.createElement('footer');
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'primary-button';
+  toggle.innerHTML = `<i class="fas ${task.state === 'completed' ? 'fa-undo' : 'fa-check'}"></i><span>${task.state === 'completed' ? 'Mark ready' : 'Mark completed'}</span>`;
+  toggle.addEventListener('click', () => setTaskState(task, task.state === 'completed' ? 'ready' : 'completed'));
+  actions.appendChild(toggle);
+
+  panel.append(header, meta, annotation, actions);
 }
 
 function renderAgendaControls() {
@@ -726,9 +852,8 @@ function createTaskRow(task) {
   row.className = addClassByState(task);
   row.classList.toggle('is-due-today', isToday(task.date_due));
   row.classList.toggle('is-bulk-selected', state.selectedTaskIds.has(task.id));
-  row.addEventListener('click', () => {
-    toggleBulkSelection(task, !state.selectedTaskIds.has(task.id));
-  });
+  row.classList.toggle('is-selected', state.detailTask && state.detailTask.id === task.id);
+  row.addEventListener('click', () => openTaskDetail(task.id));
 
   const bulkCheck = document.createElement('input');
   bulkCheck.type = 'checkbox';
@@ -776,6 +901,9 @@ async function setTaskState(task, nextState) {
   try {
     await request('modify', {method: 'POST', data: `${task.id} @${nextState}`});
     await reload();
+    if (state.detailTask && state.detailTask.id === task.id) {
+      await openTaskDetail(task.id);
+    }
   } catch (error) {
     showError(error);
   } finally {
@@ -829,6 +957,9 @@ async function deleteSelectedTasks() {
   setLoading(true);
   try {
     await request('delete', {method: 'POST', data: selected.map((task) => task.id).join(' ')});
+    if (state.detailTask && selected.some((task) => task.id === state.detailTask.id)) {
+      state.detailTask = null;
+    }
     state.selectedTaskIds.clear();
     await refreshMetadata();
     await reload();

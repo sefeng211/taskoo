@@ -53,9 +53,10 @@ impl Info {
 
             let tasks = &operation.get_result();
             if tasks.is_empty() {
-                return Err(ClientError::UnexpectedFailure(
-                    String::from(format!("Unable to find task with id : {}", real_id)),
-                ));
+                return Err(ClientError::UnexpectedFailure(String::from(format!(
+                    "Unable to find task with id : {}",
+                    real_id
+                ))));
             }
 
             assert_eq!(tasks.len(), 1);

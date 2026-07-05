@@ -29,7 +29,6 @@ pub const CREATE_TASK_STATE_TABLE_QUERY: &str = "
         FOREIGN KEY (state_id) REFERENCES state(id)
     )";
 
-
 pub const CREATE_TAG_TABLE_QUERY: &str = "
     create table if not exists tag (
         id integer primary key,

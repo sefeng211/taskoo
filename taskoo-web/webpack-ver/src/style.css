@@ -255,6 +255,7 @@ button {
 .search-strip,
 .summary-grid > div,
 .task-row,
+.task-detail,
 .empty-state {
   background: var(--panel);
   border: 1px solid var(--line);
@@ -639,6 +640,11 @@ button {
   color: var(--red);
 }
 
+.state-ready .task-state {
+  background: #e8f0fe;
+  color: var(--blue);
+}
+
 .state-started .task-state {
   background: #fff4d8;
   color: #a15c00;
@@ -650,6 +656,38 @@ button {
 }
 
 .state-completed .task-state {
+  background: #e6f4ea;
+  color: var(--green);
+}
+
+.detail-field strong.state-ready,
+.detail-field strong.state-started,
+.detail-field strong.state-blocked,
+.detail-field strong.state-completed {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.detail-field strong.state-ready {
+  background: #e8f0fe;
+  color: var(--blue);
+}
+
+.detail-field strong.state-started {
+  background: #fff4d8;
+  color: #a15c00;
+}
+
+.detail-field strong.state-blocked {
+  background: #fce8e6;
+  color: var(--red);
+}
+
+.detail-field strong.state-completed {
   background: #e6f4ea;
   color: var(--green);
 }
@@ -696,6 +734,117 @@ button {
 .danger-button {
   background: #fce8e6;
   color: var(--red);
+}
+
+.task-detail {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  bottom: 18px;
+  z-index: 20;
+  display: none;
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  gap: 18px;
+  width: min(420px, calc(100vw - 36px));
+  padding: 18px;
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  overflow: auto;
+}
+
+.task-detail.is-open {
+  display: grid;
+}
+
+.task-detail header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.detail-eyebrow {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.task-detail h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-content: start;
+}
+
+.detail-field {
+  min-width: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel-soft);
+}
+
+.detail-field span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.detail-field strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.detail-annotation {
+  display: grid;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.detail-annotation h3 {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.detail-annotation p {
+  min-height: 82px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel-soft);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.task-detail footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.detail-loading {
+  align-self: center;
+  justify-self: center;
+  color: var(--muted);
+  font-weight: 600;
 }
 
 .toast-stack {
@@ -857,6 +1006,20 @@ button {
   .task-state {
     grid-column: 3;
     justify-self: flex-start;
+  }
+
+  .task-detail {
+    top: auto;
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    width: auto;
+    max-height: calc(100vh - 76px);
+    border-radius: 16px;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
   }
 
 }

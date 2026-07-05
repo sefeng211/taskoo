@@ -238,7 +238,7 @@ impl DisplayColumn {
                 // 0 .. 10 strips converts the date string from something like
                 // 2021-01-01 00:00:00 to 2021-01-01
                 // TODO: Make it an NaiveDateTime object
-                return Paint::new(task.date_created[0 .. 10].to_string())
+                return Paint::new(task.date_created[0..10].to_string())
                     .fg(Color::Fixed(code))
                     .to_string();
             }
@@ -251,7 +251,7 @@ impl DisplayColumn {
                 };
                 // Check above to see why 0 .. 10 was used
                 if !task.date_scheduled.is_empty() {
-                    return Paint::new(task.date_scheduled[0 .. 10].to_string())
+                    return Paint::new(task.date_scheduled[0..10].to_string())
                         .fg(Color::Fixed(code))
                         .to_string();
                 } else {
@@ -266,7 +266,7 @@ impl DisplayColumn {
                     None => DisplayColors::DueHeader.get_color_code(),
                 };
                 if !task.date_due.is_empty() {
-                    return Paint::new(task.date_due[0 .. 10].to_string())
+                    return Paint::new(task.date_due[0..10].to_string())
                         .fg(Color::Fixed(code))
                         .to_string();
                 } else {

@@ -52,7 +52,6 @@ pub fn get(
             .collect();
     }
 
-
     if let Some(not_tag_ids) = not_tag_ids {
         tasks = tasks
             .into_iter()

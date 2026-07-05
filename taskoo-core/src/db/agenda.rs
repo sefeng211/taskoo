@@ -7,14 +7,16 @@ use super::get_base::get_base;
 
 use rusqlite::{Transaction, Result};
 
-
 pub fn agenda(
     conn: &Transaction,
     start_day: &NaiveDate,
     end_day: &Option<NaiveDate>,
     context_name: &Option<String>,
 ) -> Result<Vec<(NaiveDate, Vec<Task>)>, CoreError> {
-    info!("[agenda] start_day={:?} end_day={:?} context_name={:?}", start_day, end_day, context_name);
+    info!(
+        "[agenda] start_day={:?} end_day={:?} context_name={:?}",
+        start_day, end_day, context_name
+    );
 
     let mut days: Vec<NaiveDate> = vec![start_day.clone()];
 
