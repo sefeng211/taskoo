@@ -6,6 +6,7 @@ import {
   navCounts,
   priorityLabel,
   pruneSelectionForVisibleTasks,
+  visibleTasksForView,
   uniqueTasksById,
   tagView,
 } from './ui_logic.mjs';
@@ -99,6 +100,18 @@ function addClassByState(task) {
   return `task-row state-${task.state || 'ready'}`;
 }
 
+function appMarkSvg() {
+  return `
+    <svg viewBox="0 0 64 64" role="img" aria-hidden="true" focusable="false">
+      <rect x="6" y="6" width="52" height="52" rx="14" fill="#a78bfa"></rect>
+      <rect x="16" y="15" width="32" height="34" rx="8" fill="none" stroke="#ffffff" stroke-width="3"></rect>
+      <path d="M22 32.5l6.2 6.2L42.5 24.4" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>
+      <rect x="21" y="19" width="16" height="3.2" rx="1.6" fill="#ffffff" opacity="0.85"></rect>
+      <rect x="21" y="41.8" width="11" height="3.2" rx="1.6" fill="#ffffff" opacity="0.55"></rect>
+    </svg>
+  `.trim();
+}
+
 function taskDateLabel(task) {
   if (task.date_due) {
     return `Due ${formatDate(task.date_due)}`;
@@ -147,7 +160,7 @@ function renderShell() {
     <div class="app-shell">
       <aside class="rail" aria-label="Task navigation">
         <div class="brand">
-          <div class="brand-dot"><i class="fas fa-check"></i></div>
+          <div class="brand-dot">${appMarkSvg()}</div>
           <div>
             <h1>Taskoo</h1>
             <span>GTD workspace</span>
@@ -298,7 +311,7 @@ async function refreshNavCounts() {
     request('agenda', {method: 'POST', data: `${agendaRange().start} ${agendaRange().end}`}),
   ]);
   state.navTasks = flattenGroups(Array.isArray(allGroups) ? allGroups : []);
-  state.navAgendaTasks = flattenGroups(Array.isArray(agendaGroups) ? agendaGroups : []);
+  state.navAgendaTasks = uniqueTasksById(flattenGroups(Array.isArray(agendaGroups) ? agendaGroups : []));
 }
 
 function renderContexts() {
@@ -388,7 +401,7 @@ async function loadView(view) {
   }
   if (view === 'all') {
     state.title = 'All';
-    state.subtitle = 'All active and completed tasks';
+    state.subtitle = 'All active tasks';
     await loadList('');
     return;
   }
@@ -476,7 +489,9 @@ function setGroups(groups) {
   state.groups = state.clientFilter
     ? rawGroups.map(([name, tasks]) => [name, (tasks || []).filter(state.clientFilter)])
     : rawGroups;
-  state.tasks = flattenGroups(state.groups);
+  state.tasks = state.view === 'agenda'
+    ? uniqueTasksById(flattenGroups(state.groups))
+    : flattenGroups(state.groups);
   state.selectedTaskIds = pruneSelectionForVisibleTasks(state.selectedTaskIds, state.tasks);
   render();
 }
@@ -615,6 +630,7 @@ function renderBulkActions() {
 function renderTasks() {
   const board = document.getElementById('task-board');
   board.replaceChildren();
+  let previousAgendaSignature = null;
 
   const visibleGroups = state.groups
     .map(([name, tasks]) => [name, tasks || []])
@@ -633,10 +649,18 @@ function renderTasks() {
     const section = document.createElement('section');
     section.className = 'task-section';
     const title = state.view === 'agenda' ? agendaDateLabel(name) : (name || 'Tasks');
-    section.innerHTML = `<header><h3>${title}</h3><span>${tasks.length}</span></header>`;
+    const agendaTasks = state.view === 'agenda' ? uniqueTasksById(tasks) : tasks;
+    const displayTasks = visibleTasksForView(agendaTasks, state.view);
+    const agendaSignature = state.view === 'agenda' ? agendaTasks.map((task) => task.id).join(',') : '';
+    if (state.view === 'agenda' && agendaSignature === previousAgendaSignature) {
+      return;
+    }
+    previousAgendaSignature = agendaSignature;
+
+    section.innerHTML = `<header><h3>${title}</h3><span>${displayTasks.length}</span></header>`;
     const rows = document.createElement('div');
     rows.className = 'task-rows';
-    tasks.forEach((task) => rows.appendChild(createTaskRow(task)));
+    displayTasks.forEach((task) => rows.appendChild(createTaskRow(task)));
     section.appendChild(rows);
     board.appendChild(section);
   });
@@ -645,6 +669,7 @@ function renderTasks() {
 function createTaskRow(task) {
   const row = document.createElement('article');
   row.className = addClassByState(task);
+  row.classList.toggle('is-due-today', isToday(task.date_due));
   row.classList.toggle('is-bulk-selected', state.selectedTaskIds.has(task.id));
   row.addEventListener('click', () => {
     toggleBulkSelection(task, !state.selectedTaskIds.has(task.id));
@@ -672,7 +697,7 @@ function createTaskRow(task) {
   const meta = [
     task.priority ? `<span class="badge priority">${priorityLabel(task.priority)}</span>` : '',
     task.context ? `<span class="badge">${task.context}</span>` : '',
-    taskDateLabel(task) ? `<span class="badge ${isPast(task.date_due || task.date_scheduled) ? 'danger' : ''}">${taskDateLabel(task)}</span>` : '',
+    taskDateLabel(task) ? `<span class="badge ${isPast(task.date_due || task.date_scheduled) || isToday(task.date_due) ? 'danger' : ''}">${taskDateLabel(task)}</span>` : '',
     ...(task.tags || []).map((tag) => `<span class="badge tag">#${tag}</span>`),
   ].join('');
 

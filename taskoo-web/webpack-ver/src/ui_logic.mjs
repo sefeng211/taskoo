@@ -67,6 +67,13 @@ export function uniqueTasksById(tasks) {
   return [...unique.values()];
 }
 
+export function visibleTasksForView(tasks, view) {
+  if (view === 'completed') {
+    return tasks;
+  }
+  return tasks.filter((task) => task.state !== 'completed');
+}
+
 export function buildBulkModificationCommand(taskIds, values) {
   const tokens = [taskIds.join(' ')];
   if (typeof values === 'string') {

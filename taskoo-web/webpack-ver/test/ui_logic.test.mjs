@@ -8,6 +8,7 @@ import {
   priorityLabel,
   pruneSelectionForVisibleTasks,
   uniqueTasksById,
+  visibleTasksForView,
   tagView,
 } from '../src/ui_logic.mjs';
 
@@ -95,6 +96,20 @@ test('uniqueTasksById collapses duplicate agenda entries', () => {
     {id: 7, body: 'Pay bill'},
     {id: 9, body: 'Other'},
   ]);
+});
+
+test('visibleTasksForView hides completed tasks except in the completed view', () => {
+  const tasks = [
+    {id: 1, state: 'ready'},
+    {id: 2, state: 'completed'},
+    {id: 3, state: 'blocked'},
+  ];
+
+  assert.deepEqual(visibleTasksForView(tasks, 'inbox'), [
+    {id: 1, state: 'ready'},
+    {id: 3, state: 'blocked'},
+  ]);
+  assert.deepEqual(visibleTasksForView(tasks, 'completed'), tasks);
 });
 
 let passed = 0;

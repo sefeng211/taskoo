@@ -64,9 +64,15 @@ button {
   width: 36px;
   height: 36px;
   place-items: center;
-  border-radius: 10px;
-  background: var(--blue);
-  color: #fff;
+  border-radius: 12px;
+  background: transparent;
+  overflow: hidden;
+}
+
+.brand-dot svg {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .brand h1 {
@@ -529,6 +535,17 @@ button {
 .task-row.is-bulk-selected {
   border-color: #c5d7fb;
   box-shadow: 0 4px 14px rgba(60, 64, 67, 0.10);
+}
+
+.task-row.is-due-today {
+  border-color: #ea4335;
+  box-shadow: 0 0 0 1px rgba(234, 67, 53, 0.12), 0 4px 14px rgba(234, 67, 53, 0.10);
+}
+
+.task-row.is-due-today:hover,
+.task-row.is-due-today.is-selected,
+.task-row.is-due-today.is-bulk-selected {
+  border-color: #d93025;
 }
 
 .task-row.is-bulk-selected {
