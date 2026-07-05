@@ -18,6 +18,12 @@ struct AnnotationInput {
     annotation: String,
 }
 
+#[derive(serde::Deserialize)]
+struct BodyInput {
+    task_id: i64,
+    body: String,
+}
+
 #[no_mangle]
 pub extern "C" fn allocate(size: usize) -> *mut c_char {
     // create a new mutable buffer with capacity `len`
@@ -123,6 +129,39 @@ pub unsafe fn add(ptr: *mut u8, len: usize) {
 
 // Annotation Operation
 #[no_mangle]
+pub unsafe fn body(ptr: *mut u8, len: usize) -> *mut c_char {
+    let input = read_raw_string_from_js(ptr, len);
+    let payload: BodyInput = match serde_json::from_str(&input) {
+        Ok(payload) => payload,
+        Err(e) => {
+            let message = serde_json::json!({"error": e.to_string()}).to_string();
+            LENGTH = message.len();
+            return CString::new(message).unwrap().into_raw();
+        }
+    };
+
+    let mut operation = operation::SetBody::new(payload.task_id, payload.body);
+    let serded_string: String = match operation.init() {
+        Ok(_) => match operation.do_work() {
+            Ok(tasks) => {
+                if tasks.is_empty() {
+                    serde_json::json!({"error": "Unable to update body"}).to_string()
+                } else {
+                    serde_json::to_string(&tasks[0]).unwrap()
+                }
+            }
+            Err(e) => serde_json::json!({"error": e.to_string()}).to_string(),
+        },
+        Err(e) => serde_json::json!({"error": e.to_string()}).to_string(),
+    };
+
+    unsafe { LENGTH = serded_string.len() }
+    let s = CString::new(serded_string).unwrap();
+    return s.into_raw();
+}
+
+// Annotation Operation
+#[no_mangle]
 pub unsafe fn annotation(ptr: *mut u8, len: usize) -> *mut c_char {
     let input = read_raw_string_from_js(ptr, len);
     let payload: AnnotationInput = match serde_json::from_str(&input) {
@@ -135,15 +174,17 @@ pub unsafe fn annotation(ptr: *mut u8, len: usize) -> *mut c_char {
     };
 
     let mut operation = operation::AddAnnotation::new(payload.task_id, payload.annotation);
-    let serded_string: String = match operation::execute(&mut operation) {
-        Ok(_) => {
-            let tasks = operation.get_result();
-            if tasks.is_empty() {
-                serde_json::json!({"error": "Unable to update annotation"}).to_string()
-            } else {
-                serde_json::to_string(&tasks[0]).unwrap()
+    let serded_string: String = match operation.init() {
+        Ok(_) => match operation.do_work() {
+            Ok(tasks) => {
+                if tasks.is_empty() {
+                    serde_json::json!({"error": "Unable to update annotation"}).to_string()
+                } else {
+                    serde_json::to_string(&tasks[0]).unwrap()
+                }
             }
-        }
+            Err(e) => serde_json::json!({"error": e.to_string()}).to_string(),
+        },
         Err(e) => serde_json::json!({"error": e.to_string()}).to_string(),
     };
 

@@ -80,6 +80,12 @@ app.post('/add', createPost, (req, res) => {
   res.status(ret.status).send(ret.body);
 });
 
+app.post('/body', createPost, (req, res) => {
+  console.log("body endpoint");
+  const ret = parseEndpointData(Endpoints.Body(req.body.data));
+  res.status(ret.status).send(ret.body);
+});
+
 app.post('/annotation', createPost, (req, res) => {
   console.log("annotation endpoint");
   const ret = parseEndpointData(Endpoints.Annotation(req.body.data));

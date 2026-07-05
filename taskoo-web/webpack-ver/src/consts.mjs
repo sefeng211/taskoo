@@ -4,6 +4,7 @@ const SERVER_ENDPOINT_MAPPING = {
   agenda: SERVER_ENDPOINT + "/agenda",
   list: SERVER_ENDPOINT + "/list",
   add: SERVER_ENDPOINT + "/add",
+  body: SERVER_ENDPOINT + "/body",
   annotation: SERVER_ENDPOINT + "/annotation",
   info: SERVER_ENDPOINT + "/info",
   modify: SERVER_ENDPOINT + "/modify",

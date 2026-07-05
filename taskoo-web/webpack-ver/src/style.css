@@ -66,33 +66,40 @@ body {
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
 }
 
 input,
-select {
+select,
+textarea {
   border: 1px solid transparent;
   background: var(--panel);
   color: var(--text);
-  transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease, transform 140ms ease;
+  transition: border-color 140ms ease, background-color 140ms ease, transform 140ms ease;
 }
 
 input::placeholder {
   color: #9aa0a6;
 }
 
+textarea::placeholder {
+  color: #9aa0a6;
+}
+
 input:hover,
-select:hover {
+select:hover,
+textarea:hover {
   border-color: #d2dbeb;
   background: var(--panel);
 }
 
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
   border-color: #b9cdf8;
   background: var(--panel);
-  box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.12);
 }
 
 button {
@@ -387,12 +394,11 @@ button {
   border-radius: 14px;
   background: linear-gradient(180deg, var(--panel), var(--bg));
   color: var(--muted);
-  transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+  transition: border-color 140ms ease, background-color 140ms ease;
 }
 
 .search-strip label:focus-within {
   border-color: #b9cdf8;
-  box-shadow: 0 0 0 4px rgba(26, 115, 232, 0.12);
   background: var(--panel);
 }
 
@@ -921,6 +927,60 @@ button {
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
+}
+
+.detail-heading {
+  display: grid;
+  gap: 4px;
+}
+
+.detail-title-view {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  cursor: text;
+}
+
+.detail-title-view:hover,
+.detail-title-view:focus-visible {
+  border-color: #c5d7fb;
+  background: var(--panel-soft);
+  outline: none;
+}
+
+.detail-title-view.is-empty {
+  color: var(--muted);
+}
+
+.detail-title-editor {
+  display: grid;
+  gap: 10px;
+}
+
+.detail-title-editor textarea {
+  min-height: 88px;
+  width: 100%;
+  resize: vertical;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel-soft);
+  color: var(--text);
+}
+
+.detail-title-editor textarea::placeholder {
+  color: var(--muted);
+}
+
+.detail-title-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .detail-annotation p {

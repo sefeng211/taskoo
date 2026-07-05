@@ -153,5 +153,5 @@ pub fn add_annotation(
         ":task_id": task_id
     })?;
 
-    Ok(vec![])
+    get_base(tx, &format!("task.id = {}", task_id))
 }

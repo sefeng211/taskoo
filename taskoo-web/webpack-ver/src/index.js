@@ -31,6 +31,10 @@ const state = {
   selectedTaskIds: new Set(),
   detailTask: null,
   detailLoading: false,
+  bodyDraft: '',
+  bodyTaskId: null,
+  bodyEditing: false,
+  bodySaving: false,
   annotationDraft: '',
   annotationTaskId: null,
   annotationSaving: false,
@@ -630,6 +634,10 @@ function detailField(label, value, valueClass = '') {
 function closeTaskDetail() {
   state.detailTask = null;
   state.detailLoading = false;
+  state.bodyDraft = '';
+  state.bodyTaskId = null;
+  state.bodyEditing = false;
+  state.bodySaving = false;
   state.annotationDraft = '';
   state.annotationTaskId = null;
   state.annotationSaving = false;
@@ -671,6 +679,12 @@ function renderTaskDetail() {
     return;
   }
 
+  if (state.bodyTaskId !== task.id) {
+    state.bodyTaskId = task.id;
+    state.bodyDraft = task.body || '';
+    state.bodyEditing = false;
+    state.bodySaving = false;
+  }
   if (state.annotationTaskId !== task.id) {
     state.annotationTaskId = task.id;
     state.annotationDraft = task.annotation || '';
@@ -679,12 +693,73 @@ function renderTaskDetail() {
 
   const header = document.createElement('header');
   const heading = document.createElement('div');
+  heading.className = 'detail-heading';
   const eyebrow = document.createElement('span');
   eyebrow.className = 'detail-eyebrow';
   eyebrow.textContent = `Task #${task.id}`;
-  const title = document.createElement('h2');
-  title.textContent = task.body;
-  heading.append(eyebrow, title);
+  heading.append(eyebrow);
+
+  if (!state.bodyEditing) {
+    const title = document.createElement('h2');
+    title.className = 'detail-title-view';
+    title.textContent = task.body || 'Click to edit body';
+    if (!task.body) {
+      title.classList.add('is-empty');
+    }
+    title.title = 'Click to edit body';
+    title.setAttribute('role', 'button');
+    title.setAttribute('tabindex', '0');
+    title.setAttribute('aria-label', 'Click to edit body');
+    title.addEventListener('click', () => {
+      state.bodyEditing = true;
+      renderTaskDetail();
+    });
+    title.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        state.bodyEditing = true;
+        renderTaskDetail();
+      }
+    });
+    heading.append(title);
+  } else {
+    const titleEditor = document.createElement('div');
+    titleEditor.className = 'detail-title-editor';
+
+    const bodyInput = document.createElement('textarea');
+    bodyInput.value = state.bodyDraft;
+    bodyInput.placeholder = 'Edit the task body';
+    bodyInput.setAttribute('aria-label', 'Task body');
+    bodyInput.addEventListener('input', (event) => {
+      state.bodyDraft = event.target.value;
+    });
+
+    window.requestAnimationFrame(() => bodyInput.focus());
+
+    const bodyActions = document.createElement('div');
+    bodyActions.className = 'detail-title-actions';
+
+    const saveBodyButton = document.createElement('button');
+    saveBodyButton.type = 'button';
+    saveBodyButton.className = 'primary-button';
+    saveBodyButton.disabled = state.bodySaving;
+    saveBodyButton.innerHTML = `<i class="fas ${state.bodySaving ? 'fa-spinner fa-spin' : 'fa-save'}"></i><span>Save body</span>`;
+    saveBodyButton.addEventListener('click', () => saveTaskBody(task));
+
+    const cancelBodyButton = document.createElement('button');
+    cancelBodyButton.type = 'button';
+    cancelBodyButton.className = 'secondary-button';
+    cancelBodyButton.textContent = 'Cancel';
+    cancelBodyButton.addEventListener('click', () => {
+      state.bodyDraft = task.body || '';
+      state.bodyEditing = false;
+      renderTaskDetail();
+    });
+
+    bodyActions.append(cancelBodyButton, saveBodyButton);
+    titleEditor.append(bodyInput, bodyActions);
+    heading.append(titleEditor);
+  }
 
   const close = document.createElement('button');
   close.type = 'button';
@@ -757,6 +832,34 @@ function renderTaskDetail() {
   actions.appendChild(toggle);
 
   panel.append(header, meta, annotation, actions);
+}
+
+async function saveTaskBody(task) {
+  if (!task) {
+    return;
+  }
+
+  setLoading(true);
+  state.bodySaving = true;
+  renderTaskDetail();
+  try {
+    const updatedTask = await request('body', {
+      method: 'POST',
+      data: JSON.stringify({task_id: task.id, body: state.bodyDraft}),
+    });
+    state.detailTask = updatedTask;
+    state.bodyTaskId = updatedTask.id;
+    state.bodyDraft = updatedTask.body || '';
+    state.bodyEditing = false;
+    await reload();
+    toast('Body saved');
+  } catch (error) {
+    showError(error);
+  } finally {
+    state.bodySaving = false;
+    setLoading(false);
+    renderTaskDetail();
+  }
 }
 
 async function saveTaskAnnotation(task) {

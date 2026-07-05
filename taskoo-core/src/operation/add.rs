@@ -29,6 +29,13 @@ pub struct AddAnnotation {
     result: Option<Vec<Task>>,
 }
 
+pub struct SetBody {
+    pub task_id: i64,
+    pub body: String,
+    database_manager: Option<TaskManager>,
+    result: Option<Vec<Task>>,
+}
+
 impl Add<'_> {
     pub fn new(data: &Vec<String>) -> Result<Add, CoreError> {
         let option =
@@ -113,6 +120,17 @@ impl AddAnnotation {
         AddAnnotation {
             task_id: task_id,
             annotation: annotation,
+            database_manager: None,
+            result: None,
+        }
+    }
+}
+
+impl SetBody {
+    pub fn new(task_id: i64, body: String) -> SetBody {
+        SetBody {
+            task_id,
+            body,
             database_manager: None,
             result: None,
         }
@@ -213,7 +231,46 @@ impl Operation for AddAnnotation {
         );
     }
 
-    fn set_result(&mut self, _result: Vec<Task>) {}
+    fn set_result(&mut self, result: Vec<Task>) {
+        self.result = Some(result);
+    }
+
+    fn get_result(&mut self) -> &Vec<Task> {
+        return &self.result.as_ref().unwrap();
+    }
+}
+
+impl Operation for SetBody {
+    fn init(&mut self) -> Result<(), InitialError> {
+        self.database_manager = Some(TaskManager::new(
+            &ConfigManager::init_and_get_database_path()?,
+        ));
+        Ok(())
+    }
+
+    fn do_work(&mut self) -> Result<Vec<Task>, CoreError> {
+        let task_ids = vec![self.task_id];
+        let body = Some(self.body.as_str());
+        let tasks = TaskManager::modify(
+            self.database_manager.as_mut().unwrap(),
+            &task_ids,
+            &body,
+            &None,
+            &None,
+            &vec![],
+            &None,
+            &None,
+            &None,
+            &None,
+            &None,
+            &vec![],
+        )?;
+        Ok(tasks)
+    }
+
+    fn set_result(&mut self, result: Vec<Task>) {
+        self.result = Some(result);
+    }
 
     fn get_result(&mut self) -> &Vec<Task> {
         return &self.result.as_ref().unwrap();
