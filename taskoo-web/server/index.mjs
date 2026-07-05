@@ -166,6 +166,12 @@ export class Endpoints {
     return JSON.stringify({ok: true});
   }
 
+  static TagDelete(input) {
+    const allocated = allocateInput(input);
+    const result = instance.exports.tag_delete(allocated.ptr, allocated.bytes.length);
+    return readSharedString(result);
+  }
+
   static StateChange(input) {
     const allocated = allocateInput(input);
 

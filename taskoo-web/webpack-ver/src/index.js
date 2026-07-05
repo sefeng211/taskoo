@@ -400,13 +400,51 @@ function renderTags() {
   const container = document.getElementById('tag-list');
   container.replaceChildren();
   state.metadata.tags.forEach((tag) => {
+    const row = document.createElement('div');
+    row.className = 'tag-item';
+
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'context-item';
+    button.className = 'context-item tag-item-button';
     button.textContent = `#${tag}`;
     button.addEventListener('click', () => loadTag(tag));
-    container.appendChild(button);
+
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'icon-button tag-delete-button';
+    deleteButton.title = `Delete tag #${tag}`;
+    deleteButton.setAttribute('aria-label', `Delete tag #${tag}`);
+    deleteButton.innerHTML = '<i class="fas fa-times"></i>';
+    deleteButton.addEventListener('click', (event) => {
+      event.stopPropagation();
+      deleteTag(tag);
+    });
+
+    row.append(button, deleteButton);
+    container.appendChild(row);
   });
+}
+
+async function deleteTag(tag) {
+  const confirmed = window.confirm(`Delete tag #${tag}?`);
+  if (!confirmed) {
+    return;
+  }
+
+  setLoading(true);
+  try {
+    await request('tag_delete', {
+      method: 'POST',
+      data: JSON.stringify({name: tag}),
+    });
+    await refreshMetadata();
+    await reload();
+    toast(`Tag #${tag} deleted`);
+  } catch (error) {
+    showError(error);
+  } finally {
+    setLoading(false);
+  }
 }
 
 async function addTask(event) {

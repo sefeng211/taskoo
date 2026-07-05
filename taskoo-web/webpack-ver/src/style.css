@@ -235,6 +235,30 @@ button {
   padding-left: 48px;
 }
 
+.tag-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 30px;
+  gap: 6px;
+  align-items: center;
+}
+
+.tag-item-button {
+  min-width: 0;
+}
+
+.tag-delete-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--panel-soft);
+  color: var(--muted);
+}
+
+.tag-delete-button:hover {
+  background: #fde8e7;
+  color: var(--red);
+}
+
 .nav-item:hover,
 .context-item:hover,
 .nav-item.is-active {

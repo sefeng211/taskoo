@@ -109,3 +109,9 @@ app.post('/delete', createPost, (req, res) => {
   const ret = parseEndpointData(Endpoints.Delete(req.body.data));
   res.status(ret.status).send(ret.body);
 });
+
+app.post('/tag_delete', createPost, (req, res) => {
+  console.log("tag_delete endpoint");
+  const ret = parseEndpointData(Endpoints.TagDelete(req.body.data));
+  res.status(ret.status).send(ret.body);
+});

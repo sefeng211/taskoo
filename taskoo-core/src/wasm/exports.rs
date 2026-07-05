@@ -24,6 +24,11 @@ struct BodyInput {
     body: String,
 }
 
+#[derive(serde::Deserialize)]
+struct TagDeleteInput {
+    name: String,
+}
+
 #[no_mangle]
 pub extern "C" fn allocate(size: usize) -> *mut c_char {
     // create a new mutable buffer with capacity `len`
@@ -183,6 +188,32 @@ pub unsafe fn annotation(ptr: *mut u8, len: usize) -> *mut c_char {
                     serde_json::to_string(&tasks[0]).unwrap()
                 }
             }
+            Err(e) => serde_json::json!({"error": e.to_string()}).to_string(),
+        },
+        Err(e) => serde_json::json!({"error": e.to_string()}).to_string(),
+    };
+
+    unsafe { LENGTH = serded_string.len() }
+    let s = CString::new(serded_string).unwrap();
+    return s.into_raw();
+}
+
+// Tag delete operation
+#[no_mangle]
+pub unsafe fn tag_delete(ptr: *mut u8, len: usize) -> *mut c_char {
+    let input = read_raw_string_from_js(ptr, len);
+    let payload: TagDeleteInput = match serde_json::from_str(&input) {
+        Ok(payload) => payload,
+        Err(e) => {
+            let message = serde_json::json!({"error": e.to_string()}).to_string();
+            LENGTH = message.len();
+            return CString::new(message).unwrap().into_raw();
+        }
+    };
+
+    let serded_string: String = match TagCommand::new() {
+        Ok(mut command) => match command.delete(vec![payload.name]) {
+            Ok(_) => serde_json::json!({"ok": true}).to_string(),
             Err(e) => serde_json::json!({"error": e.to_string()}).to_string(),
         },
         Err(e) => serde_json::json!({"error": e.to_string()}).to_string(),
