@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Taskoo">
+  <rect x="6" y="6" width="52" height="52" rx="14" fill="#a78bfa"/>
+  <rect x="16" y="15" width="32" height="34" rx="8" fill="none" stroke="#ffffff" stroke-width="3"/>
+  <path d="M22 32.5l6.2 6.2L42.5 24.4" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="21" y="19" width="16" height="3.2" rx="1.6" fill="#ffffff" opacity="0.85"/>
+  <rect x="21" y="41.8" width="11" height="3.2" rx="1.6" fill="#ffffff" opacity="0.55"/>
+</svg>
